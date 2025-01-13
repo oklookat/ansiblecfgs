@@ -1,0 +1,156 @@
+- name: Basic server config
+  hosts: all
+  become: yes
+  vars:
+    new_ssh_port: ""
+    new_user_name: ""
+    new_user_password: ""
+    new_root_password: ""
+  tasks:
+    - name: Check required variables
+      fail:
+        msg: "Variable '{{ item }}' is not set."
+      when: item is not defined or item == ""
+      loop:
+        - new_ssh_port
+        - new_user_name
+        - new_user_password
+        - new_root_password
+
+    - name: Update and upgrade the system
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Update NetworkManager configuration
+      lineinfile:
+        path: /etc/NetworkManager/NetworkManager.conf
+        insertafter: '^#?\[main\]'
+        create: yes
+        line: "{{ item }}"
+      loop:
+        - "dns=none"
+        - "rc-manager=unmanaged"
+
+    - name: Configure DNS server
+      copy:
+        content: "nameserver 1.1.1.1\n"
+        dest: /etc/resolv.conf
+        force: yes
+
+    - name: Change root password
+      user:
+        name: root
+        password: "{{ new_root_password | password_hash('sha512') }}"
+
+    - name: Add a new user
+      user:
+        name: "{{ new_user_name }}"
+        password: "{{ new_user_password | password_hash('sha512') }}"
+        groups: sudo
+        shell: /bin/bash
+        append: yes
+
+    - name: Update SSH port in sshd_config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?Port "
+        line: "Port {{ new_ssh_port }}"
+
+    - name: Disable root login and enforce SSH key authentication
+      block:
+        - name: Update SSH config
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: "^#?PermitRootLogin"
+            line: "PermitRootLogin no"
+        - name: Disable password authentication
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: "^#?PasswordAuthentication"
+            line: "PasswordAuthentication no"
+        - name: Enable SSH key authentication
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: "^#?PubkeyAuthentication"
+            line: "PubkeyAuthentication yes"
+        - name: Disable empty passwords
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: "^#?PermitEmptyPasswords"
+            line: "PermitEmptyPasswords no"
+        - name: Disable X11 forwarding
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: "^#?X11Forwarding"
+            line: "X11Forwarding no"
+
+        - name: Disable password authentication in cloud-init SSH config
+          lineinfile:
+            path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+            regexp: "^#*PasswordAuthentication"
+            line: "PasswordAuthentication no"
+            state: present
+
+    - name: Copy SSH key to the new user
+      authorized_key:
+        user: "{{ new_user_name }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Disable UFW and install iptables
+      block:
+        - name: Disable UFW
+          command: ufw disable
+          ignore_errors: yes
+
+        - name: Install iptables and dependencies
+          apt:
+            name:
+              - iptables
+              - netfilter-persistent
+              - iptables-persistent
+            state: present
+
+        - name: Enable netfilter-persistent
+          systemd:
+            name: netfilter-persistent
+            enabled: yes
+            state: started
+
+    - name: Configure iptables rules
+      block:
+        - name: Set default policies and configure rules
+          shell: |
+            iptables -F
+            iptables -X
+            iptables -Z
+            iptables -P INPUT DROP
+            iptables -P FORWARD DROP
+            iptables -P OUTPUT ACCEPT
+            iptables -A INPUT -i lo -j ACCEPT
+            iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+            iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+            iptables -A INPUT -p udp --dport 80 -j ACCEPT
+            iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+            iptables -A INPUT -p udp --dport 443 -j ACCEPT
+            iptables -A INPUT -p tcp --dport {{ new_ssh_port }} -j ACCEPT
+
+        - name: Save iptables rules
+          shell: iptables-save | tee /etc/iptables/rules.v4
+
+    - name: Apply sysctl configurations
+      block:
+        - name: Configure sysctl
+          sysctl:
+            name: "{{ item.key }}"
+            value: "{{ item.value }}"
+          loop:
+            - { key: "net.core.default_qdisc", value: "fq" }
+            - { key: "net.ipv4.tcp_congestion_control", value: "bbr" }
+            - { key: "net.ipv4.tcp_syncookies", value: "1" }
+            - { key: "net.ipv4.icmp_echo_ignore_broadcasts", value: "1" }
+            - { key: "net.ipv6.conf.all.disable_ipv6", value: "1" }
+
+        - name: Apply sysctl changes
+          command: sysctl -p
