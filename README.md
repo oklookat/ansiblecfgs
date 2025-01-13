@@ -45,7 +45,7 @@ After reboot (it will be unsucsessful, because ssh and credentials changed), you
 
 ## reality-sfy (needs to additional testing)
 
-Basic installation and setup of REALITY (steal from yourself). It is assumed that `basic.yml` has been run prior to this.
+Basic installation and setup of REALITY (steal from yourself). It is assumed that `Basic` has been run prior to this.
 
 - Installs nginx and [XRay](https://github.com/XTLS/Xray-install). Configurations are set for both. For XRay, one client is configured.
 - Installs certbot (via pip) with automatic updates (via cron) and certificate retrieval.
