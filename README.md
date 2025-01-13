@@ -43,7 +43,7 @@ After reboot (it will be unsucsessful, because ssh and credentials changed), you
 
 `ssh NEW_USER_NAME@SERVER_IP -p NEW_SSH_PORT`
 
-## reality-sfy (needs to additional testing)
+## reality-sfy
 
 Basic installation and setup of REALITY (steal from yourself). It is assumed that `Basic` has been run prior to this.
 
