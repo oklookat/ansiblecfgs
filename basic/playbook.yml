@@ -1,22 +1,12 @@
-- name: Basic server config
-  hosts: all
-  become: yes
+- name: "ansiblecfgs: basic"
   vars:
-    new_ssh_port: ""
+    new_ssh_port: 65000
     new_user_name: ""
     new_user_password: ""
     new_root_password: ""
+  hosts: all
+  become: true
   tasks:
-    - name: Check required variables
-      fail:
-        msg: "Variable '{{ item }}' is not set."
-      when: item is not defined or item == ""
-      loop:
-        - new_ssh_port
-        - new_user_name
-        - new_user_password
-        - new_root_password
-
     - name: Update and upgrade the system
       apt:
         update_cache: yes
@@ -102,7 +92,7 @@
       block:
         - name: Disable UFW
           command: ufw disable
-          ignore_errors: yes
+          ignore_errors: true
 
         - name: Install iptables and dependencies
           apt:
@@ -154,3 +144,7 @@
 
         - name: Apply sysctl changes
           command: sysctl -p
+    
+    - name: Reboot
+      reboot:
+        reboot_timeout: 3

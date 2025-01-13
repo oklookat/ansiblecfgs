@@ -1,52 +1,56 @@
-# Конфиги для Ansible
+# Ansible Configurations
 
-## Установка Ansible
+## Installing Ansible
 
 ```sh
 cd ~
 sudo apt install -y python3
 sudo apt install -y python3-pip
 sudo apt install -y python3-venv
-sudo apt install -y sshpass # для входа по паролю на сервер
+sudo apt install -y sshpass # for password login to the server
 mkdir ansible && cd ansible
 python3 -m venv venv
-source venv/bin/activate # для взаимодействия с Ansible используйте venv
+source venv/bin/activate # use venv to interact with Ansible
 pip install ansible
-pip install passlib # для создания пользователя с паролем на сервере
+pip install passlib # to create a user with a password on the server
 ```
 
-В директории ansible создайте файл `inventory.ini`. Впишите такое:
+If you haven't logged into the server yet, do so because otherwise it will complain about `known_hosts`. Run: `ssh root@SERVER_IP`
 
-```ini
-[all]
-IP_СЕРВЕРА ansible_user=root ansible_password=ПАРОЛЬ_ОТ_РУТА
-```
+## General Instructions for All Configurations
 
-Если не входили на сервер, то войдите, потому что иначе будет ругаться на known_hosts. `ssh root@IP_СЕРВЕРА`
+1. Copy the directory.
+2. Fill out `inventory.ini`.
+3. Fill out the `vars` section in `playbook.yml`.
+4. Follow the steps required for the specific configuration.
+5. Enter the venv environment.
+6. Run: `ansible-playbook -i inventory.ini playbook.yml`
 
-## basic.yml
+## Basic
 
-Базовая настройка VPS. Вероятно, подойдет не для всех VPS.
+Basic VPS setup. This may not be suitable for all VPS.
 
-- Устанавливает DNS на CloudFlare.
-- Изменяет пароль рута.
-- Создает нового пользователя с паролем.
-- Меняет порт SSH, запрещает вход под рутом, разрешает вход только по SSH ключу, и запрешает другие мелкие вещи (см. в конфиге).
-- Запрещает вход по паролю в cloud-init (может быть не на всех серверах, поэтому тут скрипт может выдать вам ошибку).
-- Копирует id_rsa из вашей домашней папки на сервер. **Если id_rsa нет, сгенерируйте - `ssh-keygen -t rsa -b 4096 -C "ваш email"`.**
-- Отключает UFW, и настраивает iptables, разрешая http, https, ssh (см. конфиг).
-- Включает BBR, отключает ipv6, включает syncookies, и подобные твики. 
+- Sets DNS to Cloudflare.
+- Changes the root password.
+- Creates a new user with a password.
+- Changes the SSH port, disables root login, allows login only via SSH keys, and disables other minor settings (see the config).
+- Disables password login in cloud-init (may not be present on all servers, so the script might give an error).
+- Copies `id_rsa` from your home directory to the server. **If `id_rsa` is missing, generate it with `ssh-keygen -t rsa -b 4096 -C "your email"`.**
+- Disables UFW and configures iptables to allow HTTP, HTTPS, SSH (see the config).
+- Enables BBR, disables IPv6, enables syncookies, and applies other tweaks.
 
-Скопируйте .yml в директорию `ansible`. Чтобы начать установку на сервер, введите:
+After reboot (it will be unsucsessful, because ssh and credentials changed), you can log into the server (always log in this way):
 
-```sh
-ansible-playbook -i inventory.ini basic.yml --extra-vars "new_ssh_port=НОВЫЙ_ПОРТ_SSH new_user_name=НОВОЕ_ИМЯ_ПОЛЬЗОВАТЕЛЯ new_user_password=ПАРОЛЬ_НОВОГО_ПОЛЬЗОВАТЕЛЯ new_root_password=НОВЫЙ_ПАРОЛЬ_ДЛЯ_РУТА"
-```
+`ssh NEW_USER_NAME@SERVER_IP -p NEW_SSH_PORT`
 
-После успешной установки войдите на сервер (теперь всегда входите так):
+## reality-sfy (needs to additional testing)
 
-`ssh НОВОЕ_ИМЯ_ПОЛЬЗОВАТЕЛЯ@IP_СЕРВЕРА -p НОВЫЙ_ПОРТ_SSH`
+Basic installation and setup of REALITY (steal from yourself). It is assumed that `basic.yml` has been run prior to this.
 
-И перезагрузите систему - `sudo reboot`.
+- Installs nginx and [XRay](https://github.com/XTLS/Xray-install). Configurations are set for both. For XRay, one client is configured.
+- Installs certbot (via pip) with automatic updates (via cron) and certificate retrieval.
+- Key affected files and directories: `/usr/local/etc/xray/config.json`, `/etc/nginx/nginx.conf`, `/usr/share/nginx/html/index.html`, `/opt/certbot`.
 
-Готово.
+1. In the directory with the playbook, create a file `index.html` with your custom HTML (REALITY will fall back to this).
+
+2. Obtain a domain and make sure it points to your VPS IP.

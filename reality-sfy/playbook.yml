@@ -1,0 +1,135 @@
+---
+- name: "ansiblecfgs: reality-sfy"
+  vars:
+    nginx_port: 65000
+    certbot_email: ""
+    certbot_domain: ""
+    reality_fingerprint: "chrome"
+  hosts: all
+  become: true
+  tasks:
+    - name: Update package index
+      apt:
+        update_cache: yes
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Enable and start nginx service
+      systemd:
+        name: nginx
+        enabled: yes
+        state: started
+
+    - name: Install Xray using script
+      ansible.builtin.shell: |
+        bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+      debug:
+        msg: "ATTENTION! Your need periodically update XRay. See: https://github.com/XTLS/Xray-install"
+
+    - name: Install dependencies for certbot
+      apt:
+        name:
+          - python3
+          - python3-venv
+          - libaugeas0
+        state: present
+
+    - name: Create virtual environment for certbot
+      ansible.builtin.shell: python3 -m venv /opt/certbot/
+      args:
+        creates: /opt/certbot/
+
+    - name: Upgrade pip in certbot environment
+      ansible.builtin.command: /opt/certbot/bin/pip install --upgrade pip
+
+    - name: Install certbot and certbot-nginx in virtual environment
+      ansible.builtin.command: /opt/certbot/bin/pip install certbot certbot-nginx
+
+    - name: Create symbolic link for certbot
+      ansible.builtin.file:
+        src: /opt/certbot/bin/certbot
+        dest: /usr/bin/certbot
+        state: link
+
+    - name: Obtain SSL certificate with certbot
+      ansible.builtin.command: >
+        certbot certonly --nginx -n --agree-tos
+        -m {{ certbot_email }} --no-eff-email
+        -d {{ certbot_domain }}
+      ignore_errors: true
+
+    - name: Add certbot renewal cron job if not present
+      ansible.builtin.lineinfile:
+        path: /etc/crontab
+        insertafter: EOF
+        line: "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && sudo certbot renew -q"
+        state: present
+
+    - name: Add certbot upgrade cron job if not present
+      ansible.builtin.lineinfile:
+        path: /etc/crontab
+        insertafter: EOF
+        line: "0 0 1 * * root /opt/certbot/bin/pip install --upgrade certbot certbot-nginx"
+        state: present
+
+    - name: Restart cron service
+      systemd:
+        name: cron
+        state: restarted
+
+    - name: Generate shortID
+      command: openssl rand -hex 8
+      register: xray_short_id
+      debug:
+        msg: "ATTENTION! Your XRay shortID is: {{ xray_short_id }}. It needed for client."
+    
+    - name: Generate XRay UUID
+      command: xray uuid
+      register: xray_uuid
+      debug:
+        msg: "ATTENTION! Your XRay UUID is: {{ xray_uuid }}. It needed for client."
+    
+    - name: Generate XRay keys
+      command: xray x25519
+      register: xray_keys
+    
+    - name: Extract XRay keys
+      set_fact:
+        xray_private_key_e: "{{ xray_keys.stdout | trim | split('Private key: ')[1] | split()[0] }}"
+        xray_public_key_e: "{{ xray_keys.stdout | trim | split('Public key: ')[1] | split()[0] }}"
+    
+    - name: Inform user about the public key
+      debug:
+        msg: "ATTENTION! Your XRay public key is: {{ xray_public_key_e }}. It needed for client."
+
+    - name: Generate XRay config
+      template:
+        src: xray.json.j2
+        dest: /usr/local/etc/xray/config.json
+      vars:
+        xray_private_key: "{{ xray_private_key_e }}"
+
+    - name: Generate nginx config
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+
+    - name: Copy nginx index.html
+      ansible.builtin.copy:
+        src: index.html
+        dest: /usr/share/nginx/html/index.html
+    
+    - name: Restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+        daemon_reload: true
+    
+    - name: Enable XRay
+      systemd:
+        name: xray
+        enabled: true
+
