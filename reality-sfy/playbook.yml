@@ -88,7 +88,7 @@
       
     - name: Notify shortID
       debug:
-        msg: "ATTENTION! Your XRay shortID is: {{ xray_short_id }}. It needed for client."
+        msg: "ATTENTION! Your XRay shortID is: {{ xray_short_id.stdout }}. It needed for client."
     
     - name: Generate XRay UUID
       command: xray uuid
