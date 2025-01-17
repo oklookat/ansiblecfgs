@@ -131,18 +131,7 @@
 
         - name: Apply sysctl configurations
           block:
-            - name: Configure sysctl
-              sysctl:
-                name: "{{ item.key }}"
-                value: "{{ item.value }}"
-              loop:
-                - { key: "net.core.default_qdisc", value: "fq" }
-                - { key: "net.ipv4.tcp_congestion_control", value: "bbr" }
-                - { key: "net.ipv4.tcp_syncookies", value: "1" }
-                - { key: "net.ipv4.icmp_echo_ignore_broadcasts", value: "1" }
-                - { key: "net.ipv6.conf.all.disable_ipv6", value: "1" }
-
-            - name: Ensure sysctl configuration file exists
+            - name: Write to sysctl custom config
               copy:
                 dest: /etc/sysctl.d/99-sysctl.conf
                 content: |
@@ -151,7 +140,6 @@
                   net.ipv4.tcp_syncookies=1
                   net.ipv4.icmp_echo_ignore_broadcasts=1
                   net.ipv6.conf.all.disable_ipv6=1
-
             - name: Apply sysctl changes from configuration
               command: sysctl --system
 
