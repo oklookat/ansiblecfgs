@@ -41,6 +41,12 @@
         shell: /bin/bash
         append: yes
 
+    - name: Copy SSH key to the new user
+      authorized_key:
+        user: "{{ new_user_name }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
     - name: Update SSH port in sshd_config
       lineinfile:
         path: /etc/ssh/sshd_config
@@ -75,18 +81,18 @@
             regexp: "^#?X11Forwarding"
             line: "X11Forwarding no"
 
-        - name: Disable password authentication in cloud-init SSH config
-          lineinfile:
-            path: /etc/ssh/sshd_config.d/50-cloud-init.conf
-            regexp: "^#*PasswordAuthentication"
-            line: "PasswordAuthentication no"
-            state: present
+    - name: Check if /etc/ssh/sshd_config.d/50-cloud-init.conf exists
+      stat:
+        path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+      register: sshd_config_file
 
-    - name: Copy SSH key to the new user
-      authorized_key:
-        user: "{{ new_user_name }}"
+    - name: Disable password authentication in cloud-init SSH config
+      lineinfile:
+        path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+        regexp: "^#*PasswordAuthentication"
+        line: "PasswordAuthentication no"
         state: present
-        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      when: sshd_config_file.stat.exists
 
     - name: Disable UFW and install iptables
       block:
