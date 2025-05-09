@@ -1,0 +1,88 @@
+{
+    "log": {
+        "level": "warning",
+        "timestamp": true
+    },
+    "dns": {
+        "final": "adguard-quic-direct",
+        "strategy": "prefer_ipv4",
+        "servers": [
+            {
+                "tag": "cloudflare-doh-direct",
+                "address": "https://1.1.1.1/dns-query",
+                "detour": "direct-out"
+            },
+            {
+                "tag": "google-doh-direct",
+                "address": "https://8.8.8.8/dns-query",
+                "detour": "direct-out"
+            },
+            {
+                "tag": "adguard-quic-direct",
+                "address": "quic://dns.adguard-dns.com",
+                "address_resolver": "cloudflare-doh-direct",
+                "detour": "direct-out"
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "type": "vless",
+            "tag": "vless-in",
+            "listen": "::",
+            "listen_port": 443,
+            "tcp_fast_open": true,
+            "users": [
+                {
+                    "name": "{{ certbot_email }}",
+                    "uuid": "{{ singbox_uuid.stdout }}",
+                    "flow": "xtls-rprx-vision"
+                }
+            ],
+            "tls": {
+                "enabled": true,
+                "server_name": "{{ certbot_domain }}",
+                "reality": {
+                    "enabled": true,
+                    "handshake": {
+                        "server": "127.0.0.1",
+                        "server_port": {{ nginx_port }}
+                    },
+                    "private_key": "{{ singbox_private_key }}",
+                    "short_id": [
+                        "{{ singbox_short_id.stdout }}"
+                    ]
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "direct",
+            "tag": "direct-out"
+        }
+    ],
+    "route": {
+        "final": "direct-out",
+        "rules": [
+            {
+                "action": "sniff"
+            },
+            {
+                "protocol": "dns",
+                "action": "hijack-dns"
+            },
+            {
+                "action": "reject",
+                "protocol": [
+                    "bittorrent"
+                ]
+            }
+        ]
+    },
+    "experimental": {
+        "cache_file": {
+            "enabled": true
+        }
+    }
+}

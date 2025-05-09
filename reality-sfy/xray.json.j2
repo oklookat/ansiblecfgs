@@ -4,6 +4,7 @@
   },
   "dns": {
     "servers": [
+      "quic+local://dns.adguard-dns.com",
       "https+local://1.1.1.1/dns-query",
       "https+local://8.8.8.8/dns-query"
     ],
@@ -13,24 +14,6 @@
   "routing": {
     "domainStrategy": "AsIs",
     "rules": [
-      {
-        "type": "field",
-        "domain": [
-          "geosite:category-ru",
-          "geosite:category-ads-all",
-          "regexp:\\.ru$",
-          "regexp:\\.su$",
-          "regexp:\\.xn--p1ai$"
-        ],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "ip": [
-          "geoip:ru"
-        ],
-        "outboundTag": "block"
-      },
       {
         "type": "field",
         "protocol": [
@@ -61,11 +44,16 @@
         "realitySettings": {
           "fingerprint": "{{ reality_fingerprint }}",
           "dest": "{{ nginx_port }}",
-          "serverNames": ["{{ certbot_domain }}"],
+          "serverNames": [
+            "{{ certbot_domain }}"
+          ],
           "privateKey": "{{ xray_private_key }}",
           "shortIds": [
             "{{ xray_short_id.stdout }}"
           ]
+        },
+        "sockopt": {
+          "tcpFastOpen": true
         }
       },
       "sniffing": {

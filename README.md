@@ -1,6 +1,12 @@
 # Ansible Configurations
 
+## Warning ⚠️
+
+The current version of the configurations has not been tested in production. If you want more stable configurations, use a [past version of this repository](https://github.com/oklookat/ansiblecfgs/tree/b29edabf7f525fcf7d7cf43358ac8ba0412baa28).
+
 ## Installing Ansible
+
+### Ubuntu, WSL-Ubuntu
 
 ```sh
 cd ~
@@ -37,7 +43,7 @@ Basic VPS setup. This may not be suitable for all VPS.
 - Disables password login in cloud-init (may not be present on all servers, so the script might give an error).
 - Copies `id_rsa` from your home directory to the server. **If `id_rsa` is missing, generate it with `ssh-keygen -t rsa -b 4096 -C "your email"`.**
 - Disables UFW and configures iptables to allow HTTP, HTTPS, SSH (see the config).
-- Enables BBR, disables IPv6, enables syncookies, and applies other tweaks.
+- Enables BBR, TCP Fast Open, disables IPv6, enables syncookies, and applies other tweaks.
 
 After reboot (it will be unsucsessful, because ssh and credentials changed), you can log into the server (always log in this way):
 
@@ -45,11 +51,26 @@ After reboot (it will be unsucsessful, because ssh and credentials changed), you
 
 ## reality-sfy
 
-Basic installation and setup of REALITY (steal from yourself). It is assumed that `Basic` has been run prior to this.
+Basic installation and setup of REALITY, steal from yourself, [Xray](https://github.com/XTLS/Xray-core) server. It is assumed that `Basic` has been run prior to this.
 
-- Installs nginx and [XRay](https://github.com/XTLS/Xray-install). Configurations are set for both. For XRay, one client is configured.
+- Installs nginx and Xray (via [Xray-install](https://github.com/XTLS/Xray-install)).
+- Sets basic configs for nginx and Xray.
 - Installs certbot (via pip) with automatic updates (via cron) and certificate retrieval.
 - Key affected files and directories: `/usr/local/etc/xray/config.json`, `/etc/nginx/nginx.conf`, `/usr/share/nginx/html/index.html`, `/opt/certbot`.
+
+1. In the directory with the playbook, create a file `index.html` with your custom HTML (REALITY will fall back to this).
+
+2. Obtain a domain and make sure it points to your VPS IP.
+
+## reality-sfy-sing-box
+
+Basic installation and setup of REALITY, steal from yourself, [sing-box](https://github.com/SagerNet/sing-box) server. It is assumed that `Basic` has been run prior to this.
+
+- Installs nginx and sing-box (via [APT](https://sing-box.sagernet.org/installation/package-manager)).
+- Sets basic configs for nginx and sing-box.
+  - sing-box version, where config tested: 1.11.10
+- Installs certbot (via pip) with automatic updates (via cron) and certificate retrieval.
+- Key affected files and directories: `/etc/sing-box/config.json`, `/etc/nginx/nginx.conf`, `/usr/share/nginx/html/index.html`, `/opt/certbot`.
 
 1. In the directory with the playbook, create a file `index.html` with your custom HTML (REALITY will fall back to this).
 

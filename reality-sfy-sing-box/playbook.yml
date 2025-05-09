@@ -1,0 +1,163 @@
+---
+- name: "ansiblecfgs: reality-sfy-sing-box"
+  hosts: all
+  become: true
+  vars:
+    nginx_port: 60000
+    certbot_email: ""
+    certbot_domain: ""
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        daemon_reload: true
+
+    - name: Restart sing-box
+      ansible.builtin.systemd:
+        name: sing-box
+        state: restarted
+
+    - name: Restart cron
+      ansible.builtin.systemd:
+        name: cron
+        state: restarted
+
+  tasks:
+    - name: Ensure /etc/apt/keyrings exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download SagerNet GPG key
+      ansible.builtin.get_url:
+        url: https://sing-box.app/gpg.key
+        dest: /etc/apt/keyrings/sagernet.asc
+        mode: "0644"
+
+    - name: Add SagerNet APT repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/sagernet.sources
+        content: |
+          Types: deb
+          URIs: https://deb.sagernet.org/
+          Suites: *
+          Components: *
+          Enabled: yes
+          Signed-By: /etc/apt/keyrings/sagernet.asc
+        mode: "0644"
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - nginx
+          # required by certbot
+          - python3
+          - python3-venv
+          - libaugeas0
+          #
+          - sing-box
+        state: present
+        update_cache: yes
+
+    - name: Enable and start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        enabled: true
+        state: started
+
+    - name: Create virtual environment for certbot
+      ansible.builtin.shell: python3 -m venv /opt/certbot/
+      args:
+        creates: /opt/certbot/
+
+    - name: Upgrade pip in certbot environment
+      ansible.builtin.command: /opt/certbot/bin/pip install --upgrade pip
+
+    - name: Install certbot and certbot-nginx in virtual environment
+      ansible.builtin.command: /opt/certbot/bin/pip install certbot certbot-nginx
+
+    - name: Create symbolic link for certbot
+      ansible.builtin.file:
+        src: /opt/certbot/bin/certbot
+        dest: /usr/bin/certbot
+        state: link
+
+    - name: Obtain SSL certificate with certbot
+      ansible.builtin.command: >
+        certbot certonly --nginx -n --agree-tos
+        -m {{ certbot_email }} --no-eff-email
+        -d {{ certbot_domain }}
+      when: certbot_email != "" and certbot_domain != ""
+
+    - name: Add certbot renewal cron job
+      ansible.builtin.cron:
+        name: "Certbot Auto Renew"
+        minute: "0"
+        hour: "0,12"
+        user: root
+        job: "python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew -q"
+
+    - name: Add certbot upgrade cron job
+      ansible.builtin.cron:
+        name: "Certbot Auto Upgrade"
+        minute: "0"
+        hour: "0"
+        day: "1"
+        user: root
+        job: "/opt/certbot/bin/pip install --upgrade certbot certbot-nginx"
+
+    - name: Generate shortID
+      ansible.builtin.command: sing-box generate rand --hex 8
+      register: singbox_short_id
+
+    - name: Notify shortID
+      ansible.builtin.debug:
+        msg: "ATTENTION! Your sing-box shortID is: {{ singbox_short_id.stdout }}. It needed for client."
+
+    - name: Generate sing-box UUID
+      ansible.builtin.command: sing-box generate uuid
+      register: singbox_uuid
+
+    - name: Notify UUID
+      ansible.builtin.debug:
+        msg: "ATTENTION! Your sing-box UUID is: {{ singbox_uuid.stdout }}. It needed for client."
+
+    - name: Generate sing-box reality key pair
+      ansible.builtin.command: sing-box generate reality-keypair
+      register: singbox_keys
+
+    - name: Extract sing-box reality keys
+      ansible.builtin.set_fact:
+        singbox_private_key_e: "{{ singbox_keys.stdout.split('PrivateKey: ')[1].split()[0] }}"
+        singbox_public_key_e: "{{ singbox_keys.stdout.split('PublicKey: ')[1].split()[0] }}"
+
+    - name: Notify public key
+      ansible.builtin.debug:
+        msg: "ATTENTION! Your reality public key is: {{ singbox_public_key_e }}. It needed for client."
+
+    - name: Generate sing-box config
+      ansible.builtin.template:
+        src: sing-box.json.j2
+        dest: /etc/sing-box/config.json
+      vars:
+        singbox_private_key: "{{ singbox_private_key_e }}"
+      notify: Restart sing-box
+
+    - name: Generate nginx config
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+      notify: Restart nginx
+
+    - name: Copy nginx index.html
+      ansible.builtin.copy:
+        src: index.html
+        dest: /usr/share/nginx/html/index.html
+
+    - name: Enable and start sing-box
+      ansible.builtin.systemd:
+        name: sing-box
+        enabled: true
+        state: started
