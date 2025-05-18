@@ -1,9 +1,5 @@
 # Ansible Configurations
 
-## Warning ⚠️
-
-The current version of the configurations has not been tested in production. If you want more stable configurations, use a [past version of this repository](https://github.com/oklookat/ansiblecfgs/tree/b29edabf7f525fcf7d7cf43358ac8ba0412baa28).
-
 ## Installing Ansible
 
 ### Ubuntu, WSL-Ubuntu

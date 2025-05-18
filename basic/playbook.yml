@@ -119,6 +119,10 @@
               - netfilter-persistent
               - iptables-persistent
             state: present
+          register: apt_result
+          until: apt_result is succeeded
+          retries: 10
+          delay: 15
 
         - name: Enable netfilter-persistent
           systemd:
