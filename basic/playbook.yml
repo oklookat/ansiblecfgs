@@ -12,6 +12,10 @@
       apt:
         update_cache: yes
         upgrade: dist
+      register: apt_result
+      until: apt_result is succeeded
+      retries: 10
+      delay: 15
 
     - name: Update NetworkManager configuration
       block:
