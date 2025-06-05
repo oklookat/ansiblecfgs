@@ -4,23 +4,17 @@
         "timestamp": true
     },
     "dns": {
-        "final": "adguard-quic-direct",
+        "final": "cloudflare-direct",
         "strategy": "prefer_ipv4",
         "servers": [
             {
-                "tag": "cloudflare-doh-direct",
+                "tag": "cloudflare-direct",
                 "address": "https://1.1.1.1/dns-query",
                 "detour": "direct-out"
             },
             {
-                "tag": "google-doh-direct",
+                "tag": "google-direct",
                 "address": "https://8.8.8.8/dns-query",
-                "detour": "direct-out"
-            },
-            {
-                "tag": "adguard-quic-direct",
-                "address": "quic://dns.adguard-dns.com",
-                "address_resolver": "cloudflare-doh-direct",
                 "detour": "direct-out"
             }
         ]
@@ -34,7 +28,7 @@
             "tcp_fast_open": true,
             "users": [
                 {
-                    "name": "{{ certbot_email }}",
+                    "name": "sekai",
                     "uuid": "{{ singbox_uuid.stdout }}",
                     "flow": "xtls-rprx-vision"
                 }
