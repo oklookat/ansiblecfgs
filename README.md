@@ -71,3 +71,11 @@ Basic installation and setup of REALITY, steal from yourself, [sing-box](https:/
 1. In the directory with the playbook, create a file `index.html` with your custom HTML (REALITY will fall back to this).
 
 2. Obtain a domain and make sure it points to your VPS IP.
+
+## wireguard-sing-box (NOT TESTED YET)
+
+- Basic VPS setup.
+
+- Basic setup of WireGuard + sing-box server.
+
+- Contains [example sing-box client config](./wireguard-sing-box/sing-box-client.json).

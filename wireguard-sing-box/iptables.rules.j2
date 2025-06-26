@@ -1,0 +1,23 @@
+*filter
+
+# Default policies
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+
+# Allow loopback interface
+-A INPUT -i lo -j ACCEPT
+
+# Allow established and related connections
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Allow WireGuard UDP port
+-A INPUT -p udp --dport {{ wg_port }} -j ACCEPT
+
+# Allow SSH TCP port
+-A INPUT -p tcp --dport {{ new_ssh_port }} -j ACCEPT
+
+# Allow ICMP (ping, etc)
+-A INPUT -p icmp -j ACCEPT
+
+COMMIT

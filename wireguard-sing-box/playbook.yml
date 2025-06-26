@@ -1,0 +1,273 @@
+---
+- name: "ansiblecfgs: wireguard-sing-box"
+  hosts: all
+  become: true
+  vars:
+    new_ssh_port: 65000
+    wg_port: 65000
+    new_user_name: ""
+    new_user_password: ""
+    new_root_password: ""
+
+  pre_tasks:
+    - name: Ensure apt cache is updated
+      apt:
+        update_cache: yes
+      changed_when: false
+
+  tasks:
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+      register: apt_upgrade
+      until: apt_upgrade is succeeded
+      retries: 10
+      delay: 15
+
+    - name: Patch NetworkManager config if installed
+      when: "'network-manager' in ansible_facts.packages"
+      block:
+        - name: Ensure /etc/NetworkManager exists
+          file:
+            path: /etc/NetworkManager
+            state: directory
+
+        - name: Add unmanaged DNS settings
+          lineinfile:
+            path: /etc/NetworkManager/NetworkManager.conf
+            insertafter: '^#?\[main\]'
+            create: yes
+            line: "{{ item }}"
+          loop:
+            - "dns=none"
+            - "rc-manager=unmanaged"
+
+    - name: Set static DNS to Cloudflare
+      copy:
+        dest: /etc/resolv.conf
+        content: "nameserver 1.1.1.1\n"
+        force: yes
+
+    - name: Set root password
+      user:
+        name: root
+        password: "{{ new_root_password | password_hash('sha512') }}"
+
+    - name: Create new sudo user if defined
+      when: new_user_name | length > 0 and new_user_password | length > 0
+      block:
+        - name: Create user
+          user:
+            name: "{{ new_user_name }}"
+            password: "{{ new_user_password | password_hash('sha512') }}"
+            groups: sudo
+            shell: /bin/bash
+            append: true
+
+        - name: Add SSH key to user
+          authorized_key:
+            user: "{{ new_user_name }}"
+            state: present
+            key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Ensure sshd_config overrides are disabled and cloud-init removed
+      block:
+        - name: Stop and disable cloud-init service (if present)
+          systemd:
+            name: cloud-init
+            state: stopped
+            enabled: false
+          ignore_errors: true
+          when: "'cloud-init' in ansible_facts.packages"
+
+        - name: Remove cloud-init package
+          apt:
+            name: cloud-init
+            state: absent
+          when: "'cloud-init' in ansible_facts.packages"
+
+        - name: Remove cloud-init SSH override config if exists
+          file:
+            path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+            state: absent
+
+        - name: Ensure /etc/ssh/sshd_config does not include any overrides
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: '^Include\s+/etc/ssh/sshd_config.d/.*'
+            state: absent
+
+        - name: Apply main sshd_config settings
+          blockinfile:
+            path: /etc/ssh/sshd_config
+            block: |
+              Port {{ new_ssh_port }}
+              PermitRootLogin no
+              PasswordAuthentication no
+              PubkeyAuthentication yes
+              PermitEmptyPasswords no
+              X11Forwarding no
+
+    - name: Remove UFW firewall if present
+      block:
+        - name: Disable UFW
+          command: ufw disable
+          register: ufw_disable
+          ignore_errors: true
+          changed_when: "'Firewall stopped and disabled on system startup' in ufw_disable.stderr"
+
+        - name: Stop and disable UFW service
+          service:
+            name: ufw
+            state: stopped
+            enabled: false
+          ignore_errors: true
+
+        - name: Remove UFW
+          package:
+            name: ufw
+            state: absent
+
+    - name: Install and enable iptables
+      block:
+        - name: Preseed iptables-persistent
+          debconf:
+            name: iptables-persistent
+            question: iptables-persistent/autosave_v4
+            value: "true"
+            vtype: boolean
+
+        - name: Install packages
+          apt:
+            name:
+              - iptables
+              - netfilter-persistent
+              - iptables-persistent
+            state: present
+          register: ipt_result
+          until: ipt_result is succeeded
+          retries: 10
+          delay: 15
+
+        - name: Enable netfilter-persistent service
+          systemd:
+            name: netfilter-persistent
+            enabled: true
+            state: started
+
+    - name: Deploy iptables rules
+      block:
+        - name: Copy rules
+          template:
+            src: iptables.rules.j2
+            dest: /etc/iptables/rules.v4
+            mode: "0644"
+
+        - name: Reload iptables rules
+          command: netfilter-persistent reload
+
+    - name: Apply sysctl optimizations
+      block:
+        - name: Create custom sysctl config
+          copy:
+            dest: /etc/sysctl.d/99-custom.conf
+            content: |
+              net.core.default_qdisc=fq
+              net.ipv4.tcp_congestion_control=bbr
+              net.ipv4.tcp_syncookies=1
+              net.ipv4.tcp_fastopen=3
+              net.ipv4.icmp_echo_ignore_broadcasts=1
+              net.ipv4.ip_forward=1
+
+        - name: Apply sysctl config
+          command: sysctl --system
+
+    - name: Add SagerNet repo and key
+      block:
+        - name: Ensure keyrings dir
+          file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: "0755"
+
+        - name: Download GPG key
+          get_url:
+            url: https://sing-box.app/gpg.key
+            dest: /etc/apt/keyrings/sagernet.asc
+            mode: "0644"
+
+        - name: Add APT source
+          copy:
+            dest: /etc/apt/sources.list.d/sagernet.sources
+            content: |
+              Types: deb
+              URIs: https://deb.sagernet.org/
+              Suites: *
+              Components: *
+              Enabled: yes
+              Signed-By: /etc/apt/keyrings/sagernet.asc
+            mode: "0644"
+
+    - name: Install sing-box and wireguard
+      apt:
+        name:
+          - wireguard
+          - sing-box
+        state: present
+        update_cache: yes
+      register: sagernet_install
+      until: sagernet_install is succeeded
+      retries: 10
+      delay: 15
+
+    - name: Generate WireGuard keys with sing-box
+      block:
+        - name: Generate server keys
+          command: sing-box generate wg-keypair
+          register: server_keys
+
+        - name: Set server key facts
+          set_fact:
+            wg_server_private_key: "{{ server_keys.stdout.split('PrivateKey: ')[1].split()[0] }}"
+            wg_server_public_key: "{{ server_keys.stdout.split('PublicKey: ')[1].split()[0] }}"
+
+        - name: Print server public key
+          debug:
+            msg: |
+              ATTENTION! Server keys:
+              PrivateKey: {{ wg_server_private_key }}
+              PublicKey: {{ wg_server_public_key }}
+              You need to copy PublicKey into the client's config.
+
+        - name: Generate client keys
+          command: sing-box generate wg-keypair
+          register: client_keys
+
+        - name: Set client key facts
+          set_fact:
+            wg_client_private_key: "{{ client_keys.stdout.split('PrivateKey: ')[1].split()[0] }}"
+            wg_client_public_key: "{{ client_keys.stdout.split('PublicKey: ')[1].split()[0] }}"
+
+        - name: Print client public/private keys
+          debug:
+            msg: |
+              ATTENTION! Client keys:
+              PrivateKey: {{ wg_client_private_key }}
+              PublicKey: {{ wg_client_public_key }}
+              You need to copy the private key into the client config.
+
+    - name: Deploy sing-box server config
+      template:
+        src: sing-box-server.json.j2
+        dest: /etc/sing-box/config.json
+        mode: "0644"
+
+    - name: Enable and start sing-box
+      systemd:
+        name: sing-box
+        enabled: true
+        state: started
+
+    - name: Reboot server
+      reboot:
+        reboot_timeout: 3
