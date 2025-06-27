@@ -72,10 +72,10 @@ Basic installation and setup of REALITY, steal from yourself, [sing-box](https:/
 
 2. Obtain a domain and make sure it points to your VPS IP.
 
-## wireguard-sing-box (NOT TESTED YET)
+## wireguard-sing-box
 
 - Basic VPS setup.
 
 - Basic setup of WireGuard + sing-box server.
 
-- Contains [example sing-box client config](./wireguard-sing-box/sing-box-client.json).
+- For your reference: [example sing-box client config](./wireguard-sing-box/sing-box-client.json).
