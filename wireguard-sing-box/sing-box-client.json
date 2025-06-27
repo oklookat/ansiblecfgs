@@ -90,11 +90,6 @@
                 "action": "route",
                 "ip_cidr": "10.18.0.0/24",
                 "outbound": "wg-out"
-            },
-            {
-                "action": "route",
-                "ip_cidr": "192.168.0.0/24",
-                "outbound": "wg-out"
             }
         ]
     },
