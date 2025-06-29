@@ -28,6 +28,7 @@
       stat:
         path: "{{ lookup('env','HOME') + '/.ssh/id_rsa.pub' }}"
       delegate_to: localhost
+      become: false
       register: ssh_key_stat
 
     - name: Fail if SSH public key does not exist on control node
@@ -221,11 +222,6 @@
         - name: Apply sysctl config
           command: sysctl --system
 
-    - name: Reboot the server
+    - name: Reboot
       reboot:
-        reboot_timeout: 300
-      async: 1
-      poll: 0
-
-    - name: Stop playbook after reboot task
-      meta: end_play
+        reboot_timeout: 3
