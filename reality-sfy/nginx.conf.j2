@@ -18,6 +18,8 @@ http {
 
 	server {
 		listen 127.0.0.1:{{ nginx_port }} ssl http2;
+		listen [::1]:{{ nginx_port }} ssl http2;
+		
 		server_name {{ certbot_domain }};
 
 		ssl_certificate /etc/letsencrypt/live/{{ certbot_domain }}/fullchain.pem;
@@ -25,7 +27,6 @@ http {
 
 		ssl_protocols TLSv1.3;
 		ssl_ecdh_curve X25519:secp384r1:secp521r1;
-		ssl_session_tickets off;
 
 		# OCSP Stapling (https://letsencrypt.org/2024/12/05/ending-ocsp)
 		ssl_stapling off;

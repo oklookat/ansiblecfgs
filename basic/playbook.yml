@@ -7,25 +7,35 @@
     new_root_password: ""
   hosts: all
   become: true
-  tasks:
-    - name: Update and upgrade the system
+  pre_tasks:
+    - name: Ensure apt cache is updated
       apt:
         update_cache: yes
+      changed_when: false
+
+  tasks:
+    - name: Upgrade all packages
+      apt:
         upgrade: dist
-      register: apt_result
-      until: apt_result is succeeded
+      register: apt_upgrade
+      until: apt_upgrade is succeeded
       retries: 10
       delay: 15
 
-    - name: Update NetworkManager configuration
+    - name: Gather installed packages
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Patch NetworkManager config if installed
+      when: "'network-manager' in ansible_facts.packages"
       block:
-        - name: Ensure NetworkManager config directory exists
-          file:
+        - name: Ensure /etc/NetworkManager exists
+          ansible.builtin.file:
             path: /etc/NetworkManager
             state: directory
 
-        - name: Patch NetworkManager.conf
-          lineinfile:
+        - name: Add unmanaged DNS settings
+          ansible.builtin.lineinfile:
             path: /etc/NetworkManager/NetworkManager.conf
             insertafter: '^#?\[main\]'
             create: yes
@@ -33,126 +43,161 @@
           loop:
             - "dns=none"
             - "rc-manager=unmanaged"
-      when: ansible_facts.packages['network-manager'] is defined
 
-    - name: Configure DNS server
+    - name: Set static DNS to Cloudflare
       copy:
-        content: "nameserver 1.1.1.1\n"
         dest: /etc/resolv.conf
+        content: "nameserver 1.1.1.1\n"
         force: yes
 
-    - name: Change root password
+    - name: Set root password
       user:
         name: root
         password: "{{ new_root_password | password_hash('sha512') }}"
 
-    - name: Add a new user
-      user:
-        name: "{{ new_user_name }}"
-        password: "{{ new_user_password | password_hash('sha512') }}"
-        groups: sudo
-        shell: /bin/bash
-        append: yes
-
-    - name: Copy SSH key to the new user
-      authorized_key:
-        user: "{{ new_user_name }}"
-        state: present
-        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-
-    - name: Harden SSH configuration
+    - name: Create new sudo user if defined
+      when: new_user_name | length > 0 and new_user_password | length > 0
       block:
-        - name: Set custom SSH port
+        - name: Create user
+          user:
+            name: "{{ new_user_name }}"
+            password: "{{ new_user_password | password_hash('sha512') }}"
+            groups: sudo
+            shell: /bin/bash
+            append: true
+
+        - name: Add SSH key to user
+          authorized_key:
+            user: "{{ new_user_name }}"
+            state: present
+            key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Ensure sshd_config overrides are disabled and cloud-init removed
+      block:
+        - name: Stop and disable cloud-init service (if present)
+          systemd:
+            name: cloud-init
+            state: stopped
+            enabled: false
+          ignore_errors: true
+          when: "'cloud-init' in ansible_facts.packages"
+
+        - name: Remove cloud-init SSH override config if exists
+          file:
+            path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+            state: absent
+
+        - name: Ensure /etc/ssh/sshd_config does not include any overrides
           lineinfile:
             path: /etc/ssh/sshd_config
-            regexp: "^#?Port "
-            line: "Port {{ new_ssh_port }}"
+            regexp: '^Include\s+/etc/ssh/sshd_config.d/.*'
+            state: absent
 
-        - name: Disable root login
-          lineinfile:
+        - name: Apply main sshd_config settings
+          blockinfile:
             path: /etc/ssh/sshd_config
-            regexp: "^#?PermitRootLogin"
-            line: "PermitRootLogin no"
+            block: |
+              Port {{ new_ssh_port }}
+              PermitRootLogin no
+              PasswordAuthentication no
+              PubkeyAuthentication yes
+              PermitEmptyPasswords no
+              X11Forwarding no
 
-        - name: Disable password authentication
-          lineinfile:
-            path: /etc/ssh/sshd_config
-            regexp: "^#?PasswordAuthentication"
-            line: "PasswordAuthentication no"
-
-        - name: Enable SSH key authentication
-          lineinfile:
-            path: /etc/ssh/sshd_config
-            regexp: "^#?PubkeyAuthentication"
-            line: "PubkeyAuthentication yes"
-
-        - name: Disable empty passwords
-          lineinfile:
-            path: /etc/ssh/sshd_config
-            regexp: "^#?PermitEmptyPasswords"
-            line: "PermitEmptyPasswords no"
-
-        - name: Disable X11 forwarding
-          lineinfile:
-            path: /etc/ssh/sshd_config
-            regexp: "^#?X11Forwarding"
-            line: "X11Forwarding no"
-
-    - name: Disable password auth in cloud-init (if exists)
-      stat:
-        path: /etc/ssh/sshd_config.d/50-cloud-init.conf
-      register: sshd_config_file
-
-    - name: Disable password auth in 50-cloud-init.conf
-      lineinfile:
-        path: /etc/ssh/sshd_config.d/50-cloud-init.conf
-        regexp: "^#*PasswordAuthentication"
-        line: "PasswordAuthentication no"
-      when: sshd_config_file.stat.exists
-
-    - name: Disable UFW and install iptables
+    - name: Remove UFW firewall if present
       block:
         - name: Disable UFW
           command: ufw disable
+          register: ufw_disable
+          ignore_errors: true
+          changed_when: "'Firewall stopped and disabled on system startup' in ufw_disable.stderr"
+
+        - name: Stop and disable UFW service
+          service:
+            name: ufw
+            state: stopped
+            enabled: false
           ignore_errors: true
 
-        - name: Install iptables packages
+        - name: Remove UFW
+          package:
+            name: ufw
+            state: absent
+
+    - name: Install and enable iptables (IPv4 and IPv6)
+      block:
+        - name: Preseed iptables-persistent for IPv4
+          debconf:
+            name: iptables-persistent
+            question: iptables-persistent/autosave_v4
+            value: "true"
+            vtype: boolean
+
+        - name: Preseed iptables-persistent for IPv6
+          debconf:
+            name: iptables-persistent
+            question: iptables-persistent/autosave_v6
+            value: "true"
+            vtype: boolean
+
+        - name: Install packages
           apt:
             name:
               - iptables
               - netfilter-persistent
               - iptables-persistent
             state: present
-          register: apt_result
-          until: apt_result is succeeded
+          register: ipt_result
+          until: ipt_result is succeeded
           retries: 10
           delay: 15
 
-        - name: Enable netfilter-persistent
+        - name: Enable netfilter-persistent service
           systemd:
             name: netfilter-persistent
-            enabled: yes
+            enabled: true
             state: started
 
-    - name: Deploy iptables rules
-      template:
-        src: iptables.rules.j2
-        dest: /etc/iptables/rules.v4
-        mode: "0644"
-
-    - name: Apply sysctl configurations
+    - name: Deploy iptables and ip6tables rules
       block:
-        - name: Write custom sysctl configuration
+        - name: Copy IPv4 rules
+          template:
+            src: iptables.rules.j2
+            dest: /etc/iptables/rules.v4
+            mode: "0644"
+
+        - name: Copy IPv6 rules
+          template:
+            src: iptables6.rules.j2
+            dest: /etc/iptables/rules.v6
+            mode: "0644"
+
+        - name: Reload iptables rules
+          command: netfilter-persistent reload
+
+    - name: Apply sysctl optimizations
+      block:
+        - name: Create custom sysctl config
           copy:
             dest: /etc/sysctl.d/99-custom.conf
             content: |
               net.core.default_qdisc=fq
               net.ipv4.tcp_congestion_control=bbr
+              net.ipv6.tcp_congestion_control=bbr
               net.ipv4.tcp_syncookies=1
               net.ipv4.tcp_fastopen=3
+              net.ipv6.tcp_fastopen=3
               net.ipv4.icmp_echo_ignore_broadcasts=1
-              net.ipv6.conf.all.disable_ipv6=1
-        - name: Apply sysctl changes
+              net.ipv4.conf.all.accept_redirects = 0
+              net.ipv6.conf.all.accept_redirects = 0
+              net.ipv4.conf.all.accept_source_route = 0
+              net.ipv6.conf.all.accept_source_route = 0
+              net.ipv4.conf.all.rp_filter = 2
+              net.ipv6.conf.all.rp_filter = 2
+              net.ipv4.conf.default.rp_filter = 2
+              net.ipv6.conf.default.rp_filter = 2
+
+        - name: Apply sysctl config
           command: sysctl --system
 
     - name: Reboot

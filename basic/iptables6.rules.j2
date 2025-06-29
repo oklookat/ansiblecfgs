@@ -1,18 +1,18 @@
 *filter
 
-# Clear chains
+# Default policies
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 
-# Allow loopback
+# Allow loopback interface
 -A INPUT -i lo -j ACCEPT
 
-# Allow already established connections
+# Allow established and related connections
 -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-# Allow ICMP
--A INPUT -p icmp -j ACCEPT
+# Allow ICMPv6 (needed for ping, SLAAC, ND, etc.)
+-A INPUT -p ipv6-icmp -j ACCEPT
 
 # Allow HTTP/HTTPS
 -A INPUT -p tcp --dport 80 -j ACCEPT
@@ -20,7 +20,7 @@
 -A INPUT -p tcp --dport 443 -j ACCEPT
 -A INPUT -p udp --dport 443 -j ACCEPT
 
-# Allow SSH (from variable)
+# Allow SSH on a custom port
 -A INPUT -p tcp --dport {{ new_ssh_port }} -j ACCEPT
 
 COMMIT

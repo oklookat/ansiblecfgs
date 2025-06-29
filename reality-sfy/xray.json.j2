@@ -7,7 +7,6 @@
       "https+local://1.1.1.1/dns-query",
       "https+local://8.8.8.8/dns-query"
     ],
-    "queryStrategy": "UseIPv4",
     "tag": "dns-in"
   },
   "routing": {
@@ -69,10 +68,7 @@
   "outbounds": [
     {
       "tag": "direct",
-      "protocol": "freedom",
-      "settings": {
-        "domainStrategy": "UseIPv4"
-      }
+      "protocol": "freedom"
     },
     {
       "tag": "block",
