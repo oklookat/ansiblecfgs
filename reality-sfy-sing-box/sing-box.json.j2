@@ -35,6 +35,9 @@
             "tls": {
                 "enabled": true,
                 "server_name": "{{ certbot_domain }}",
+                "alpn": [
+                    "h2"
+                ],
                 "reality": {
                     "enabled": true,
                     "handshake": {
