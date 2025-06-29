@@ -7,11 +7,33 @@
     new_root_password: ""
   hosts: all
   become: true
+
   pre_tasks:
     - name: Ensure apt cache is updated
       apt:
         update_cache: yes
       changed_when: false
+
+    - name: Fail if root password is not set
+      fail:
+        msg: "Variable new_root_password must be set!"
+      when: new_root_password == ""
+
+    - name: Fail if new user password is not set while user is defined
+      fail:
+        msg: "Variable new_user_password must be set if new_user_name is defined!"
+      when: new_user_name != "" and new_user_password == ""
+
+    - name: Check if SSH public key exists on control node
+      stat:
+        path: "{{ lookup('env','HOME') + '/.ssh/id_rsa.pub' }}"
+      delegate_to: localhost
+      register: ssh_key_stat
+
+    - name: Fail if SSH public key does not exist on control node
+      fail:
+        msg: "SSH public key '~/.ssh/id_rsa.pub' does not exist on control node."
+      when: ssh_key_stat.stat.exists == false
 
   tasks:
     - name: Upgrade all packages
@@ -70,39 +92,38 @@
           authorized_key:
             user: "{{ new_user_name }}"
             state: present
-            key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+            key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+          when: ssh_key_stat.stat.exists
 
-    - name: Ensure sshd_config overrides are disabled and cloud-init removed
-      block:
-        - name: Stop and disable cloud-init service (if present)
-          systemd:
-            name: cloud-init
-            state: stopped
-            enabled: false
-          ignore_errors: true
-          when: "'cloud-init' in ansible_facts.packages"
+    - name: Stop and disable cloud-init service (if present)
+      systemd:
+        name: cloud-init
+        state: stopped
+        enabled: false
+      when: "'cloud-init' in ansible_facts.packages"
 
-        - name: Remove cloud-init SSH override config if exists
-          file:
-            path: /etc/ssh/sshd_config.d/50-cloud-init.conf
-            state: absent
+    - name: Remove cloud-init SSH override config if exists
+      file:
+        path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+        state: absent
+      when: "'cloud-init' in ansible_facts.packages"
 
-        - name: Ensure /etc/ssh/sshd_config does not include any overrides
-          lineinfile:
-            path: /etc/ssh/sshd_config
-            regexp: '^Include\s+/etc/ssh/sshd_config.d/.*'
-            state: absent
+    - name: Ensure /etc/ssh/sshd_config does not include any overrides
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Include\s+/etc/ssh/sshd_config.d/.*'
+        state: absent
 
-        - name: Apply main sshd_config settings
-          blockinfile:
-            path: /etc/ssh/sshd_config
-            block: |
-              Port {{ new_ssh_port }}
-              PermitRootLogin no
-              PasswordAuthentication no
-              PubkeyAuthentication yes
-              PermitEmptyPasswords no
-              X11Forwarding no
+    - name: Apply main sshd_config settings
+      blockinfile:
+        path: /etc/ssh/sshd_config
+        block: |
+          Port {{ new_ssh_port }}
+          PermitRootLogin no
+          PasswordAuthentication no
+          PubkeyAuthentication yes
+          PermitEmptyPasswords no
+          X11Forwarding no
 
     - name: Remove UFW firewall if present
       block:
@@ -200,6 +221,11 @@
         - name: Apply sysctl config
           command: sysctl --system
 
-    - name: Reboot
+    - name: Reboot the server
       reboot:
-        reboot_timeout: 3
+        reboot_timeout: 300
+      async: 1
+      poll: 0
+
+    - name: Stop playbook after reboot task
+      meta: end_play
