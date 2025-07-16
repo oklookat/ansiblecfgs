@@ -17,8 +17,8 @@
 # Allow SSH TCP port
 -A INPUT -p tcp --dport {{ new_ssh_port }} -j ACCEPT
 
-# Allow ICMP (ping, etc)
--A INPUT -p icmp -j ACCEPT
+# Allow ICMPv6 (ping, etc)
+-A INPUT -p icmpv6 -j ACCEPT
 
 # Allow all incoming traffic from WireGuard interface
 -A INPUT -i wg0 -j ACCEPT
