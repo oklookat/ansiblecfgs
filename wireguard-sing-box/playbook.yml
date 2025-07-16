@@ -126,12 +126,19 @@
             name: ufw
             state: absent
 
-    - name: Install and enable iptables
+    - name: Install and enable iptables (IPv4 and IPv6)
       block:
-        - name: Preseed iptables-persistent
+        - name: Preseed iptables-persistent for IPv4
           debconf:
             name: iptables-persistent
             question: iptables-persistent/autosave_v4
+            value: "true"
+            vtype: boolean
+
+        - name: Preseed iptables-persistent for IPv6
+          debconf:
+            name: iptables-persistent
+            question: iptables-persistent/autosave_v6
             value: "true"
             vtype: boolean
 
@@ -153,7 +160,7 @@
             enabled: true
             state: started
 
-    - name: Deploy iptables rules
+    - name: Deploy iptables and ip6tables rules
       block:
         - name: Copy IPv4 rules
           template:
