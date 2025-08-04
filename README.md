@@ -39,7 +39,7 @@ Basic VPS setup. This may not be suitable for all VPS.
 - Disables password login in cloud-init (may not be present on all servers, so the script might give an error).
 - Copies `id_rsa` from your home directory to the server. **If `id_rsa` is missing, generate it with `ssh-keygen -t rsa -b 4096 -C "your email"`.**
 - Disables UFW and configures iptables to allow HTTP, HTTPS, SSH (see the config).
-- Enables BBR, TCP Fast Open, disables IPv6, enables syncookies, and applies other tweaks.
+- Enables BBR, TCP Fast Open, and other tweaks.
 
 After reboot (it will be unsucsessful, because ssh and credentials changed), you can log into the server (always log in this way):
 
