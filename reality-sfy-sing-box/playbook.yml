@@ -51,6 +51,7 @@
     - name: Install required packages
       ansible.builtin.apt:
         name:
+          - cron
           - nginx
           # required by certbot
           - python3
@@ -64,6 +65,12 @@
       until: apt_result is succeeded
       retries: 10
       delay: 15
+
+    - name: Enable and start cron
+      ansible.builtin.systemd:
+        name: cron
+        enabled: true
+        state: started
 
     - name: Enable and start nginx
       ansible.builtin.systemd:
