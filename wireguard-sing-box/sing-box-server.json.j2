@@ -5,17 +5,16 @@
     },
     "dns": {
         "final": "cloudflare-direct",
-        "strategy": "prefer_ipv4",
         "servers": [
             {
                 "tag": "cloudflare-direct",
-                "address": "https://1.1.1.1/dns-query",
-                "detour": "direct-out"
+                "type": "https",
+                "server": "1.1.1.1"
             },
             {
                 "tag": "google-direct",
-                "address": "https://8.8.8.8/dns-query",
-                "detour": "direct-out"
+                "type": "https",
+                "server": "8.8.8.8"
             }
         ]
     },
@@ -48,6 +47,7 @@
     ],
     "route": {
         "final": "direct-out",
+        "default_domain_resolver": "cloudflare-direct",
         "rules": [
             {
                 "action": "sniff"
