@@ -1,0 +1,42 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0;
+        policy drop;
+
+        # Allow loopback
+        iifname "lo" accept
+
+        # Allow established and related
+        ct state established,related accept
+
+        # Allow WireGuard UDP port
+        udp dport {{ wg_port }} accept
+
+        # Allow SSH TCP port
+        tcp dport {{ new_ssh_port }} accept
+
+        # Allow ICMP (both v4 + v6)
+        ip protocol icmp accept
+        ip6 nexthdr icmpv6 accept
+
+        # Allow all traffic from WireGuard interface
+        iifname "wg0" accept
+    }
+
+    chain forward {
+        type filter hook forward priority 0;
+        policy drop;
+
+        # Allow forwarding between WireGuard peers
+        iifname "wg0" oifname "wg0" accept
+    }
+
+    chain output {
+        type filter hook output priority 0;
+        policy accept;
+    }
+}

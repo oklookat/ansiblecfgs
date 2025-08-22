@@ -126,56 +126,33 @@
             name: ufw
             state: absent
 
-    - name: Install and enable iptables (IPv4 and IPv6)
+    - name: Install and enable nftables
       block:
-        - name: Preseed iptables-persistent for IPv4
-          debconf:
-            name: iptables-persistent
-            question: iptables-persistent/autosave_v4
-            value: "true"
-            vtype: boolean
-
-        - name: Preseed iptables-persistent for IPv6
-          debconf:
-            name: iptables-persistent
-            question: iptables-persistent/autosave_v6
-            value: "true"
-            vtype: boolean
-
-        - name: Install packages
+        - name: Install nftables package
           apt:
-            name:
-              - iptables
-              - netfilter-persistent
-              - iptables-persistent
+            name: nftables
             state: present
-          register: ipt_result
-          until: ipt_result is succeeded
+          register: nft_result
+          until: nft_result is succeeded
           retries: 10
           delay: 15
 
-        - name: Enable netfilter-persistent service
+        - name: Enable nftables service
           systemd:
-            name: netfilter-persistent
+            name: nftables
             enabled: true
             state: started
 
-    - name: Deploy iptables and ip6tables rules
+    - name: Deploy nftables rules
       block:
-        - name: Copy IPv4 rules
+        - name: Copy nftables rules
           template:
-            src: iptables.rules.j2
-            dest: /etc/iptables/rules.v4
+            src: nftables.conf.j2
+            dest: /etc/nftables.conf
             mode: "0644"
 
-        - name: Copy IPv6 rules
-          template:
-            src: iptables6.rules.j2
-            dest: /etc/iptables/rules.v6
-            mode: "0644"
-
-        - name: Reload iptables rules
-          command: netfilter-persistent reload
+        - name: Reload nftables rules
+          command: nft -f /etc/nftables.conf
 
     - name: Apply sysctl optimizations
       block:
