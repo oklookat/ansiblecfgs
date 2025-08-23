@@ -3,11 +3,7 @@
   hosts: all
   become: true
   vars:
-    new_ssh_port: 65000
     wg_port: 65000
-    new_user_name: ""
-    new_user_password: ""
-    new_root_password: ""
 
   pre_tasks:
     - name: Ensure apt cache is updated
@@ -28,156 +24,16 @@
       ansible.builtin.package_facts:
         manager: auto
 
-    - name: Patch NetworkManager config if installed
-      when: "'network-manager' in ansible_facts.packages"
+    - name: Deploy WireGuard nftables rules
       block:
-        - name: Ensure /etc/NetworkManager exists
-          ansible.builtin.file:
-            path: /etc/NetworkManager
-            state: directory
-
-        - name: Add unmanaged DNS settings
-          ansible.builtin.lineinfile:
-            path: /etc/NetworkManager/NetworkManager.conf
-            insertafter: '^#?\[main\]'
-            create: yes
-            line: "{{ item }}"
-          loop:
-            - "dns=none"
-            - "rc-manager=unmanaged"
-
-    - name: Set static DNS to Cloudflare
-      copy:
-        dest: /etc/resolv.conf
-        content: "nameserver 1.1.1.1\n"
-        force: yes
-
-    - name: Set root password
-      user:
-        name: root
-        password: "{{ new_root_password | password_hash('sha512') }}"
-
-    - name: Create new sudo user if defined
-      when: new_user_name | length > 0 and new_user_password | length > 0
-      block:
-        - name: Create user
-          user:
-            name: "{{ new_user_name }}"
-            password: "{{ new_user_password | password_hash('sha512') }}"
-            groups: sudo
-            shell: /bin/bash
-            append: true
-
-        - name: Add SSH key to user
-          authorized_key:
-            user: "{{ new_user_name }}"
-            state: present
-            key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-
-    - name: Ensure sshd_config overrides are disabled and cloud-init removed
-      block:
-        - name: Stop and disable cloud-init service (if present)
-          systemd:
-            name: cloud-init
-            state: stopped
-            enabled: false
-          ignore_errors: true
-          when: "'cloud-init' in ansible_facts.packages"
-
-        - name: Remove cloud-init SSH override config if exists
-          file:
-            path: /etc/ssh/sshd_config.d/50-cloud-init.conf
-            state: absent
-
-        - name: Ensure /etc/ssh/sshd_config does not include any overrides
-          lineinfile:
-            path: /etc/ssh/sshd_config
-            regexp: '^Include\s+/etc/ssh/sshd_config.d/.*'
-            state: absent
-
-        - name: Apply main sshd_config settings
-          blockinfile:
-            path: /etc/ssh/sshd_config
-            block: |
-              Port {{ new_ssh_port }}
-              PermitRootLogin no
-              PasswordAuthentication no
-              PubkeyAuthentication yes
-              PermitEmptyPasswords no
-              X11Forwarding no
-
-    - name: Remove UFW firewall if present
-      block:
-        - name: Disable UFW
-          command: ufw disable
-          register: ufw_disable
-          ignore_errors: true
-          changed_when: "'Firewall stopped and disabled on system startup' in ufw_disable.stderr"
-
-        - name: Stop and disable UFW service
-          service:
-            name: ufw
-            state: stopped
-            enabled: false
-          ignore_errors: true
-
-        - name: Remove UFW
-          package:
-            name: ufw
-            state: absent
-
-    - name: Install and enable nftables
-      block:
-        - name: Install nftables package
-          apt:
-            name: nftables
-            state: present
-          register: nft_result
-          until: nft_result is succeeded
-          retries: 10
-          delay: 15
-
-        - name: Enable nftables service
-          systemd:
-            name: nftables
-            enabled: true
-            state: started
-
-    - name: Deploy nftables rules
-      block:
-        - name: Copy nftables rules
+        - name: Copy WireGuard nftables snippet
           template:
-            src: nftables.conf.j2
-            dest: /etc/nftables.conf
+            src: "20-wireguard-sb.nft.j2"
+            dest: /etc/nftables.d/20-wireguard-sb.nft
             mode: "0644"
 
         - name: Reload nftables rules
           command: nft -f /etc/nftables.conf
-
-    - name: Apply sysctl optimizations
-      block:
-        - name: Create custom sysctl config
-          copy:
-            dest: /etc/sysctl.d/99-custom.conf
-            content: |
-              net.core.default_qdisc=fq
-              net.ipv4.tcp_congestion_control=bbr
-              net.ipv4.tcp_syncookies=1
-              net.ipv4.tcp_fastopen=3
-              net.ipv4.icmp_echo_ignore_broadcasts=1
-              net.ipv4.ip_forward=1
-              net.ipv4.conf.all.accept_redirects=0
-              net.ipv4.conf.default.accept_redirects=0
-              net.ipv4.conf.all.send_redirects=0
-              net.ipv4.conf.default.send_redirects=0
-              net.ipv6.conf.all.forwarding=1
-              net.ipv6.conf.all.accept_redirects=0
-              net.ipv6.conf.default.accept_redirects=0
-              net.ipv4.conf.all.rp_filter=1
-              net.ipv4.conf.default.rp_filter=1
-
-        - name: Apply sysctl config
-          command: sysctl --system
 
     - name: Add SagerNet repo and key
       block:

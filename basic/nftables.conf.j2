@@ -1,0 +1,39 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0;
+        policy drop;
+
+        # allow loopback
+        iif lo accept
+
+        # allow established/related
+        ct state established,related accept
+
+        # allow ICMP (IPv4 and IPv6)
+        ip protocol icmp accept
+        ip6 nexthdr icmpv6 accept
+
+        # allow HTTP/HTTPS (tcp/udp)
+        tcp dport { 80, 443 } accept
+        udp dport { 80, 443 } accept
+
+        # allow SSH (custom port)
+        tcp dport {{ new_ssh_port }} accept
+    }
+
+    chain forward {
+        type filter hook forward priority 0;
+        policy drop;
+    }
+
+    chain output {
+        type filter hook output priority 0;
+        policy accept;
+    }
+}
+
+include "/etc/nftables.d/*.nft"

@@ -8,6 +8,11 @@
   hosts: all
   become: true
 
+  handlers:
+    - name: Reload nftables
+      ansible.builtin.command: nft -f /etc/nftables.conf
+      changed_when: false
+
   pre_tasks:
     - name: Ensure apt cache is updated
       apt:
@@ -146,56 +151,41 @@
             name: ufw
             state: absent
 
-    - name: Install and enable iptables (IPv4 and IPv6)
-      block:
-        - name: Preseed iptables-persistent for IPv4
-          debconf:
-            name: iptables-persistent
-            question: iptables-persistent/autosave_v4
-            value: "true"
-            vtype: boolean
+    - name: Remove iptables and netfilter-persistent if present
+      package:
+        name:
+          - iptables
+          - iptables-persistent
+          - netfilter-persistent
+        state: absent
 
-        - name: Preseed iptables-persistent for IPv6
-          debconf:
-            name: iptables-persistent
-            question: iptables-persistent/autosave_v6
-            value: "true"
-            vtype: boolean
+    - name: Install nftables
+      apt:
+        name: nftables
+        state: present
+      register: nft_result
+      until: nft_result is succeeded
+      retries: 10
+      delay: 15
 
-        - name: Install packages
-          apt:
-            name:
-              - iptables
-              - netfilter-persistent
-              - iptables-persistent
-            state: present
-          register: ipt_result
-          until: ipt_result is succeeded
-          retries: 10
-          delay: 15
+    - name: Enable and start nftables service
+      systemd:
+        name: nftables
+        enabled: true
+        state: started
 
-        - name: Enable netfilter-persistent service
-          systemd:
-            name: netfilter-persistent
-            enabled: true
-            state: started
+    - name: Deploy nftables rules
+      template:
+        src: nftables.conf.j2
+        dest: /etc/nftables.conf
+        mode: "0644"
+      notify: Reload nftables
 
-    - name: Deploy iptables and ip6tables rules
-      block:
-        - name: Copy IPv4 rules
-          template:
-            src: iptables.rules.j2
-            dest: /etc/iptables/rules.v4
-            mode: "0644"
-
-        - name: Copy IPv6 rules
-          template:
-            src: iptables6.rules.j2
-            dest: /etc/iptables/rules.v6
-            mode: "0644"
-
-        - name: Reload iptables rules
-          command: netfilter-persistent reload
+    - name: Ensure /etc/nftables.d exists
+      file:
+        path: /etc/nftables.d
+        state: directory
+        mode: "0755"
 
     - name: Deploy sysctl config
       block:
