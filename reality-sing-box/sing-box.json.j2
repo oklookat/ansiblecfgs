@@ -1,0 +1,82 @@
+{
+    "log": {
+        "level": "warning",
+        "timestamp": true
+    },
+    "dns": {
+        "final": "cloudflare-direct",
+        "servers": [
+            {
+                "tag": "cloudflare-direct",
+                "type": "https",
+                "server": "1.1.1.1"
+            },
+            {
+                "tag": "google-direct",
+                "type": "https",
+                "server": "8.8.8.8"
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "type": "vless",
+            "tag": "vless-in",
+            "listen": "::",
+            "listen_port": 443,
+            "users": [
+                {
+                    "name": "sekai",
+                    "uuid": "{{ singbox_uuid.stdout }}",
+                    "flow": "xtls-rprx-vision"
+                }
+            ],
+            "tls": {
+                "enabled": true,
+                "server_name": "{{ sni }}",
+                "reality": {
+                    "enabled": true,
+                    "handshake": {
+                        "server": "{{ sni }}",
+                        "server_port": 443
+                    },
+                    "private_key": "{{ singbox_private_key }}",
+                    "short_id": [
+                        "{{ singbox_short_id.stdout }}"
+                    ]
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "direct",
+            "tag": "direct-out"
+        }
+    ],
+    "route": {
+        "final": "direct-out",
+        "default_domain_resolver": "cloudflare-direct",
+        "rules": [
+            {
+                "action": "sniff"
+            },
+            {
+                "protocol": "dns",
+                "action": "hijack-dns"
+            },
+            {
+                "action": "reject",
+                "protocol": [
+                    "bittorrent",
+                    "quic"
+                ]
+            }
+        ]
+    },
+    "experimental": {
+        "cache_file": {
+            "enabled": true
+        }
+    }
+}

@@ -1,10 +1,5 @@
 ---
 - name: "ansiblecfgs: reality-sfy"
-  vars:
-    nginx_port: 60000
-    certbot_email: ""
-    certbot_domain: ""
-    reality_fingerprint: "chrome"
   hosts: all
   become: true
   tasks:
@@ -26,7 +21,7 @@
     - name: Install Xray using script
       ansible.builtin.shell: |
         bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-        
+
     - name: Notify xray-install
       debug:
         msg: "ATTENTION! Your need periodically update XRay. See: https://github.com/XTLS/Xray-install"
@@ -85,28 +80,28 @@
     - name: Generate shortID
       command: openssl rand -hex 8
       register: xray_short_id
-      
+
     - name: Notify shortID
       debug:
         msg: "ATTENTION! Your XRay shortID is: {{ xray_short_id.stdout }}. It needed for client."
-    
+
     - name: Generate XRay UUID
       command: xray uuid
       register: xray_uuid
-      
+
     - name: Notify UUID
       debug:
         msg: "ATTENTION! Your XRay UUID is: {{ xray_uuid.stdout }}. It needed for client."
-    
+
     - name: Generate XRay keys
       command: xray x25519
       register: xray_keys
-    
+
     - name: Extract XRay keys
       set_fact:
         xray_private_key_e: "{{ xray_keys.stdout.split('Private key: ')[1].split()[0] }}"
         xray_public_key_e: "{{ xray_keys.stdout.split('Public key: ')[1].split()[0] }}"
-    
+
     - name: Notify public key
       debug:
         msg: "ATTENTION! Your XRay public key is: {{ xray_public_key_e }}. It needed for client."
@@ -127,15 +122,14 @@
       ansible.builtin.copy:
         src: index.html
         dest: /usr/share/nginx/html/index.html
-    
+
     - name: Restart nginx
       systemd:
         name: nginx
         state: restarted
         daemon_reload: true
-    
+
     - name: Enable XRay
       systemd:
         name: xray
         enabled: true
-

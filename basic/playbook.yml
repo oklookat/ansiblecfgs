@@ -1,10 +1,5 @@
 ---
 - name: "ansiblecfgs: basic"
-  vars:
-    new_ssh_port: 65000
-    new_user_name: ""
-    new_user_password: ""
-    new_root_password: ""
   hosts: all
   become: true
 

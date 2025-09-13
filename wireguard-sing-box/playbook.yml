@@ -2,8 +2,6 @@
 - name: "ansiblecfgs: wireguard-sing-box"
   hosts: all
   become: true
-  vars:
-    wg_port: 65000
 
   pre_tasks:
     - name: Ensure apt cache is updated

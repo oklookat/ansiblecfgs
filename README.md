@@ -26,7 +26,7 @@ If you haven't logged into the server yet, do so because otherwise it will compl
 3. Fill out the `vars` section in `playbook.yml`.
 4. Follow the steps required for the specific configuration.
 5. Enter the venv environment.
-6. Run: `ansible-playbook -i inventory.ini playbook.yml`
+6. Run: `ansible-playbook -i inventory.yml playbook.yml`
 
 ## Basic
 
@@ -71,6 +71,10 @@ Basic installation and setup of REALITY, steal from yourself, [sing-box](https:/
 1. In the directory with the playbook, create a file `index.html` with your custom HTML (REALITY will fall back to this).
 
 2. Obtain a domain and make sure it points to your VPS IP.
+
+## reality-sing-box
+
+Like `reality-sfy-sing-box`, but without `steal from yourself`. Masquerading as another domain.
 
 ## wireguard-sing-box
 

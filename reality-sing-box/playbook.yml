@@ -1,22 +1,11 @@
 ---
-- name: "ansiblecfgs: reality-sfy-sing-box"
+- name: "ansiblecfgs: reality-sing-box"
   hosts: all
   become: true
   handlers:
-    - name: Restart nginx
-      ansible.builtin.systemd:
-        name: nginx
-        state: restarted
-        daemon_reload: true
-
     - name: Restart sing-box
       ansible.builtin.systemd:
         name: sing-box
-        state: restarted
-
-    - name: Restart cron
-      ansible.builtin.systemd:
-        name: cron
         state: restarted
 
   tasks:
@@ -47,13 +36,6 @@
     - name: Install required packages
       ansible.builtin.apt:
         name:
-          - cron
-          - nginx
-          # required by certbot
-          - python3
-          - python3-venv
-          - libaugeas0
-          #
           - sing-box
         state: present
         update_cache: yes
@@ -61,59 +43,6 @@
       until: apt_result is succeeded
       retries: 10
       delay: 15
-
-    - name: Enable and start cron
-      ansible.builtin.systemd:
-        name: cron
-        enabled: true
-        state: started
-
-    - name: Enable and start nginx
-      ansible.builtin.systemd:
-        name: nginx
-        enabled: true
-        state: started
-
-    - name: Create virtual environment for certbot
-      ansible.builtin.shell: python3 -m venv /opt/certbot/
-      args:
-        creates: /opt/certbot/
-
-    - name: Upgrade pip in certbot environment
-      ansible.builtin.command: /opt/certbot/bin/pip install --upgrade pip
-
-    - name: Install certbot and certbot-nginx in virtual environment
-      ansible.builtin.command: /opt/certbot/bin/pip install certbot certbot-nginx
-
-    - name: Create symbolic link for certbot
-      ansible.builtin.file:
-        src: /opt/certbot/bin/certbot
-        dest: /usr/bin/certbot
-        state: link
-
-    - name: Obtain SSL certificate with certbot
-      ansible.builtin.command: >
-        certbot certonly --nginx -n --agree-tos
-        -m {{ certbot_email }} --no-eff-email
-        -d {{ certbot_domain }}
-      when: certbot_email != "" and certbot_domain != ""
-
-    - name: Add certbot renewal cron job
-      ansible.builtin.cron:
-        name: "Certbot Auto Renew"
-        minute: "0"
-        hour: "0,12"
-        user: root
-        job: "python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew -q"
-
-    - name: Add certbot upgrade cron job
-      ansible.builtin.cron:
-        name: "Certbot Auto Upgrade"
-        minute: "0"
-        hour: "0"
-        day: "1"
-        user: root
-        job: "/opt/certbot/bin/pip install --upgrade certbot certbot-nginx"
 
     - name: Generate shortID
       ansible.builtin.command: sing-box generate rand --hex 8
@@ -151,17 +80,6 @@
       vars:
         singbox_private_key: "{{ singbox_private_key_e }}"
       notify: Restart sing-box
-
-    - name: Generate nginx config
-      ansible.builtin.template:
-        src: nginx.conf.j2
-        dest: /etc/nginx/nginx.conf
-      notify: Restart nginx
-
-    - name: Copy nginx index.html
-      ansible.builtin.copy:
-        src: index.html
-        dest: /usr/share/nginx/html/index.html
 
     - name: Enable and start sing-box
       ansible.builtin.systemd:

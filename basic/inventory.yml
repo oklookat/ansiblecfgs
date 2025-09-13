@@ -1,0 +1,10 @@
+all:
+  hosts:
+    vps:
+      ansible_host: 192.168.1.1
+      ansible_user: root
+      ansible_password: "ROOT_PASSWORD"
+      new_ssh_port: 65000
+      new_user_name: ""
+      new_user_password: ""
+      new_root_password: ""
