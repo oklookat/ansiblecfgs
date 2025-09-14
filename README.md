@@ -83,3 +83,11 @@ Like `reality-sfy-sing-box`, but without `steal from yourself`. Masquerading as 
 - WireGuard + sing-box server.
 
 - [Example sing-box client config](./wireguard-sing-box/sing-box-client.json).
+
+## sing-box-deploy
+
+Convenient deployment of sing-box configurations.
+
+- Copies `sing-box` configs, validates, and restart service. Supports `systemd` and `OpenWrt`.
+
+- Deployment of public `sing-box` configs with validation.

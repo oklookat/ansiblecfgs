@@ -1,0 +1,137 @@
+# ================= VPS Deployment =================
+- name: Deploy VPS configs
+  hosts: vps_servers
+  gather_facts: no
+  tags: vps
+  tasks:
+    - name: Ensure local_file is defined
+      assert:
+        that:
+          - local_file is defined
+          - local_file | length > 0
+        fail_msg: "Variable 'local_file' must be defined for host {{ inventory_hostname }}"
+
+    - name: Define temporary path
+      set_fact:
+        temp_file: "/tmp/{{ local_file | basename }}"
+
+    - name: Upload VPS config
+      copy:
+        src: "{{ local_file }}"
+        dest: "{{ temp_file }}"
+        mode: "0644"
+
+    - name: Validate VPS config and fail if invalid
+      command: /usr/bin/sing-box -c "{{ temp_file }}"
+      register: validate_result
+      failed_when: validate_result.rc != 0
+
+    - name: Move VPS config to live location
+      command: mv "{{ temp_file }}" "{{ remote_file | default('/etc/sing-box/config.json') }}"
+      register: mv_result
+
+    - name: Restart VPS sing-box if config changed
+      systemd:
+        name: sing-box
+        state: restarted
+      when: mv_result.changed
+
+    - name: Remove VPS files if files_to_delete is defined
+      file:
+        path: "{{ item.dest }}"
+        state: absent
+      loop: "{{ files_to_delete | default([]) }}"
+      loop_control:
+        label: "{{ item.dest }}"
+      when: files_to_delete is defined
+      tags:
+        - vps
+
+# ================= Public Config Deployment =================
+- name: Deploy Public Configs
+  hosts: public_config
+  gather_facts: no
+  tags: public_config
+  tasks:
+    - name: Ensure files_to_deploy is defined
+      assert:
+        that:
+          - files_to_deploy is defined
+          - files_to_deploy | length > 0
+        fail_msg: "No public config files to deploy"
+
+    - name: Upload public config files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0644"
+      loop: "{{ files_to_deploy }}"
+      loop_control:
+        label: "{{ item.src }}"
+      tags:
+        - public_config
+
+    - name: Validate public config files
+      command: /usr/bin/sing-box -c "{{ item.dest }}"
+      register: validate_result
+      failed_when: validate_result.rc != 0
+      loop: "{{ files_to_deploy }}"
+      loop_control:
+        label: "{{ item.src }}"
+      tags:
+        - public_config
+
+    - name: Remove public files if files_to_delete is defined
+      file:
+        path: "{{ item.dest }}"
+        state: absent
+      loop: "{{ files_to_delete | default([]) }}"
+      loop_control:
+        label: "{{ item.dest }}"
+      when: files_to_delete is defined
+      tags:
+        - public_config
+
+# ================= OpenWRT Router Deployment =================
+- name: Deploy OpenWRT configs
+  hosts: router
+  gather_facts: no
+  tags: router
+  tasks:
+    - name: Ensure local_file is defined
+      assert:
+        that:
+          - local_file is defined
+          - local_file | length > 0
+        fail_msg: "Variable 'local_file' must be defined for host {{ inventory_hostname }}"
+
+    - name: Define temporary path
+      set_fact:
+        temp_file: "/tmp/{{ local_file | basename }}"
+
+    - name: Upload router config via SCP
+      delegate_to: localhost
+      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} {{ local_file }} {{ ansible_user }}@{{ ansible_host }}:{{ temp_file }}
+
+    - name: Validate router config and fail if invalid
+      raw: /usr/bin/sing-box -c "{{ temp_file }}"
+      register: validate_result
+      failed_when: validate_result.rc != 0
+
+    - name: Move router config to live location
+      raw: mv "{{ temp_file }}" "{{ remote_file | default('/etc/sing-box/config.json') }}"
+
+    - name: Restart sing-box on router
+      raw: /etc/init.d/sing-box restart
+
+    - name: Clean up temporary file on router
+      raw: rm -f "{{ temp_file }}"
+
+    - name: Remove router files if files_to_delete is defined
+      raw: rm -f "{{ item.dest }}"
+      loop: "{{ files_to_delete | default([]) }}"
+      loop_control:
+        label: "{{ item.dest }}"
+      when: files_to_delete is defined
+      tags:
+        - router
