@@ -2,7 +2,7 @@
 
 Run Ansible:
 
-```bash
+```sh
 # Full deployment
 ansible-playbook -i hosts.yml deploy.yml
 
@@ -19,8 +19,6 @@ ansible-playbook -i hosts.yml deploy.yml --tags router
 ansible-playbook -i hosts.yml deploy.yml --tags public_config --limit myvps2,myvps3
 ```
 
----
-
 ## Setting Directory Permissions for a Group (No sudo needed)
 
 If you want multiple users to manage files in a directory **without using sudo**, you can create a dedicated group and configure the directory with proper permissions.
@@ -31,20 +29,23 @@ If you want multiple users to manage files in a directory **without using sudo**
 sudo groupadd groupname
 ```
 
-* Example: `singboxctl` or `www-deploy`.
+Example: `sudo groupadd www-deploy`.
 
 ### Add users to the group
 
 ```sh
 sudo usermod -aG groupname youruser
+```
 
-# Example:
+* Example:
+
+```sh
 sudo usermod -aG www-deploy youruser
 sudo usermod -aG www-deploy root
 sudo usermod -aG www-deploy sing-box
 ```
 
-* After adding, log out and back in, or run:
+* After adding users, log out and back in, or run:
 
 ```sh
 newgrp groupname
@@ -64,7 +65,7 @@ sudo chgrp -R groupname /path/to/directory
 sudo chmod -R g+rwX /path/to/directory
 ```
 
-* `g+rwX` -> group can read/write, and `X` allows entering directories.
+* `g+rwX` → group can read/write, and `X` allows entering directories.
 
 ### Set the setgid bit (recommended)
 
@@ -98,3 +99,41 @@ ls -l
 * Only trusted users should be added to the group.
 * Always verify permissions after creation.
 * Use `setgid` to avoid permission inconsistencies in collaborative directories.
+
+## Granting Systemd Permissions via Polkit (No sudo needed)
+
+If you want certain users or groups to manage specific systemd services **without using sudo**, you can create a Polkit rule.
+
+### Create a Polkit Rule
+
+Create a file in `/etc/polkit-1/rules.d/`, e.g.:
+
+```sh
+sudo nano /etc/polkit-1/rules.d/10-singbox.rules
+```
+
+**Example — Allow `www-deploy` group to manage `sing-box.service`:**
+
+```js
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        action.lookup("unit") == "sing-box.service" &&
+        subject.isInGroup("www-deploy")) {
+        return polkit.Result.YES;
+    }
+});
+```
+
+*Explanation:*
+
+* `action.id` → the Polkit action you want to allow (e.g., managing systemd units).
+* `action.lookup("unit")` → restrict to a specific service.
+* `subject.isInGroup("mygroup")` → restrict to users in a specific group.
+* `polkit.Result.YES` → grants permission.
+
+### Notes / Best Practices
+
+* Only trusted users should be granted these permissions.
+* Prefer groups over individual users for easier management.
+* Polkit rules are evaluated in lexicographical order — lower-numbered files take precedence.
+* After editing rules, changes take effect immediately; no service restart needed.
