@@ -1,49 +1,9 @@
 ---
+- import_playbook: ../install-sing-box/playbook.yml
 - name: "ansiblecfgs: reality-sing-box"
   hosts: all
   become: true
-  handlers:
-    - name: Restart sing-box
-      ansible.builtin.systemd:
-        name: sing-box
-        state: restarted
-
   tasks:
-    - name: Ensure /etc/apt/keyrings exists
-      ansible.builtin.file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: "0755"
-
-    - name: Download SagerNet GPG key
-      ansible.builtin.get_url:
-        url: https://sing-box.app/gpg.key
-        dest: /etc/apt/keyrings/sagernet.asc
-        mode: "0644"
-
-    - name: Add SagerNet APT repository
-      ansible.builtin.copy:
-        dest: /etc/apt/sources.list.d/sagernet.sources
-        content: |
-          Types: deb
-          URIs: https://deb.sagernet.org/
-          Suites: *
-          Components: *
-          Enabled: yes
-          Signed-By: /etc/apt/keyrings/sagernet.asc
-        mode: "0644"
-
-    - name: Install required packages
-      ansible.builtin.apt:
-        name:
-          - sing-box
-        state: present
-        update_cache: yes
-      register: apt_result
-      until: apt_result is succeeded
-      retries: 10
-      delay: 15
-
     - name: Generate shortID
       ansible.builtin.command: sing-box generate rand --hex 8
       register: singbox_short_id
@@ -86,3 +46,8 @@
         name: sing-box
         enabled: true
         state: started
+  handlers:
+    - name: Restart sing-box
+      ansible.builtin.systemd:
+        name: sing-box
+        state: restarted

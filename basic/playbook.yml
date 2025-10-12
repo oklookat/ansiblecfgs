@@ -37,6 +37,15 @@
       when: ssh_key_stat.stat.exists == false
 
   tasks:
+    - name: Update Ubuntu APT mirror (if new_ubuntu_mirror is defined)
+      ansible.builtin.replace:
+        path: /etc/apt/sources.list.d/ubuntu.sources
+        regexp: '^URIs:.*'
+        replace: "URIs: {{ new_ubuntu_mirror }}"
+      when:
+        - new_ubuntu_mirror is defined
+        - new_ubuntu_mirror | trim | length > 0
+
     - name: Upgrade all packages
       apt:
         upgrade: dist

@@ -1,0 +1,48 @@
+---
+- name: "ansiblecfgs: generate self-signed certificate"
+  hosts: all
+  become: false
+  tasks:
+    - name: Ensure certificate directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ cert_key_path | dirname }}"
+        - "{{ cert_pubkey_path | dirname }}"
+      become: true
+
+    - name: Generate self-signed certificate
+      ansible.builtin.command: >
+        openssl req -x509 -newkey rsa:2048
+        -keyout {{ cert_key_path }}
+        -out {{ cert_pubkey_path }}
+        -days {{ cert_days }}
+        -nodes
+        -subj "/CN={{ sni }}"
+        -addext "subjectAltName=DNS:{{ sni }},DNS:www.{{ sni }}"
+      args:
+        creates: "{{ cert_pubkey_path }}"
+      become: true
+
+    - name: Read certificate content
+      ansible.builtin.slurp:
+        src: "{{ cert_pubkey_path }}"
+      register: cert_pubkey_content
+
+    - name: Convert certificate to JSON array
+      ansible.builtin.set_fact:
+        certificate_json: >-
+          {{ (cert_pubkey_content.content | b64decode).splitlines() | reject('equalto','') | list }}
+
+    - name: Save certificate JSON on localhost
+      ansible.builtin.copy:
+        dest: "./{{ inventory_hostname }}-cert.json"
+        content: |
+          {
+            "certificate": {{ certificate_json | to_nice_json }}
+          }
+        mode: "0644"
+      delegate_to: localhost
+      run_once: true

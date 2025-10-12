@@ -1,27 +1,9 @@
 ---
+- import_playbook: ../install-sing-box/playbook.yml
 - name: "ansiblecfgs: wireguard-sing-box"
   hosts: all
   become: true
-
-  pre_tasks:
-    - name: Ensure apt cache is updated
-      apt:
-        update_cache: yes
-      changed_when: false
-
   tasks:
-    - name: Upgrade all packages
-      apt:
-        upgrade: dist
-      register: apt_upgrade
-      until: apt_upgrade is succeeded
-      retries: 10
-      delay: 15
-
-    - name: Gather installed packages
-      ansible.builtin.package_facts:
-        manager: auto
-
     - name: Deploy WireGuard nftables rules
       block:
         - name: Copy WireGuard nftables snippet
@@ -33,41 +15,14 @@
         - name: Reload nftables rules
           command: nft -f /etc/nftables.conf
 
-    - name: Add SagerNet repo and key
-      block:
-        - name: Ensure keyrings dir
-          file:
-            path: /etc/apt/keyrings
-            state: directory
-            mode: "0755"
-
-        - name: Download GPG key
-          get_url:
-            url: https://sing-box.app/gpg.key
-            dest: /etc/apt/keyrings/sagernet.asc
-            mode: "0644"
-
-        - name: Add APT source
-          copy:
-            dest: /etc/apt/sources.list.d/sagernet.sources
-            content: |
-              Types: deb
-              URIs: https://deb.sagernet.org/
-              Suites: *
-              Components: *
-              Enabled: yes
-              Signed-By: /etc/apt/keyrings/sagernet.asc
-            mode: "0644"
-
-    - name: Install sing-box and wireguard
+    - name: Install wireguard
       apt:
         name:
           - wireguard
-          - sing-box
         state: present
         update_cache: yes
-      register: sagernet_install
-      until: sagernet_install is succeeded
+      register: apt_result
+      until: apt_result is succeeded
       retries: 10
       delay: 15
 

@@ -1,49 +1,9 @@
 ---
+- import_playbook: ../install-sing-box/playbook.yml
 - name: "ansiblecfgs: reality-sfy-sing-box"
   hosts: all
   become: true
-  handlers:
-    - name: Restart nginx
-      ansible.builtin.systemd:
-        name: nginx
-        state: restarted
-        daemon_reload: true
-
-    - name: Restart sing-box
-      ansible.builtin.systemd:
-        name: sing-box
-        state: restarted
-
-    - name: Restart cron
-      ansible.builtin.systemd:
-        name: cron
-        state: restarted
-
   tasks:
-    - name: Ensure /etc/apt/keyrings exists
-      ansible.builtin.file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: "0755"
-
-    - name: Download SagerNet GPG key
-      ansible.builtin.get_url:
-        url: https://sing-box.app/gpg.key
-        dest: /etc/apt/keyrings/sagernet.asc
-        mode: "0644"
-
-    - name: Add SagerNet APT repository
-      ansible.builtin.copy:
-        dest: /etc/apt/sources.list.d/sagernet.sources
-        content: |
-          Types: deb
-          URIs: https://deb.sagernet.org/
-          Suites: *
-          Components: *
-          Enabled: yes
-          Signed-By: /etc/apt/keyrings/sagernet.asc
-        mode: "0644"
-
     - name: Install required packages
       ansible.builtin.apt:
         name:
@@ -53,8 +13,6 @@
           - python3
           - python3-venv
           - libaugeas0
-          #
-          - sing-box
         state: present
         update_cache: yes
       register: apt_result
@@ -168,3 +126,19 @@
         name: sing-box
         enabled: true
         state: started
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        daemon_reload: true
+
+    - name: Restart sing-box
+      ansible.builtin.systemd:
+        name: sing-box
+        state: restarted
+
+    - name: Restart cron
+      ansible.builtin.systemd:
+        name: cron
+        state: restarted
