@@ -29,7 +29,7 @@
         state: directory
         owner: root
         group: "{{ group_name }}"
-        mode: "2775" # rwxr-sr-x (setgid bit set)
+        mode: "2775" # rwxr-sr-x (setgid)
       loop: "{{ shared_dirs }}"
 
     - name: Ensure group ownership recursively
