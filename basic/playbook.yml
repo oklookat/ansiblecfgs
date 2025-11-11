@@ -2,6 +2,7 @@
 - name: "ansiblecfgs: basic"
   hosts: all
   become: true
+  gather_facts: true
 
   handlers:
     - name: Reload nftables
@@ -9,11 +10,6 @@
       changed_when: false
 
   pre_tasks:
-    - name: Ensure apt cache is updated
-      apt:
-        update_cache: yes
-      changed_when: false
-
     - name: Fail if root password is not set
       fail:
         msg: "Variable new_root_password must be set!"
@@ -36,11 +32,16 @@
         msg: "SSH public key '~/.ssh/id_rsa.pub' does not exist on control node."
       when: ssh_key_stat.stat.exists == false
 
+    - name: Ensure apt cache is updated
+      apt:
+        update_cache: yes
+      changed_when: false
+
   tasks:
     - name: Update Ubuntu APT mirror (if new_ubuntu_mirror is defined)
       ansible.builtin.replace:
         path: /etc/apt/sources.list.d/ubuntu.sources
-        regexp: '^URIs:.*'
+        regexp: "^URIs:.*"
         replace: "URIs: {{ new_ubuntu_mirror }}"
       when:
         - new_ubuntu_mirror is defined
@@ -202,6 +203,35 @@
         - name: Apply sysctl config
           command: sysctl --system
 
-    - name: Reboot
-      reboot:
-        reboot_timeout: 3
+    - name: Reboot host without waiting for old SSH
+      ansible.builtin.command: reboot
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - name: Overwrite host with new SSH parameters
+      ansible.builtin.add_host:
+        name: "{{ inventory_hostname }}"
+        ansible_host: "{{ ansible_host }}"
+        ansible_user: "{{ new_user_name }}"
+        ansible_port: "{{ new_ssh_port }}"
+
+    - name: Wait for SSH port to become open
+      become: false
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: "{{ new_ssh_port }}"
+        delay: 10
+        timeout: 300
+
+- name: Wait for SSH connection with new parameters
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Ensure host is reachable via SSH
+      ansible.builtin.wait_for_connection:
+        delay: 10
+        timeout: 300
+
+    - name: Ping new host
+      ansible.builtin.ping:

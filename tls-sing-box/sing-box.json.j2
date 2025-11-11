@@ -34,7 +34,6 @@
             "tls": {
                 "enabled": true,
                 "alpn": [
-                    "h3",
                     "h2"
                 ],
                 "server_name": "{{ sni }}",
@@ -63,7 +62,8 @@
             {
                 "action": "reject",
                 "protocol": [
-                    "bittorrent"
+                    "bittorrent",
+                    "quic"
                 ]
             }
         ]

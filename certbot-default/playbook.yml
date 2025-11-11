@@ -1,0 +1,28 @@
+---
+- name: "ansiblecfgs: certbot-default"
+  hosts: all
+  become: true
+  tasks:
+    - name: Obtain SSL certificate with certbot
+      ansible.builtin.command: >
+        certbot certonly --nginx -n --agree-tos
+        -m {{ certbot_email }} --no-eff-email
+        -d {{ certbot_domain }}
+      when: certbot_email != "" and certbot_domain != ""
+
+    - name: Add certbot renewal cron job
+      ansible.builtin.cron:
+        name: "Certbot Auto Renew"
+        minute: "0"
+        hour: "0,12"
+        user: root
+        job: "python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew -q"
+
+    - name: Add certbot upgrade cron job
+      ansible.builtin.cron:
+        name: "Certbot Auto Upgrade"
+        minute: "0"
+        hour: "0"
+        day: "1"
+        user: root
+        job: "/opt/certbot/bin/pip install --upgrade certbot certbot-nginx"

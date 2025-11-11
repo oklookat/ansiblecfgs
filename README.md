@@ -1,5 +1,7 @@
 # Ansible Configurations
 
+Useful Ansible configurations.
+
 ## Installing Ansible
 
 ### Ubuntu, WSL (Ubuntu)
@@ -18,88 +20,7 @@ If you haven't logged into the server yet, do so because otherwise it will compl
 ## General instructions for all configurations
 
 1. Copy the directory.
-2. Fill out `inventory.ini`.
-3. Fill out the `vars` section in `playbook.yml`.
-4. Follow the steps required for the specific configuration.
-5. Enter the venv environment.
-6. Run: `ansible-playbook -i inventory.yml playbook.yml`
-
-## basic
-
-Basic VPS setup. This may not be suitable for all VPS.
-
-- Sets DNS to Cloudflare.
-- Changes the root password.
-- Creates a new user with a password.
-- Changes the SSH port, disables root login, allows login only via SSH keys, and disables other minor settings (see the config).
-- Disables password login in cloud-init (may not be present on all servers, so the script might give an error).
-- Copies `id_rsa` from your home directory to the server. **If `id_rsa` is missing, generate it with `ssh-keygen -t rsa -b 4096 -C "your email"`.**
-- Changes firewall to `nftables`, allows HTTP, HTTPS, SSH.
-- Enables BBR, TCP Fast Open, and other tweaks.
-
-After reboot (it will be unsucsessful, because ssh and credentials changed), you can log into the server (always log in this way):
-
-`ssh NEW_USER_NAME@SERVER_IP -p NEW_SSH_PORT`
-
-## generate-cert
-
-- Generates self-signed certificate.
-- Creates *-cert.json on host machine, with generated public key.
-
-## install-sing-box
-
-Installs `sing-box` [via APT](https://sing-box.sagernet.org/installation/package-manager).
-
-## reality-sfy
-
-Basic installation and setup of REALITY, steal from yourself, [Xray](https://github.com/XTLS/Xray-core) server. It is assumed that `Basic` has been run prior to this.
-
-- Installs nginx and Xray (via [Xray-install](https://github.com/XTLS/Xray-install)).
-- Sets basic configs for nginx and Xray.
-- Installs certbot (via pip) with automatic updates (via cron) and certificate retrieval.
-- Key affected files and directories: `/usr/local/etc/xray/config.json`, `/etc/nginx/nginx.conf`, `/usr/share/nginx/html/index.html`, `/opt/certbot`.
-
-1. In the directory with the playbook, create a file `index.html` with your custom HTML (REALITY will fall back to this).
-
-2. Obtain a domain and make sure it points to your VPS IP.
-
-## reality-sfy-sing-box
-
-Basic installation and setup of REALITY, steal from yourself, [sing-box](https://github.com/SagerNet/sing-box) server. Assumed that `Basic` has been run prior to this.
-
-- Installs nginx, cron.
-- Installs `sing-box` via `install-sing-box`.
-- Sets basic configs for nginx and sing-box.
-  - sing-box version, where config tested: 1.11.
-- Installs certbot (pip) with automatic updates (cron) and certificate retrieval.
-- Key affected files and directories: `/etc/sing-box/config.json`, `/etc/nginx/nginx.conf`, `/usr/share/nginx/html/index.html`, `/opt/certbot`.
-
-1. In the directory with the playbook, create a file `index.html` with your custom HTML (REALITY will fall back to this).
-
-2. Obtain a domain and make sure it points to your VPS IP.
-
-## reality-sing-box
-
-Like `reality-sfy-sing-box`, but without `steal from yourself`. Masquerading as another domain.
-
-## tls-sing-box
-
-- Imports `install-sing-box`.
-- Imports `generate-cert`.
-- Setups sing-box VLESS TLS with self-signed certificate.
-
-## wireguard-sing-box
-
-- Assumed that you executed Basic before.
-
-- WireGuard + sing-box server.
-
-- [Example sing-box client config](./wireguard-sing-box/sing-box-client.json).
-
-## sing-box-deploy
-
-Convenient deployment of sing-box configurations.
-
-- Copies `sing-box` configs, validates, and restart service. Supports `systemd` and `OpenWrt`.
-
-- Deployment of public `sing-box` configs with validation.
+2. Rename `inventory.example.yml` to `inventory.yml`. Fill with your values.
+3. Follow the steps required for the specific configuration.
+4. Enter the Ansible `venv`.
+5. Run: `ansible-playbook -i inventory.yml playbook.yml`

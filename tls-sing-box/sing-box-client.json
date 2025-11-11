@@ -5,6 +5,7 @@
     },
     "dns": {
         "final": "cloudflare-direct",
+        "reverse_mapping": true,
         "servers": [
             {
                 "tag": "cloudflare-direct",
@@ -12,46 +13,29 @@
                 "detour": "direct-out"
             },
             {
-                "tag": "cloudflare-wg",
-                "address": "https://1.1.1.1/dns-query",
-                "detour": "wg-out"
+                "tag": "google-vless",
+                "address": "https://8.8.8.8/dns-query",
+                "detour": "vless-out"
+            }
+        ],
+        "rules": [
+            {
+                "outbound": "any",
+                "server": "cloudflare-direct"
             }
         ]
     },
-    "endpoints": [
-        {
-            "type": "wireguard",
-            "tag": "wg-out",
-            "system": false,
-            "mtu": 1408,
-            "address": [
-                "10.18.0.2/24",
-                "fd10:18::2/64"
-            ],
-            "private_key": "{{ wg_client_private_key }}",
-            "peers": [
-                {
-                    "address": "{{ server_ip }}",
-                    "port": "{{ wg_port }}",
-                    "public_key": "{{ wg_server_public_key }}",
-                    "allowed_ips": [
-                        "0.0.0.0/0",
-                        "::/0"
-                    ],
-                    "persistent_keepalive_interval": 25
-                }
-            ]
-        }
-    ],
     "inbounds": [
         {
             "tag": "all-in",
             "type": "tun",
+            "interface_name": "tun0",
             "address": [
                 "172.18.0.1/30",
-                "fd72:18::1/126"
+                "fdfe:dcba:9876::1/126"
             ],
             "auto_route": true,
+            "auto_redirect": false,
             "strict_route": true,
             "stack": "system",
             "mtu": 9000
@@ -61,6 +45,24 @@
         {
             "type": "direct",
             "tag": "direct-out"
+        },
+        {
+            "type": "vless",
+            "tag": "vless-out",
+            "server": "{{ ansible_host }}",
+            "server_port": 443,
+            "uuid": "{{ sing_box_uuid }}",
+            "flow": "xtls-rprx-vision",
+            "tls": {
+                "enabled": true,
+                "server_name": "{{ sni }}",
+                "alpn": [
+                    "h2"
+                ],
+                "certificate": [
+                    "{{ certificate.json content }}"
+                ]
+            }
         }
     ],
     "route": {
@@ -71,8 +73,10 @@
                 "action": "sniff"
             },
             {
-                "protocol": "dns",
-                "action": "hijack-dns"
+                "action": "reject",
+                "protocol": [
+                    "quic"
+                ]
             },
             {
                 "action": "route",
@@ -83,18 +87,8 @@
                 ]
             },
             {
-                "action": "reject",
-                "protocol": [
-                    "quic"
-                ]
-            },
-            {
-                "action": "route",
-                "ip_cidr": [
-                    "10.18.0.0/24",
-                    "fd10:18::/64"
-                ],
-                "outbound": "wg-out"
+                "protocol": "dns",
+                "action": "hijack-dns"
             }
         ]
     },

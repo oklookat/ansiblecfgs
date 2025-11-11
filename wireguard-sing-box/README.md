@@ -1,5 +1,11 @@
 # wireguard-sing-box
 
+- Assumed that you executed Basic before.
+
+- WireGuard + sing-box server.
+
+- [Example sing-box client config](./sing-box-client.json).
+
 ## Thanks
 
 Very big thanks to author of this guides:

@@ -1,0 +1,20 @@
+---
+- name: "ansiblecfgs: deploy-group"
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure Polkit directory exists
+      ansible.builtin.file:
+        path: /etc/polkit-1/rules.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Deploy Polkit rule from template
+      ansible.builtin.template:
+        src: polkit-rule.j2
+        dest: "{{ polkit_rule_path }}"
+        owner: root
+        group: root
+        mode: "0644"

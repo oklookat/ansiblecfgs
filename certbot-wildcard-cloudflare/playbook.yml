@@ -1,0 +1,46 @@
+---
+- name: "ansiblecfgs: certbot-wildcard-cloudflare"
+  hosts: all
+  become: true
+  tasks:
+    - name: Install certbot DNS Cloudflare plugin
+      ansible.builtin.pip:
+        name: certbot-dns-cloudflare
+        executable: /opt/certbot/bin/pip
+
+    - name: Create Cloudflare credentials ini
+      ansible.builtin.template:
+        src: cloudflare.ini.j2
+        dest: /root/.secrets/certbot/cloudflare.ini
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Obtain wildcard SSL certificate with certbot and Cloudflare DNS
+      ansible.builtin.command: >
+        certbot certonly
+        --dns-cloudflare
+        --dns-cloudflare-credentials /root/.secrets/certbot/cloudflare.ini
+        -n --agree-tos
+        -m {{ certbot_email }} --no-eff-email
+        -d {{ certbot_domain }}
+        -d *.{{ certbot_domain }}
+        -i nginx
+      when: certbot_email != "" and certbot_domain != ""
+
+    - name: Add certbot renewal cron job
+      ansible.builtin.cron:
+        name: "Certbot Auto Renew"
+        minute: "0"
+        hour: "0,12"
+        user: root
+        job: "python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew -q"
+
+    - name: Add certbot upgrade cron job
+      ansible.builtin.cron:
+        name: "Certbot Auto Upgrade"
+        minute: "0"
+        hour: "0"
+        day: "1"
+        user: root
+        job: "/opt/certbot/bin/pip install --upgrade certbot certbot-nginx certbot-dns-cloudflare"
