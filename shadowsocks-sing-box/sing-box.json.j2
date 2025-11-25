@@ -1,0 +1,70 @@
+{
+    "log": {
+        "level": "warning",
+        "timestamp": true
+    },
+    "dns": {
+        "final": "cloudflare-direct",
+        "servers": [
+            {
+                "tag": "cloudflare-direct",
+                "type": "https",
+                "server": "1.1.1.1"
+            },
+            {
+                "tag": "google-direct",
+                "type": "https",
+                "server": "8.8.8.8"
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "type": "shadowsocks",
+            "tag": "ss-in",
+            "listen": "::",
+            "listen_port": {{ ss_port }},
+            "method": "2022-blake3-chacha20-poly1305",
+            "password": "{{ ss_password }}",
+            "multiplex": {
+                "enabled": true,
+                "brutal": {
+                    "enabled": true,
+                    "up_mbps": {{ ss_up_mbps }},
+                    "down_mbps": {{ ss_down_mbps }}
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "direct",
+            "tag": "direct-out"
+        }
+    ],
+    "route": {
+        "final": "direct-out",
+        "default_domain_resolver": "cloudflare-direct",
+        "rules": [
+            {
+                "action": "sniff"
+            },
+            {
+                "protocol": "dns",
+                "action": "hijack-dns"
+            },
+            {
+                "action": "reject",
+                "protocol": [
+                    "bittorrent",
+                    "quic"
+                ]
+            }
+        ]
+    },
+    "experimental": {
+        "cache_file": {
+            "enabled": true
+        }
+    }
+}
