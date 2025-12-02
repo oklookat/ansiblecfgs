@@ -1,4 +1,4 @@
-# tls-sing-box
+# tls-xray
 
 Xray VLESS-TLS-XHTTP, self-signed certificate.
 
