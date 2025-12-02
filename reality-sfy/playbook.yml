@@ -1,82 +1,11 @@
 ---
+- import_playbook: ../install-xray/playbook.yml
+- import_playbook: ../install-certbot/playbook.yml
+- import_playbook: ../certbot-default/playbook.yml
 - name: "ansiblecfgs: reality-sfy"
   hosts: all
   become: true
   tasks:
-    - name: Update package index
-      apt:
-        update_cache: yes
-
-    - name: Install nginx
-      apt:
-        name: nginx
-        state: present
-
-    - name: Enable and start nginx service
-      systemd:
-        name: nginx
-        enabled: yes
-        state: started
-
-    - name: Install Xray using script
-      ansible.builtin.shell: |
-        bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-
-    - name: Notify xray-install
-      debug:
-        msg: "ATTENTION! Your need periodically update XRay. See: https://github.com/XTLS/Xray-install"
-
-    - name: Install dependencies for certbot
-      apt:
-        name:
-          - python3
-          - python3-venv
-          - libaugeas0
-        state: present
-
-    - name: Create virtual environment for certbot
-      ansible.builtin.shell: python3 -m venv /opt/certbot/
-      args:
-        creates: /opt/certbot/
-
-    - name: Upgrade pip in certbot environment
-      ansible.builtin.command: /opt/certbot/bin/pip install --upgrade pip
-
-    - name: Install certbot and certbot-nginx in virtual environment
-      ansible.builtin.command: /opt/certbot/bin/pip install certbot certbot-nginx
-
-    - name: Create symbolic link for certbot
-      ansible.builtin.file:
-        src: /opt/certbot/bin/certbot
-        dest: /usr/bin/certbot
-        state: link
-
-    - name: Obtain SSL certificate with certbot
-      ansible.builtin.command: >
-        certbot certonly --nginx -n --agree-tos
-        -m {{ certbot_email }} --no-eff-email
-        -d {{ certbot_domain }}
-      ignore_errors: true
-
-    - name: Add certbot renewal cron job if not present
-      ansible.builtin.lineinfile:
-        path: /etc/crontab
-        insertafter: EOF
-        line: "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && sudo certbot renew -q"
-        state: present
-
-    - name: Add certbot upgrade cron job if not present
-      ansible.builtin.lineinfile:
-        path: /etc/crontab
-        insertafter: EOF
-        line: "0 0 1 * * root /opt/certbot/bin/pip install --upgrade certbot certbot-nginx"
-        state: present
-
-    - name: Restart cron service
-      systemd:
-        name: cron
-        state: restarted
-
     - name: Generate shortID
       command: openssl rand -hex 8
       register: xray_short_id
@@ -85,28 +14,28 @@
       debug:
         msg: "ATTENTION! Your XRay shortID is: {{ xray_short_id.stdout }}. It needed for client."
 
-    - name: Generate XRay UUID
+    - name: Generate UUID
       command: xray uuid
       register: xray_uuid
 
     - name: Notify UUID
       debug:
-        msg: "ATTENTION! Your XRay UUID is: {{ xray_uuid.stdout }}. It needed for client."
+        msg: "ATTENTION! Your Xray UUID is: {{ xray_uuid.stdout }}. It needed for client."
 
-    - name: Generate XRay keys
+    - name: Generate keys
       command: xray x25519
       register: xray_keys
 
-    - name: Extract XRay keys
+    - name: Extract keys
       set_fact:
         xray_private_key_e: "{{ xray_keys.stdout.split('Private key: ')[1].split()[0] }}"
         xray_public_key_e: "{{ xray_keys.stdout.split('Public key: ')[1].split()[0] }}"
 
     - name: Notify public key
       debug:
-        msg: "ATTENTION! Your XRay public key is: {{ xray_public_key_e }}. It needed for client."
+        msg: "ATTENTION! Your Xray public key is: {{ xray_public_key_e }}. It needed for client."
 
-    - name: Generate XRay config
+    - name: Generate Xray config
       template:
         src: xray.json.j2
         dest: /usr/local/etc/xray/config.json
@@ -125,11 +54,12 @@
 
     - name: Restart nginx
       systemd:
+        daemon_reload: true
         name: nginx
         state: restarted
-        daemon_reload: true
 
-    - name: Enable XRay
+    - name: Restart Xray
       systemd:
+        daemon_reload: true
         name: xray
-        enabled: true
+        state: restarted

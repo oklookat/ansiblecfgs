@@ -60,7 +60,7 @@
                     "h2"
                 ],
                 "certificate": [
-                    "{{ certificate.json content }}"
+                    "{{ certificate.json content, every line is new element in array }}"
                 ]
             }
         }
