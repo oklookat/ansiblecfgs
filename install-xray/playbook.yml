@@ -71,7 +71,7 @@
         mode: "0644"
       notify:
         - systemd daemon-reload
-        - restart xray
+        - Restart Xray
 
     - name: Create Xray update cron task (monthly)
       cron:
@@ -90,7 +90,7 @@
     - name: systemd daemon-reload
       ansible.builtin.command: systemctl daemon-reload
 
-    - name: restart xray
+    - name: Restart Xray
       ansible.builtin.service:
         name: xray
         state: restarted

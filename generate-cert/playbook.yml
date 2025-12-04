@@ -67,3 +67,16 @@
         mode: "0600"
       delegate_to: localhost
       run_once: true
+
+    - name: Create ssl group
+      become: true
+      ansible.builtin.group:
+        name: ssl
+        state: present
+
+    - name: Change group of private key to ssl
+      become: true
+      ansible.builtin.file:
+        path: /etc/ssl/private/self.key
+        group: ssl
+        mode: "0640"
