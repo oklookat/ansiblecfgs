@@ -69,7 +69,9 @@
         owner: root
         group: root
         mode: "0644"
-      notify: Reload and restart xray
+      notify:
+        - systemd daemon-reload
+        - restart xray
 
     - name: Create Xray update cron task (monthly)
       cron:
@@ -85,8 +87,10 @@
         state: restarted
 
   handlers:
-    - name: Reload and restart xray
-      systemd:
-        daemon_reload: yes
+    - name: systemd daemon-reload
+      ansible.builtin.command: systemctl daemon-reload
+
+    - name: restart xray
+      ansible.builtin.service:
         name: xray
         state: restarted
