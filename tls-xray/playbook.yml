@@ -5,23 +5,38 @@
   hosts: all
   become: true
   tasks:
-    - name: Add xray user to ssl group
+    - name: Add xray user self ssl group
       user:
         name: xray
-        groups: ssl
+        groups: "{{ ssl_group_name }}"
         append: yes
+      become: true
+
+    - name: Ensure Xray can read private key
+      file:
+        path: "{{ cert_key_path }}"
+        group: "{{ ssl_group_name }}"
+        mode: "0644"
+      become: true
+
+    - name: Ensure Xray can read public key
+      file:
+        path: "{{ cert_pubkey_path }}"
+        group: "{{ ssl_group_name }}"
+        mode: "0644"
+      become: true
 
     - name: Add supplementary SSL group to Xray systemd unit
       ansible.builtin.copy:
-        dest: /etc/systemd/system/xray.service.d/10-tls.conf
+        dest: /etc/systemd/system/xray.service.d/10-ssl.conf
         content: |
           [Service]
-          SupplementaryGroups=ssl
+          SupplementaryGroups={{ ssl_group_name }}
         owner: root
         group: root
         mode: "0644"
       notify:
-        - systemd daemon-reload
+        - Reload systemd
         - Restart Xray
 
     - name: Generate UUID
@@ -39,10 +54,11 @@
       notify: Restart Xray
 
   handlers:
-    - name: systemd daemon-reload
-      ansible.builtin.command: systemctl daemon-reload
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: yes
 
     - name: Restart Xray
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: xray
         state: restarted

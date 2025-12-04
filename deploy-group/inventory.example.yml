@@ -4,8 +4,8 @@ all:
       ansible_host: 192.168.1.1
       ansible_port: SSH_PORT
       ansible_user: "NOT_ROOT_USER"
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
       ansible_become_password: "USER_PASSWORD"
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa
       group_name: www-deploy
       shared_dirs:
         - /etc/sing-box
