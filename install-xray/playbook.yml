@@ -71,14 +71,6 @@
         mode: "0644"
       notify: Reload and restart xray
 
-    - name: Allow Xray to bind privileged ports
-      ansible.builtin.command: setcap cap_net_bind_service=+ep /usr/local/bin/xray
-      args:
-        warn: false
-      register: setcap_result
-      changed_when: setcap_result.rc == 0
-      check_mode: no
-
     - name: Create Xray update cron task (monthly)
       cron:
         name: "Monthly Xray auto-update"

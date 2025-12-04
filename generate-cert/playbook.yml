@@ -3,6 +3,7 @@
   become: false
   tasks:
     - name: Ensure certificate directories exist
+      become: true
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
@@ -10,9 +11,9 @@
       loop:
         - "{{ cert_key_path | dirname }}"
         - "{{ cert_pubkey_path | dirname }}"
-      become: true
 
     - name: Generate self-signed certificate
+      become: true
       ansible.builtin.command: >
         openssl req -x509 -newkey rsa:2048
         -keyout {{ cert_key_path }}
@@ -23,7 +24,6 @@
         -addext "subjectAltName=DNS:{{ sni }},DNS:www.{{ sni }}"
       args:
         creates: "{{ cert_pubkey_path }}"
-      become: true
 
     - name: Read certificate content
       ansible.builtin.slurp:
@@ -47,6 +47,7 @@
       run_once: true
 
     - name: Read private key content
+      become: true
       ansible.builtin.slurp:
         src: "{{ cert_key_path }}"
       register: cert_key_content
