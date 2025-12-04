@@ -1,0 +1,21 @@
+---
+- name: "ansiblecfgs: xray-deploy-geo"
+  hosts: all
+  become: false
+  tasks:
+    - name: "Copy geoip.dat to remote host"
+      copy:
+        src: "{{ geoip_local_path }}"
+        dest: "{{ geoip_remote_path }}"
+        mode: '0644'
+
+    - name: "Copy geosite.dat to remote host"
+      copy:
+        src: "{{ geosite_local_path }}"
+        dest: "{{ geosite_remote_path }}"
+        mode: '0644'
+
+    - name: "Restart xray service"
+      systemd:
+        name: xray
+        state: restarted
