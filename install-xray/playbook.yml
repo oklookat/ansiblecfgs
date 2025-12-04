@@ -15,7 +15,7 @@
         create_home: no
         state: present
 
-    - name: Install Xray via Xray-install with User=xray
+    - name: Install Xray via Xray-install
       ansible.builtin.shell: |
         bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u '{{ xray_username }}'
       args:
