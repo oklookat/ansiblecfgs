@@ -1,0 +1,48 @@
+---
+- name: "ansiblecfgs: openwrt-install-sing-box (compress)"
+  hosts: localhost
+  gather_facts: false
+  vars:
+    arm_container: "ubuntu:22.04"
+
+  tasks:
+    - name: Ensure compress_workdir exists
+      file:
+        path: "{{ compress_workdir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Ensure QEMU is registered for ARM64 in Docker
+      command: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      args:
+        creates: /usr/bin/qemu-aarch64-static
+
+    - name: Run ARM64 container to download and compress sing-box
+      command: >
+        docker run --rm --platform linux/arm64
+        -v {{ compress_workdir }}:/workdir
+        {{ arm_container }} /bin/bash -c "
+          set -e
+          cd /workdir
+          apt update && apt install -y wget tar xz-utils
+
+          # UPX
+          wget -O upx.tar.xz '{{ compress_upx_url }}'
+          xz -d upx.tar.xz
+          tar -xf upx.tar
+          upx_bin=$(find . -type f -name 'upx' | head -n1)
+          mv \"$upx_bin\" upx
+          rm -rf $(find . -mindepth 1 ! -name 'upx' -exec echo {} +)
+
+          # sing-box
+          wget -O sing-box.tar.gz '{{ compress_sb_url }}'
+          tar -xzf sing-box.tar.gz
+          sing_bin=$(find . -type f -name 'sing-box' | head -n1)
+          mv \"$sing_bin\" sing-box
+          rm -rf $(find . -mindepth 1 ! -name 'upx' ! -name 'sing-box' -exec echo {} +)
+
+          # compress sing-box
+          ./upx --best --lzma sing-box
+        "
+      args:
+        chdir: "{{ compress_workdir }}"
