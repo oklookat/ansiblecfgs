@@ -1,6 +1,6 @@
 ---
-- import_playbook: "templates/playbook.yml" # locally render sing-box service templates
-- import_playbook: "compress/playbook.yml" # locally compress sing-box
+- import_playbook: "templates/playbook.yml"
+- import_playbook: "compress/playbook.yml"
 - name: "ansiblecfgs: openwrt-install-sing-box"
   hosts: all
   gather_facts: false
@@ -24,19 +24,19 @@
         mkdir -p "{{ sb_workdir }}"
 
     - name: Copy binary
-      local_action: shell scp -P {{ ansible_port }} {{ compress_sb_bin }} 'root@{{ inventory_hostname }}:{{ sb_bin }}'
+      local_action: shell scp -P {{ ansible_port }} {{ compress_sb_bin }} 'root@{{ ansible_host }}:{{ sb_bin }}'
 
     - name: Make binary executable
       raw: chmod +x "{{ sb_bin }}"
-  
+
     - name: Copy etc config
-      local_action: shell scp -P {{ ansible_port }} {{ ts_sb_etc_config }} 'root@{{ inventory_hostname }}:{{ sb_etc_config }}'
+      local_action: shell scp -P {{ ansible_port }} {{ ts_sb_etc_config }} 'root@{{ ansible_host }}:{{ sb_etc_config }}'
 
-    - name: Copy initd config 
-      local_action: shell scp -P {{ ansible_port }} {{ ts_sb_etc_initd }} 'root@{{ inventory_hostname }}:{{ sb_initd_config }}'
+    - name: Copy initd config
+      local_action: shell scp -P {{ ansible_port }} {{ ts_sb_initd_config }} 'root@{{ ansible_host }}:{{ sb_initd_config }}'
 
-    - name: Copy config 
-      local_action: shell scp -P {{ ansible_port }} {{ ts_sb_config }} 'root@{{ inventory_hostname }}:{{ sb_config }}'
+    - name: Copy config
+      local_action: shell scp -P {{ ansible_port }} {{ ts_sb_config }} 'root@{{ ansible_host }}:{{ sb_config }}'
 
     - name: Make initd config executable
       raw: chmod +x "{{ sb_initd_config }}"

@@ -1,0 +1,39 @@
+---
+- name: "ansiblecfgs: openwrt-install-sing-box (templates)"
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ensure template directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ ts_xray_etc_config | dirname }}"
+        - "{{ ts_xray_initd_config | dirname }}"
+        - "{{ ts_xray_config | dirname }}"
+
+    - name: Render etc config
+      template:
+        src: config/xray.j2
+        dest: "{{ ts_xray_etc_config }}"
+
+    - name: Render initd config
+      template:
+        src: init.d/xray.j2
+        dest: "{{ ts_xray_initd_config }}"
+
+    - name: Copy config
+      copy:
+        src: xray/config.json
+        dest: "{{ ts_xray_config }}"
+
+    - name: Copy geosite
+      copy:
+        src: xray/geosite.dat
+        dest: "{{ ts_xray_geosite }}"
+
+    - name: Copy geoip
+      copy:
+        src: xray/geoip.dat
+        dest: "{{ ts_xray_geoip }}"

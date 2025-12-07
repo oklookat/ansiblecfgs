@@ -1,24 +1,24 @@
 all:
   vars:
-      ansible_connection: ssh
-      ansible_shell_type: sh
-      ansible_python_interpreter: /bin/false
-      # templates/playbook.yml
-      ts_workdir: "{{ playbook_dir }}/temp-data"
-      ts_sb_etc_config: "{{ ts_workdir }}/config/sing-box"
-      ts_sb_initd_config: "{{ ts_workdir }}/init.d/sing-box"
-      ts_sb_config: "{{ ts_workdir }}/sing-box/config.json"
-      # compress/playbook.yml
-      compress_upx_url: "https://github.com/upx/upx/releases/download/v5.0.2/upx-5.0.2-arm64_linux.tar.xz"
-      compress_sb_url: "https://github.com/SagerNet/sing-box/releases/download/v1.12.12/sing-box-1.12.12-linux-arm64.tar.gz"
-      compress_workdir: "{{ playbook_dir }}/temp-data"
-      compress_sb_bin: "{{ compress_workdir }}/sing-box"
-      # playbook.yml
-      sb_bin: "/usr/local/bin/sing-box"
-      sb_etc_config: "/etc/config/sing-box"
-      sb_initd_config: "/etc/init.d/sing-box"
-      sb_config: "/etc/sing-box/config.json"
-      sb_workdir: "/usr/share/sing-box"
+    ansible_connection: ssh
+    ansible_shell_type: sh
+    ansible_python_interpreter: /bin/false
+    # templates/playbook.yml
+    ts_workdir: "{{ lookup('env','PWD') }}/templates/workdir"
+    ts_sb_etc_config: "{{ ts_workdir }}/config/sing-box"
+    ts_sb_initd_config: "{{ ts_workdir }}/init.d/sing-box"
+    ts_sb_config: "{{ ts_workdir }}/sing-box/config.json"
+    # compress/playbook.yml
+    compress_upx_url: "https://github.com/upx/upx/releases/download/v5.0.2/upx-5.0.2-arm64_linux.tar.xz"
+    compress_sb_url: "https://github.com/SagerNet/sing-box/releases/download/v1.12.12/sing-box-1.12.12-linux-arm64.tar.gz"
+    compress_workdir: "{{ lookup('env','PWD') }}/compress/workdir"
+    compress_sb_bin: "{{ compress_workdir }}/sing-box"
+    # playbook.yml
+    sb_bin: "/usr/local/bin/sing-box"
+    sb_etc_config: "/etc/config/sing-box"
+    sb_initd_config: "/etc/init.d/sing-box"
+    sb_config: "/etc/sing-box/config.json"
+    sb_workdir: "/usr/share/sing-box"
   hosts:
     vps:
       ansible_host: 192.168.1.1

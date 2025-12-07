@@ -24,6 +24,6 @@
         dest: "{{ ts_sb_initd_config }}"
 
     - name: Render config
-      template:
-        src: init.d/sing-box.j2
+      copy:
+        src: sing-box/config.json
         dest: "{{ ts_sb_config }}"

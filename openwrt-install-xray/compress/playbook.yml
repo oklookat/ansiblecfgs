@@ -1,7 +1,12 @@
 ---
-- name: "ansiblecfgs: openwrt-install-sing-box (compress)"
+- name: openwrt-install-xray (compress) on localhost
   hosts: localhost
   gather_facts: false
+  vars:
+    compress_upx_url: "https://github.com/upx/upx/releases/download/v5.0.2/upx-5.0.2-amd64_linux.tar.xz"
+    compress_xray_url: "https://github.com/XTLS/Xray-core/releases/download/v25.12.2/Xray-linux-arm64-v8a.zip"
+    compress_workdir: "{{ playbook_dir }}/workdir"
+    compress_xray_bin: "{{ compress_workdir }}/xray"
   tasks:
     - name: Ensure compress_workdir exists
       file:
@@ -17,34 +22,33 @@
         tar -xf upx.tar
         upx_bin=$(find . -type f -name 'upx' | head -n1)
         mv "$upx_bin" upx
-        # remove UPX temp files
         find . -mindepth 1 ! -name 'upx' -exec rm -rf {} +
       args:
         executable: /bin/bash
 
-    - name: Download sing-box
+    - name: Download Xray
       shell: |
         cd "{{ compress_workdir }}"
-        curl -L -o sing-box.tar.gz "{{ compress_sb_url }}"
+        curl -L -o xray.zip "{{ compress_xray_url }}"
+        if ! file xray.zip | grep -q "Zip archive"; then
+          echo "Downloaded file is not a valid zip!"
+          exit 1
+        fi
       args:
         executable: /bin/bash
 
-    - name: Extract sing-box (same logic as original script)
+    - name: Extract Xray
       shell: |
         cd "{{ compress_workdir }}"
-        tar -xzf sing-box.tar.gz
-        sing_bin=$(find . -type f -name 'sing-box' | head -n1)
-        mv "$sing_bin" sing-box
-        find . -mindepth 1 ! -name 'upx' ! -name 'sing-box' -exec rm -rf {} +
+        unzip -q xray.zip
       args:
         executable: /bin/bash
 
-    - name: Compress sing-box with UPX
+    - name: Compress Xray with UPX
       shell: |
         cd "{{ compress_workdir }}"
         chmod +x ./upx
-        sb_bin=$(find . -type f -name 'sing-box' | head -n1)
-        chmod +x "$sb_bin"
-        ./upx --best --lzma "$sb_bin"
+        chmod +x ./xray
+        ./upx --best --lzma ./xray
       args:
         executable: /bin/bash

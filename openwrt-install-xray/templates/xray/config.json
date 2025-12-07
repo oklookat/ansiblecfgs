@@ -1,0 +1,80 @@
+{
+    "log": {
+        "loglevel": "warning"
+    },
+    "dns": {
+        "tag": "dns-in",
+        "servers": [
+            {
+                "address": "https+local://1.1.1.1/dns-query"
+            },
+            {
+                "address": "https+local://8.8.8.8/dns-query"
+            }
+        ]
+    },
+    "routing": {
+        "domainStrategy": "IpOnDemand",
+        "rules": [
+            {
+                "type": "field",
+                "outboundTag": "direct-out",
+                "ip": [
+                    "geoip:private"
+                ]
+            },
+            {
+                "type": "field",
+                "outboundTag": "direct-out",
+                "protocol": [
+                    "bittorrent"
+                ]
+            },
+            {
+                "type": "field",
+                "inboundTag": [
+                    "dns-in"
+                ],
+                "outboundTag": "direct-out"
+            },
+            {
+                "type": "field",
+                "outboundTag": "direct-out",
+                "domain": [
+                    "geosite:category-ru",
+                    "geosite:ru-available-only-inside"
+                ]
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "tag": "socks-in",
+            "listen": "127.0.0.1",
+            "port": 10808,
+            "protocol": "socks",
+            "settings": {
+                "auth": "noauth",
+                "udp": true,
+                "ip": "127.0.0.1"
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls"
+                ]
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "tag": "direct-out",
+            "protocol": "freedom"
+        },
+        {
+            "tag": "block-out",
+            "protocol": "blackhole"
+        }
+    ]
+}
