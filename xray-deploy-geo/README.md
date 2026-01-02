@@ -1,5 +1,7 @@
 # xray-deploy-geo
 
-Deploy `xray-core` `geoip` and `geosite` files.
+Deploys `geoip` and `geosite` files for Xray-core. Supports `systemd` and `OpenWrt`.
 
-Permissions can be achieved via `deploy-group`, `polkit-manage-units` playbooks.
+Usage: `ansible-playbook -i inventory.yml playbook.yml`
+
+Write permissions can be achieved via [deploy-group](../deploy-group) and [polkit-manage-units](../polkit-manage-units) playbooks.

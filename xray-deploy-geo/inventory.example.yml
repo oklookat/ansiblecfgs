@@ -1,11 +1,26 @@
 all:
-  hosts:
-    alice:
-      ansible_host: 192.168.1.1
-      ansible_port: SSH_PORT
-      ansible_user: "NOT_ROOT_USER"
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-      geoip_local_path: "geoip-private.dat"
-      geosite_local_path: "geosite-server.dat"
-      geoip_remote_path: "/usr/local/share/xray/geoip.dat"
-      geosite_remote_path: "/usr/local/share/xray/geosite.dat"
+  children:
+    vps:
+      hosts:
+        myserver:
+          ansible_host: 192.168.1.2
+          ansible_port: SSH_PORT
+          ansible_user: "NOT_ROOT_USER"
+          ansible_ssh_private_key_file: ~/.ssh/id_rsa
+          geoip_local_path: "geoip-server.dat"
+          geosite_local_path: "geosite-server.dat"
+          # usage in Xray example: "ext:geoip-server.dat:private"
+          geoip_remote_path: "/usr/local/share/xray/geoip-server.dat"
+          geosite_remote_path: "/usr/local/share/xray/geosite-server.dat"
+
+    router:
+      hosts:
+        openwrt:
+          ansible_host: 192.168.1.1
+          ansible_port: 22
+          ansible_user: root
+          ansible_ssh_private_key_file: ~/.ssh/id_rsa
+          geoip_local_path: "geoip-client.dat"
+          geosite_local_path: "geosite-client.dat"
+          geoip_remote_path: "/usr/local/share/xray/geoip-client.dat"
+          geosite_remote_path: "/usr/local/share/xray/geosite-client.dat"

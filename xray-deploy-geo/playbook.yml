@@ -1,21 +1,37 @@
 ---
 - name: "ansiblecfgs: xray-deploy-geo"
-  hosts: all
+  hosts: vps
   become: false
   tasks:
-    - name: "Copy geoip.dat to remote host"
+    - name: Copy geoip to remote host
       copy:
         src: "{{ geoip_local_path }}"
         dest: "{{ geoip_remote_path }}"
-        mode: '0644'
+        mode: "0644"
 
-    - name: "Copy geosite.dat to remote host"
+    - name: Copy geosite to remote host
       copy:
         src: "{{ geosite_local_path }}"
         dest: "{{ geosite_remote_path }}"
-        mode: '0644'
+        mode: "0644"
 
-    - name: "Restart xray service"
+    - name: Restart Xray
       systemd:
         name: xray
         state: restarted
+
+- name: "ansiblecfgs: xray-deploy-geo (OpenWrt)"
+  hosts: router
+  gather_facts: false
+  tags: router
+  tasks:
+    - name: Copy geoip
+      delegate_to: localhost
+      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} "{{ geoip_local_path }}" {{ ansible_user }}@{{ ansible_host }}:"{{ geoip_remote_path }}"
+
+    - name: Copy geosite
+      delegate_to: localhost
+      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} "{{ geosite_local_path }}" {{ ansible_user }}@{{ ansible_host }}:"{{ geosite_remote_path }}"
+
+    - name: Restart Xray
+      raw: "/etc/init.d/xray restart"
