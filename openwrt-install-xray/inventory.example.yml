@@ -16,12 +16,13 @@ all:
     compress_workdir: "{{ lookup('env','PWD') }}/compress/workdir"
     compress_xray_bin: "{{ compress_workdir }}/xray"
     # playbook.yml
+    # https://xtls.github.io/en/config/features/env.html
     xray_bin: "/usr/local/bin/xray"
     xray_etc_config: "/etc/config/xray"
     xray_initd_config: "/etc/init.d/xray"
     xray_location_config: "/etc/xray/config.json"
     xray_location_confdir: ""
-    xray_location_asset: "/usr/share/xray"
+    xray_location_asset: "/usr/local/share/xray"
     xray_geosite: "{{ xray_location_asset }}/geosite.dat"
     xray_geoip: "{{ xray_location_asset }}/geoip.dat"
   hosts:
@@ -29,5 +30,4 @@ all:
       ansible_host: 192.168.1.1
       ansible_port: 22
       ansible_user: "root"
-      ansible_become_password: "root"
       ansible_ssh_private_key_file: ~/.ssh/id_rsa

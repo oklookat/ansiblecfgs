@@ -2,11 +2,6 @@
 - name: openwrt-install-xray (compress) on localhost
   hosts: localhost
   gather_facts: false
-  vars:
-    compress_upx_url: "https://github.com/upx/upx/releases/download/v5.0.2/upx-5.0.2-amd64_linux.tar.xz"
-    compress_xray_url: "https://github.com/XTLS/Xray-core/releases/download/v25.12.2/Xray-linux-arm64-v8a.zip"
-    compress_workdir: "{{ playbook_dir }}/workdir"
-    compress_xray_bin: "{{ compress_workdir }}/xray"
   tasks:
     - name: Ensure compress_workdir exists
       file:

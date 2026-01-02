@@ -11,6 +11,9 @@
     - name: Install openssh-sftp-server
       raw: opkg install openssh-sftp-server
 
+    - name: Install kmod-nft-tproxy
+      raw: opkg install kmod-nft-tproxy
+
     - name: Stop service (ignore errors)
       raw: service xray stop || true
 
@@ -47,5 +50,5 @@
     - name: Make initd config executable
       raw: chmod +x "{{ xray_initd_config }}"
 
-    - name: Start service (ignore errors)
-      raw: service xray start || true
+    # - name: Start service (ignore errors)
+    #   raw: service xray start || true
