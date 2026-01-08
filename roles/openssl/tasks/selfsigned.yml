@@ -10,7 +10,7 @@
     mode: "0750"
   loop:
     - "{{ openssl_key_path | dirname }}"
-    - "{{ cert_openssl_certificate_path | dirname }}"
+    - "{{ openssl_certificate_path | dirname }}"
 
 - name: Generate private key if not exists
   community.crypto.openssl_privatekey:
@@ -18,7 +18,7 @@
     size: 2048
     type: RSA
     mode: "0640"
-    group: "{{ openssl_ssl_group_name }}"
+    group: "{{ openssl_group_name }}"
   register: key_result
   changed_when: key_result.changed
 
@@ -31,22 +31,22 @@
   community.crypto.openssl_csr:
     path: "{{ temp_csr_path }}"
     privatekey_path: "{{ openssl_key_path }}"
-    common_name: "{{ sni }}"
+    common_name: "{{ openssl_sni }}"
     subject_alt_name:
-      - "DNS:{{ sni }}"
-      - "DNS:www.{{ sni }}"
+      - "DNS:{{ openssl_sni }}"
+      - "DNS:www.{{ openssl_sni }}"
   when: key_result.changed or not csr_stat.stat.exists
 
 - name: Generate self-signed certificate
   community.crypto.x509_certificate:
-    path: "{{ cert_openssl_certificate_path }}"
+    path: "{{ openssl_certificate_path }}"
     csr_path: "{{ temp_csr_path }}"
     privatekey_path: "{{ openssl_key_path }}"
     provider: selfsigned
     selfsigned_not_after: "+{{ openssl_cert_days }}d"
     selfsigned_not_before: "+0s"
     mode: "0644"
-    group: "{{ openssl_ssl_group_name }}"
+    group: "{{ openssl_group_name }}"
     force: false
   register: cert_result
 

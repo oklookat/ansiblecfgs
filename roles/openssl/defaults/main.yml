@@ -1,6 +1,6 @@
 ---
 # selfsigned
-openssl_ssl_group_name: "root"
+openssl_group_name: "root"
 openssl_cert_days: 365
 openssl_sni: ""
 openssl_key_path: "/etc/ssl/private/{{ openssl_sni }}.key"
