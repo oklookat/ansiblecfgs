@@ -57,51 +57,30 @@
   when: cert_result is succeeded
 
 - block:
-    - name: Read certificate content
-      ansible.builtin.slurp:
-        src: "{{ cert_openssl_certificate_path }}"
-      register: cert_pubkey_content
-
-    - name: Read private key content
-      ansible.builtin.slurp:
-        src: "{{ openssl_key_path }}"
-      register: cert_key_content
-
-    - name: Convert certificate to JSON array
-      ansible.builtin.set_fact:
-        certificate_json: >-
-          {{ (cert_pubkey_content.content | b64decode)
-             .splitlines()
-             | reject('equalto', '')
-             | list }}
-
-    - name: Convert private key to JSON array
-      ansible.builtin.set_fact:
-        certificate_key_json: >-
-          {{ (cert_key_content.content | b64decode)
-             .splitlines()
-             | reject('equalto', '')
-             | list }}
-
-    - name: Save certificate JSON on localhost
-      ansible.builtin.copy:
-        dest: "./{{ inventory_hostname }}-{{ sni }}-cert.json"
-        content: |
-          {
-            "certificate": {{ certificate_json | to_nice_json }}
-          }
-        mode: "0644"
+    - name: Ensure output dir exists on localhost
+      ansible.builtin.file:
+        path: "{{ openssl_output_dir }}"
+        state: directory
+        mode: "0700"
       delegate_to: localhost
+      become: false
       run_once: true
 
-    - name: Save private key JSON on localhost
+    - name: Save certificate to localhost
       ansible.builtin.copy:
-        dest: "./{{ inventory_hostname }}-{{ sni }}-cert-key.json"
-        content: |
-          {
-            "private_key": {{ certificate_key_json | to_nice_json }}
-          }
+        src: "{{ openssl_certificate_path }}"
+        dest: "{{ openssl_output_dir }}/{{ inventory_hostname }}-{{ sni }}.crt"
+        mode: "0644"
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: Save private key to localhost
+      ansible.builtin.copy:
+        src: "{{ openssl_key_path }}"
+        dest: "{{ openssl_output_dir }}/{{ inventory_hostname }}-{{ sni }}.key"
         mode: "0600"
       delegate_to: localhost
+      become: false
       run_once: true
   when: cert_result.changed
