@@ -1,0 +1,11 @@
+- include_tasks: cleanup.yml
+  tags: firewall_cleanup
+
+- include_tasks: install.yml
+  tags: firewall_install
+
+- include_tasks: rules.yml
+  tags: firewall_rules
+
+- include_tasks: apply.yml
+  tags: firewall_apply

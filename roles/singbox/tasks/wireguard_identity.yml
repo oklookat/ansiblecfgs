@@ -1,0 +1,42 @@
+---
+- name: Check if sing-box identity exists
+  ansible.builtin.stat:
+    path: "{{ singbox_identity_path }}"
+  register: singbox_identity_stat
+
+- block:
+    - name: Generate sing-box wg-keypair (server)
+      ansible.builtin.command: sing-box generate wg-keypair
+      register: singbox_server_keys
+      changed_when: true
+
+    - name: Generate sing-box wg-keypair (client)
+      ansible.builtin.command: sing-box generate wg-keypair
+      register: singbox_client_keys
+      changed_when: true
+
+    - name: Save sing-box identity
+      ansible.builtin.copy:
+        dest: "{{ singbox_identity_path }}"
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          server_private_key: "{{ singbox_server_keys.stdout | regex_search('PrivateKey: ([A-Za-z0-9+/=]+)', '\1') }}"
+          server_public_key: "{{ singbox_server_keys.stdout | regex_search('PublicKey: ([A-Za-z0-9+/=]+)', '\1') }}"
+          client_private_key: "{{ singbox_client_keys.stdout | regex_search('PrivateKey: ([A-Za-z0-9+/=]+)', '\1') }}"
+          client_public_key: "{{ singbox_client_keys.stdout | regex_search('PublicKey: ([A-Za-z0-9+/=]+)', '\1') }}"
+
+  when: not singbox_identity_stat.stat.exists
+
+- name: Fail if sing-box identity file is empty or broken
+  ansible.builtin.fail:
+    msg: "sing-box identity file exists but is empty or invalid"
+  when:
+    - singbox_identity_stat.stat.exists
+    - singbox_identity_stat.stat.size | default(0) == 0
+
+- name: Load sing-box identity
+  ansible.builtin.include_vars:
+    file: "{{ singbox_identity_path }}"
+    name: singbox_identity

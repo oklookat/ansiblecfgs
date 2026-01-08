@@ -1,0 +1,84 @@
+---
+- name: "sing-box: REALITY (steal from yourself)"
+  hosts: sing-box-reality-sfy
+  become: true
+  tasks:
+    - name: "sing-box: install"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: install.yml
+
+    - name: "firewall: apply rules"
+      block:
+        - name: "Allow: 80 (TCP) for nginx and certbot"
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+          vars:
+            firewall_rule_name: "allow_http"
+            firewall_rules:
+              - "add rule inet filter input tcp dport 80 accept"
+
+        - name: "Allow: {{ singbox_listen_port }} (TCP) for sing-box"
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+          vars:
+            firewall_rule_name: "allow_singbox"
+            firewall_rules:
+              - "add rule inet filter input tcp dport {{ singbox_listen_port }} accept"
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: apply.yml
+
+    - name: "nginx: install, apply base config"
+      block:
+        - name: Install
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: install.yml
+        - name: Create base config
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: base.yml
+        - name: Apply
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: base.yml
+
+    - name: "certbot: install, obtain, autorenew"
+      block:
+        - name: Install
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: install.yml
+        - name: Install certbot-nginx
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: install_nginx.yml
+        - name: Obtain
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: obtain.yml
+        - name: Autorenew
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: autorenew.yml
+
+    - name: "nginx: generate REALITY-SFY config, apply"
+      block:
+        - name: Generate
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: reality_sfy.yml
+        - name: Apply
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: apply.yml
+
+    - name: "sing-box: apply REALITY-SFY config"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: reality_sfy.yml

@@ -1,6 +1,6 @@
-# Ansible Configurations
+# ansiblecfgs (v2)
 
-Useful Ansible configurations.
+In development.
 
 ## Installing Ansible
 
@@ -16,11 +16,3 @@ pip install ansible passlib # passlib for creating a user with a password on the
 ```
 
 If you haven't logged into the server yet, do so because otherwise it will complain about `known_hosts`. Run: `ssh root@SERVER_IP`
-
-## General instructions for all configurations
-
-1. Copy the directory.
-2. Rename `inventory.example.yml` to `inventory.yml`. Fill with your values.
-3. Follow the steps required for the specific configuration.
-4. Enter the Ansible `venv`.
-5. Run: `ansible-playbook -i inventory.yml playbook.yml`

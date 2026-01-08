@@ -1,0 +1,38 @@
+---
+- name: "sing-box: VLESS-TLS"
+  hosts: sing-box-vless-tls
+  become: true
+  tasks:
+    - name: "sing-box: install"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: install.yml
+
+    - name: "openssl: generate self-signed certificate"
+      ansible.builtin.include_role:
+        name: openssl
+        tasks_from: selfsigned.yml
+
+    - name: "firewall: add, apply rules"
+      block:
+        - name: "Allow: {{ singbox_listen_port }} (TCP/UDP)"
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+          vars:
+            firewall_rule_name: "allow_singbox"
+            firewall_rules:
+              - "add rule inet filter input tcp dport {{ singbox_listen_port }} accept"
+        - name: Apply
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: apply.yml
+
+    - name: "sing-box: apply VLESS-TLS config"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: vless_tls.yml
+      vars:
+        singbox_sni: "{{ openssl_sni }}"
+        singbox_certificate_path: "{{ openssl_certificate_path }}"
+        singbox_key_path: "{{ openssl_key_path }}"

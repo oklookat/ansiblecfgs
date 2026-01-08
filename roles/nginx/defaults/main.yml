@@ -1,0 +1,16 @@
+---
+nginx_user: "www-data"
+nginx_port: 443
+nginx_domain: ""
+
+nginx_web_root_path: >-
+  {{ '/var/www/' + (nginx_domain | default('')) 
+     if (nginx_domain | default('')) | length > 0 else '' }}
+
+nginx_fullchain_path: >-
+  {{ '/etc/letsencrypt/live/' + (nginx_domain | default('')) + '/fullchain.pem'
+     if (nginx_domain | default('')) | length > 0 else '' }}
+
+nginx_private_key_path: >-
+  {{ '/etc/letsencrypt/live/' + (nginx_domain | default('')) + '/privkey.pem'
+     if (nginx_domain | default('')) | length > 0 else '' }}

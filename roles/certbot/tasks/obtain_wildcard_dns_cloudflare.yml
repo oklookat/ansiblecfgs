@@ -1,0 +1,19 @@
+---
+- name: Create Cloudflare credentials ini
+  ansible.builtin.template:
+    src: dns_cloudflare.ini.j2
+    dest: "{{ certbot_dns_cloudflare_api_token_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Obtain wildcard SSL certificate with certbot and Cloudflare DNS
+  ansible.builtin.command: >
+    {{ certbot_bin_path }} certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials {{ certbot_dns_cloudflare_api_token_path }}
+    -n --agree-tos
+    -m {{ certbot_email }} --no-eff-email
+    -d {{ certbot_domain }}
+    -d *.{{ certbot_domain }}
+    -i nginx

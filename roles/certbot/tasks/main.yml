@@ -1,0 +1,18 @@
+---
+- include_tasks: install.yml
+  tags: certbot_install
+
+- include_tasks: install_nginx.yml
+  tags: certbot_install_nginx
+
+- include_tasks: obtain.yml
+  tags: certbot_obtain
+
+- include_tasks: install_dns_cloudflare.yml
+  tags: certbot_install_dns_cloudflare
+
+- include_tasks: obtain_wildcard_dns_cloudflare.yml
+  tags: certbot_obtain_wildcard_dns_cloudflare
+
+- include_tasks: autorenew.yml
+  tags: certbot_autorenew

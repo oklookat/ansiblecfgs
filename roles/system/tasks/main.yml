@@ -1,0 +1,20 @@
+---
+- include_tasks: dns.yml
+  tags: system_dns
+
+- include_tasks: upgrade.yml
+  tags: system_upgrade
+
+- include_tasks: kernel.yml
+  tags: system_kernel
+
+- meta: flush_handlers
+
+- include_tasks: ssh.yml
+  tags: system_ssh
+
+- include_tasks: journald.yml
+  tags: system_journald
+
+- include_tasks: reboot.yml
+  tags: system_reboot

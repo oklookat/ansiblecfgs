@@ -1,0 +1,30 @@
+user {{ nginx_user }};
+worker_processes auto;
+pid /var/run/nginx.pid;
+error_log /var/log/nginx/error.log warn;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    server_tokens off;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name _;
+        return 301 https://$host$request_uri;
+    }
+
+    include /etc/nginx/conf.d/*.conf;
+}

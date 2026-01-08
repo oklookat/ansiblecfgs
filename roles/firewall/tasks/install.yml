@@ -1,0 +1,14 @@
+---
+- name: Ensure nftables package is installed
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    update_cache: yes
+
+- name: Deploy base nftables config
+  ansible.builtin.template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0644"

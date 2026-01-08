@@ -1,0 +1,15 @@
+---
+certbot_path: "/opt/certbot"
+certbot_pip_path: "{{ certbot_path }}/bin/pip"
+certbot_bin_path: "{{ certbot_path }}/bin/certbot"
+
+# "" | "obtain" | "obtain-wildcard-dns-cloudflare"
+certbot_mode: ""
+
+# "obtain" | "obtain-wildcard-dns-cloudflare"
+certbot_email: ""
+certbot_domain: ""
+
+# "obtain-wildcard-dns-cloudflare"
+certbot_dns_cloudflare_api_token: ""
+certbot_dns_cloudflare_api_token_path: "/root/.secrets/certbot/cloudflare.ini"

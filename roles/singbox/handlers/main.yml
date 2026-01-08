@@ -1,0 +1,10 @@
+- name: Restart sing-box
+  ansible.builtin.systemd:
+    name: sing-box
+    state: restarted
+
+- name: Enable and start sing-box
+  ansible.builtin.systemd:
+    name: sing-box
+    enabled: true
+    state: started

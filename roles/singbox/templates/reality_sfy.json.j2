@@ -1,0 +1,86 @@
+{
+    "log": {
+        "level": "warning",
+        "timestamp": true
+    },
+    "dns": {
+        "final": "cloudflare-direct",
+        "servers": [
+            {
+                "tag": "cloudflare-direct",
+                "type": "https",
+                "server": "1.1.1.1"
+            },
+            {
+                "tag": "google-direct",
+                "type": "https",
+                "server": "8.8.8.8"
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "type": "vless",
+            "tag": "vless-in",
+            "listen": "::",
+            "listen_port": {{ singbox_listen_port }},
+            "tcp_fast_open": true,
+            "users": [
+                {
+                    "name": "sekai",
+                    "uuid": "{{ singbox_identity.uuid }}",
+                    "flow": "xtls-rprx-vision"
+                }
+            ],
+            "tls": {
+                "enabled": true,
+                "server_name": "{{ singbox_sni }}",
+                "alpn": [
+                    "h2"
+                ],
+                "reality": {
+                    "enabled": true,
+                    "handshake": {
+                        "server": "127.0.0.1",
+                        "server_port": {{ singbox_handshake_port }}
+                    },
+                    "private_key": "{{ singbox_identity.private_key }}",
+                    "short_id": [
+                        "{{ singbox_identity.short_id }}"
+                    ]
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "direct",
+            "tag": "direct-out"
+        }
+    ],
+    "route": {
+        "final": "direct-out",
+        "default_domain_resolver": "cloudflare-direct",
+        "rules": [
+            {
+                "action": "sniff"
+            },
+            {
+                "protocol": "dns",
+                "action": "hijack-dns"
+            },
+            {
+                "action": "reject",
+                "protocol": [
+                    "bittorrent",
+                    "quic"
+                ]
+            }
+        ]
+    },
+    "experimental": {
+        "cache_file": {
+            "enabled": true
+        }
+    }
+}

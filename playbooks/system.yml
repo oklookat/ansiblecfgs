@@ -1,0 +1,111 @@
+---
+# Try connecting using original inventory settings.
+- name: Test old SSH connectivity
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Test connection using current inventory settings
+      ansible.builtin.wait_for_connection:
+        timeout: 10
+      register: old_conn
+      ignore_errors: true
+
+    - name: Mark old SSH as working
+      set_fact:
+        ssh_user_working: "{{ ansible_user | default('root') }}"
+        ssh_port_working: "{{ ansible_port | default(22) }}"
+        ssh_become_pass: "{{ ansible_become_pass | default(omit) }}"
+      when: old_conn is succeeded
+
+# Try connecting using new SSH settings if old failed.
+- name: Test new SSH connectivity if old failed
+  hosts: all
+  gather_facts: false
+  vars:
+    ansible_user: "{{ system_new_user_name | default(omit) }}"
+    ansible_port: "{{ system_new_ssh_port | default(omit) }}"
+    ansible_become_pass: "{{ system_new_root_password | default(omit) }}"
+  tasks:
+    - name: Test connection using new settings
+      ansible.builtin.wait_for_connection:
+        timeout: 10
+      register: new_conn
+      ignore_errors: true
+      when: ssh_user_working is not defined
+
+    - name: Mark new SSH as working
+      set_fact:
+        ssh_user_working: "{{ system_new_user_name }}"
+        ssh_port_working: "{{ system_new_ssh_port }}"
+        ssh_become_pass: "{{ system_new_root_password }}"
+      when:
+        - ssh_user_working is not defined
+        - new_conn is succeeded
+
+    - name: Fail if neither old nor new SSH works
+      ansible.builtin.fail:
+        msg: "Cannot connect to {{ inventory_hostname }} using either old or new SSH settings"
+      when: ssh_user_working is not defined
+
+# Use the working connection settings.
+- name: System
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    ansible_user: "{{ ssh_user_working }}"
+    ansible_port: "{{ ssh_port_working }}"
+    ansible_become_pass: "{{ ssh_become_pass | default(omit) }}"
+  tasks:
+    - name: "firewall: cleanup"
+      ansible.builtin.include_role:
+        name: firewall
+        tasks_from: cleanup.yml
+
+    - name: "system: main"
+      ansible.builtin.include_role:
+        name: firewall
+        tasks_from: cleanup.yml
+
+    - name: Determine effective SSH port
+      ansible.builtin.set_fact:
+        effective_ssh_port: >-
+          {{
+            system_new_ssh_port
+            if (
+              system_new_ssh_port is defined and
+              (system_new_ssh_port | int(default=0)) > 0 and
+              (system_new_ssh_port | int) <= 65535
+            )
+            else (
+              ansible_port
+              if ansible_port is defined
+              else 22
+            )
+          }}
+
+    - name: "firewall: setup"
+      block:
+        - name: Install
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: install.yml
+
+        - name: Allow SSH
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+          vars:
+            firewall_rule_name: "99-allow_ssh"
+            firewall_rules:
+              - "add rule inet filter input tcp dport {{ effective_ssh_port }} accept"
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: apply.yml
+
+    - name: "system: reboot if required"
+      ansible.builtin.include_role:
+        name: system
+        tasks_from: reboot.yml

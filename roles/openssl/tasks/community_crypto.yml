@@ -1,0 +1,18 @@
+---
+- name: Check if community.crypto collection is installed
+  ansible.builtin.command: ansible-galaxy collection list community.crypto
+  register: crypto_collection_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  become: false
+  delegate_to: localhost
+
+- name: Install community.crypto collection if missing
+  ansible.builtin.command: >-
+    ansible-galaxy collection install community.crypto
+  when: >
+    crypto_collection_check.rc != 0 or
+    'community.crypto' not in crypto_collection_check.stdout
+  become: false
+  delegate_to: localhost

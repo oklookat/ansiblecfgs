@@ -1,0 +1,6 @@
+[Journal]
+Storage={{ system_journald_storage | default('persistent') }}
+SystemMaxUse={{ system_journald_system_max_use | default('500M') }}
+SystemMaxFileSize={{ system_journald_system_max_file_size | default('50M') }}
+RuntimeMaxUse={{ system_journald_runtime_max_use | default('100M') }}
+Compress={{ system_journald_compress | default('yes') }}

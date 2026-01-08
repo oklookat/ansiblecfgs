@@ -1,0 +1,10 @@
+---
+- include_tasks: reality_identity.yml
+
+- name: Generate config
+  ansible.builtin.template:
+    src: reality_sfy.json.j2
+    dest: "{{ singbox_config_path }}"
+  notify:
+    - Enable and start sing-box
+    - Restart sing-box

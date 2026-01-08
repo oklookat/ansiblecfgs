@@ -1,0 +1,25 @@
+---
+# ALL
+singbox_apt_repo: "https://deb.sagernet.org/"
+singbox_apt_gpg_url: "https://sing-box.app/gpg.key"
+singbox_apt_gpg_path: "/etc/apt/keyrings/sagernet.asc"
+singbox_config_path: "/etc/sing-box/config.json"
+singbox_listen_port: 443
+
+# reality | reality_sfy | vless_tls | wireguard
+singbox_identity_path: "/etc/sing-box/identity.yml"
+
+# reality | reality_sfy | vless_tls
+singbox_sni: "example.com"
+
+# reality | reality_sfy
+singbox_handshake_port: 3000
+
+# vless_tls
+singbox_certificate_path: ""
+singbox_key_path: ""
+
+# shadowsocks
+singbox_password: ""
+singbox_up_mbps: 1000
+singbox_down_mbps: 1000

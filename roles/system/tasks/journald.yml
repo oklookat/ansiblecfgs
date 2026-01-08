@@ -1,0 +1,15 @@
+---
+- name: Set journald disk usage limits
+  block:
+    - name: Ensure journald drop-in directory exists
+      ansible.builtin.file:
+        path: /etc/systemd/journald.conf.d
+        state: directory
+        mode: "0755"
+
+    - name: Install journald limits configuration
+      ansible.builtin.template:
+        src: journald.conf.j2
+        dest: "/etc/systemd/journald.conf.d/{{ system_journald_file | default('limits.conf', true) }}"
+        mode: "0644"
+      notify: Restart systemd-journald

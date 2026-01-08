@@ -1,0 +1,17 @@
+---
+- include_tasks: upgrade_pip
+
+- name: Install certbot-nginx
+  ansible.builtin.pip:
+    name: certbot-nginx
+    virtualenv: "{{ certbot_path }}"
+    state: present
+
+- name: Add upgrade cron job
+  ansible.builtin.cron:
+    name: "certbot-nginx auto upgrade"
+    minute: "0"
+    hour: "0"
+    day: "1"
+    user: root
+    job: "{{ certbot_pip_path }} install --upgrade certbot-nginx"

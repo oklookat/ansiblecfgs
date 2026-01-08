@@ -1,0 +1,6 @@
+---
+- name: Reboot host if required
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+    connect_timeout: 30
+  when: system_reboot_required | default(false)

@@ -1,0 +1,76 @@
+{
+    "log": {
+        "level": "warning",
+        "timestamp": true
+    },
+    "dns": {
+        "final": "cloudflare-direct",
+        "servers": [
+            {
+                "tag": "cloudflare-direct",
+                "type": "https",
+                "server": "1.1.1.1"
+            },
+            {
+                "tag": "google-direct",
+                "type": "https",
+                "server": "8.8.8.8"
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "type": "vless",
+            "tag": "vless-in",
+            "listen": "::",
+            "listen_port": {{ singbox_listen_port }},
+            "users": [
+                {
+                    "name": "sekai",
+                    "uuid": "{{ singbox_identity.uuid }}",
+                    "flow": "xtls-rprx-vision"
+                }
+            ],
+            "tls": {
+                "enabled": true,
+                "alpn": [
+                    "h2"
+                ],
+                "server_name": "{{ singbox_sni }}",
+                "certificate_path": "{{ singbox_certificate_path }}",
+                "key_path": "{{ singbox_key_path }}"
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "direct",
+            "tag": "direct-out"
+        }
+    ],
+    "route": {
+        "final": "direct-out",
+        "default_domain_resolver": "cloudflare-direct",
+        "rules": [
+            {
+                "action": "sniff"
+            },
+            {
+                "protocol": "dns",
+                "action": "hijack-dns"
+            },
+            {
+                "action": "reject",
+                "protocol": [
+                    "bittorrent",
+                    "quic"
+                ]
+            }
+        ]
+    },
+    "experimental": {
+        "cache_file": {
+            "enabled": true
+        }
+    }
+}

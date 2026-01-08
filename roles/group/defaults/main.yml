@@ -1,0 +1,8 @@
+---
+# deploy
+# group_name: "www-deploy"
+# group_users:
+#   - root
+#   - myuser
+# group_directories:
+#   - /var/wwww

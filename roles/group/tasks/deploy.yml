@@ -1,0 +1,23 @@
+---
+- name: Ensure deploy group exists
+  ansible.builtin.group:
+    name: "{{ group_name }}"
+    state: present
+  when: group_name is defined
+
+- name: Add users to deploy group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: "{{ group_name }}"
+    append: true
+  loop: "{{ group_users | default([]) }}"
+
+- name: Ensure shared directories exist with proper permissions
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: "{{ group_name }}"
+    mode: "2775" # rwxrwsr-x, setgid bit
+    recurse: true
+  loop: "{{ group_directories | default([]) }}"

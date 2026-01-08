@@ -1,0 +1,25 @@
+server {
+	listen 127.0.0.1:{{ nginx_port }} ssl http2;
+	listen [::1]:{{ nginx_port }} ssl http2;
+		
+	server_name {{ nginx_domain }};
+
+	ssl_certificate {{ nginx_fullchain_path }};
+	ssl_certificate_key {{ nginx_private_key_path }};
+
+	ssl_protocols TLSv1.2 TLSv1.3;
+	ssl_ecdh_curve X25519:secp384r1:secp521r1;
+
+	# OCSP Stapling (https://letsencrypt.org/2024/12/05/ending-ocsp)
+	ssl_stapling off;
+		
+	# HSTS
+	add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+	root {{ nginx_web_root_path }};
+	index index.html;
+
+	location / {
+        try_files $uri $uri/ =404;
+    }
+}

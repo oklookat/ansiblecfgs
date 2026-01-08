@@ -1,0 +1,48 @@
+---
+- name: Patch NetworkManager config if installed
+  when: "'network-manager' in ansible_facts.packages"
+  block:
+    - name: Ensure /etc/NetworkManager exists
+      ansible.builtin.file:
+        path: /etc/NetworkManager
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Disable DNS management in NetworkManager
+      ansible.builtin.lineinfile:
+        path: /etc/NetworkManager/NetworkManager.conf
+        insertafter: '^#?\[main\]'
+        create: yes
+        line: "{{ item }}"
+      loop:
+        - "dns=none"
+        - "rc-manager=unmanaged"
+      notify: Restart NetworkManager
+
+- name: Ensure systemd-resolved override directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure static DNS via systemd-resolved
+  when: "'systemd-resolved' in ansible_facts.packages"
+  ansible.builtin.template:
+    src: resolved.conf.j2
+    dest: "{{ system_new_resolved_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart systemd-resolved
+
+- name: Ensure /etc/resolv.conf points to systemd stub
+  when: "'systemd-resolved' in ansible_facts.packages"
+  ansible.builtin.file:
+    path: /etc/resolv.conf
+    state: link
+    src: /run/systemd/resolve/stub-resolv.conf
+    force: yes

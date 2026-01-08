@@ -1,0 +1,35 @@
+# Core network buffer settings
+net.core.rmem_max = 8388608        # 8 MB
+net.core.wmem_max = 8388608        # 8 MB
+net.core.netdev_max_backlog = 2000
+net.core.somaxconn = 1024
+
+# IPv4 TCP performance
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_keepalive_time = 1200
+net.ipv4.tcp_keepalive_probes = 5
+net.ipv4.tcp_keepalive_intvl = 30
+net.ipv4.tcp_max_syn_backlog = 2048
+net.ipv4.tcp_max_tw_buckets = 2000
+net.ipv4.tcp_mem = 4096 8192 16384        # pages
+net.ipv4.udp_mem = 4096 8192 16384        # pages
+net.ipv4.tcp_rmem = 4096 65536 8388608    # min, default, max
+net.ipv4.tcp_wmem = 4096 65536 8388608
+net.ipv4.tcp_mtu_probing = 1
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# IPv6 support
+net.ipv6.conf.all.disable_ipv6 = 0
+net.ipv6.conf.default.disable_ipv6 = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# Additional protections
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.all.log_martians = 0
+net.ipv4.conf.default.log_martians = 0

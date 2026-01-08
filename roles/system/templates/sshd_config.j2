@@ -1,0 +1,58 @@
+# SSH log verbosity level
+LogLevel INFO
+
+# Port on which SSH will listen
+Port {{ system_new_ssh_port }}
+
+# Disable root login
+PermitRootLogin no
+
+# Disable X11 forwarding
+X11Forwarding no
+
+# Maximum number of authentication attempts
+MaxAuthTries 5
+
+# Time (in seconds) allowed for login before disconnect
+LoginGraceTime 30
+
+# Allow login only for the specified user
+{% if system_new_user_name is defined and system_new_user_name | length > 0 %}
+AllowUsers {{ system_new_user_name }}
+{% endif %}
+
+# Interval (in seconds) to send keepalive messages to the client
+ClientAliveInterval 300
+
+# Number of missed keepalive messages before disconnect
+ClientAliveCountMax 2
+
+# Enable PAM (Pluggable Authentication Modules) for authentication,
+# account management, and session handling. If enabled, PAM authentication
+# is allowed via KbdInteractiveAuthentication and PasswordAuthentication.
+# You can enable PAM account/session checks without enabling password auth.
+UsePAM yes
+
+# Disallow empty passwords
+PermitEmptyPasswords no
+
+# Enable public key authentication
+PubkeyAuthentication yes
+
+# Disable password authentication
+PasswordAuthentication no
+
+# Disable keyboard-interactive authentication (challenge-response)
+KbdInteractiveAuthentication no
+
+# Disable challenge-response authentication
+ChallengeResponseAuthentication no
+
+# Disable displaying the message of the day (MOTD) on login
+PrintMotd no
+
+# Allow the client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+# Define SSH subsystems (here we enable SFTP)
+Subsystem       sftp    /usr/lib/openssh/sftp-server

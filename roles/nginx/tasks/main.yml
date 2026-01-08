@@ -1,0 +1,12 @@
+---
+- include_tasks: install.yml
+  tags: nginx_install
+
+- include_tasks: base.yml
+  tags: nginx_base
+
+- include_tasks: reality_sfy.yml
+  tags: nginx_reality_sfy
+
+- include_tasks: apply.yml
+  tags: nginx_apply

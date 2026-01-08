@@ -1,0 +1,6 @@
+---
+- name: Obtain SSL certificate with certbot
+  ansible.builtin.command: >
+    {{ certbot_bin_path }} certonly --nginx -n --agree-tos
+    -m {{ certbot_email }} --no-eff-email
+    -d {{ certbot_domain }}

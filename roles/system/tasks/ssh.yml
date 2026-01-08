@@ -1,0 +1,101 @@
+---
+- name: Set root password
+  ansible.builtin.user:
+    name: root
+    password: "{{ system_new_root_password | password_hash('sha512') }}"
+  when:
+    - system_new_root_password is defined
+    - system_new_root_password | length > 0
+  register: root_password_result
+
+- name: Update ansible_become_pass if root password changed
+  ansible.builtin.set_fact:
+    ansible_become_pass: "{{ system_new_root_password }}"
+  when: root_password_result.changed | default(false)
+
+- name: Check SSH public key exists on control node
+  ansible.builtin.stat:
+    path: "{{ system_ssh_public_key_path }}"
+  delegate_to: localhost
+  become: false
+  register: ssh_key_stat
+
+- name: Ensure new sudo user and SSH key exist
+  ansible.builtin.assert:
+    that:
+      - system_new_user_name is defined
+      - system_new_user_name | length > 0
+      - system_new_user_password is defined
+      - system_new_user_password | length > 0
+      - ssh_key_stat.stat.exists
+    fail_msg: >
+      No valid new sudo user or SSH key is defined.
+      Define system_new_user_name/password and ensure the SSH key exists.
+
+- name: Create new user and add SSH key
+  when:
+    - system_new_user_name | length > 0
+    - system_new_user_password | length > 0
+    - ssh_key_stat.stat.exists
+  block:
+    - name: Create user with sudo privileges
+      ansible.builtin.user:
+        name: "{{ system_new_user_name }}"
+        password: "{{ system_new_user_password | password_hash('sha512') }}"
+        groups: sudo
+        shell: /bin/bash
+        append: true
+      register: new_user_result
+
+    - name: Add SSH public key to new user
+      ansible.builtin.authorized_key:
+        user: "{{ system_new_user_name }}"
+        state: present
+        key: "{{ lookup('file', system_ssh_public_key_path) }}"
+
+- name: Update ansible_user if new user was created
+  ansible.builtin.set_fact:
+    ansible_user: "{{ system_new_user_name }}"
+  when: new_user_result.changed | default(false)
+
+- name: Stop and disable cloud-init service if present
+  ansible.builtin.systemd:
+    name: cloud-init
+    state: stopped
+    enabled: false
+  when: "'cloud-init' in ansible_facts.packages"
+
+- name: Find cloud-init SSH override configs
+  ansible.builtin.find:
+    paths: /etc/ssh/sshd_config.d
+    patterns: "*cloud-init*"
+  register: cloud_init_ssh_overrides
+  when: "'cloud-init' in ansible_facts.packages"
+
+- name: Remove cloud-init SSH override configs
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ cloud_init_ssh_overrides.files }}"
+  when:
+    - "'cloud-init' in ansible_facts.packages"
+    - cloud_init_ssh_overrides.matched > 0
+
+- name: Apply main sshd_config template
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: "0600"
+  when: system_new_ssh_port is defined and
+    (system_new_ssh_port | int(default=0)) | int > 0 and
+    (system_new_ssh_port | int <= 65535)
+  register: sshd_config_result
+
+- name: Update firewall_ssh_port and ansible_port if SSH port changed
+  ansible.builtin.set_fact:
+    firewall_ssh_port: "{{ system_new_ssh_port | int(default=22) }}"
+    ansible_port: "{{ system_new_ssh_port | int(default=22) }}"
+    system_reboot_required: true
+  when: sshd_config_result.changed | default(false)

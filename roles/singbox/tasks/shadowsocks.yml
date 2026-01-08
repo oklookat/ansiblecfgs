@@ -1,0 +1,22 @@
+---
+- include_tasks: shadowsocks_identity.yml
+
+# TODO: make idempotent
+
+- name: Download tcp-brutal installer
+  ansible.builtin.get_url:
+    url: https://tcp.hy2.sh/
+    dest: /tmp/tcp-brutal.sh
+    mode: "0755"
+
+- name: Run tcp-brutal installer
+  ansible.builtin.command: bash /tmp/tcp-brutal.sh
+  changed_when: true
+
+- name: Generate config
+  ansible.builtin.template:
+    src: shadowsocks.json.j2
+    dest: "{{ singbox_identity_path }}"
+  notify:
+    - Enable and start sing-box
+    - Restart sing-box

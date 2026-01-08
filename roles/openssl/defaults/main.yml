@@ -1,0 +1,8 @@
+---
+# selfsigned
+openssl_ssl_group_name: "root"
+openssl_cert_days: 365
+openssl_sni: ""
+openssl_key_path: "/etc/ssl/private/{{ openssl_sni }}.key"
+openssl_certificate_path: "/etc/ssl/certs/{{ openssl_sni }}.crt"
+openssl_temp_csr_path: "{{ temp_dir }}/{{ inventory_hostname }}-{{ openssl_sni }}-{{ ansible_play_id | default(ansible_date_time.epoch) }}.csr"

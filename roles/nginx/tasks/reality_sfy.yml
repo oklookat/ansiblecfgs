@@ -1,0 +1,31 @@
+---
+- name: Check if fullchain exists
+  ansible.builtin.stat:
+    path: "{{ nginx_fullchain_path }}"
+  register: fullchain_stat
+
+- name: Check if private key exists
+  ansible.builtin.stat:
+    path: "{{ nginx_private_key_path }}"
+  register: privkey_stat
+
+- name: Ensure web root exists
+  ansible.builtin.file:
+    path: "{{ nginx_web_root_path }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: "0755"
+
+- name: Copy HTML files
+  ansible.builtin.copy:
+    src: reality_sfy.html
+    dest: "{{ nginx_web_root_path }}/index.html"
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: "0755"
+
+- name: Generate config
+  ansible.builtin.template:
+    src: reality_sfy.conf.j2
+    dest: /etc/nginx/conf.d/{{ nginx_domain }}.conf

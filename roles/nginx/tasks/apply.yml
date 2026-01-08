@@ -1,0 +1,23 @@
+---
+- name: Enable and start nginx
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+
+- name: Check nginx config and reload
+  ansible.builtin.block:
+    - name: Test Nginx configuration
+      ansible.builtin.command: nginx -t
+      register: nginx_test
+      ignore_errors: yes
+
+    - name: Fail if Nginx config test failed
+      ansible.builtin.fail:
+        msg: "Nginx configuration test failed! Check the config."
+      when: nginx_test.rc != 0
+
+    - name: Reload Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded

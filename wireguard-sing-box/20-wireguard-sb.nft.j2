@@ -1,3 +1,0 @@
-add rule inet filter input udp dport {{ wg_port }} accept
-add rule inet filter input iifname "wg0" accept
-add rule inet filter forward iifname "wg0" oifname "wg0" accept

@@ -1,0 +1,12 @@
+---
+- name: Ensure certbot_path is defined
+  ansible.builtin.assert:
+    that:
+      - certbot_path is defined
+      - certbot_path | length > 0
+
+- name: Upgrade pip in certbot environment
+  ansible.builtin.pip:
+    name: pip
+    virtualenv: "{{ certbot_path }}"
+    state: latest

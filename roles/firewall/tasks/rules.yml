@@ -1,0 +1,29 @@
+---
+- name: Ensure firewall rules directory exists
+  ansible.builtin.file:
+    path: "{{ firewall_rules_dir }}"
+    state: directory
+    mode: "0755"
+  when: firewall_rules_dir is defined and firewall_rules_dir != ""
+
+- name: Generate firewall rules file
+  ansible.builtin.template:
+    src: rules.nft.j2
+    dest: "{{ firewall_rules_dir }}/{{ firewall_rule_name }}.nft"
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - firewall_rules is defined
+    - firewall_rules | length > 0
+    - firewall_rules_dir is defined and firewall_rules_dir != ""
+    - firewall_rule_name is defined and firewall_rule_name != ""
+
+- name: Remove firewall rules file if empty or undefined
+  ansible.builtin.file:
+    path: "{{ firewall_rules_dir }}/{{ firewall_rule_name }}"
+    state: absent
+  when:
+    - firewall_rules_dir is defined and firewall_rules_dir != ""
+    - firewall_rule_name is defined and firewall_rule_name != ""
+    - firewall_rules is not defined or firewall_rules | length == 0

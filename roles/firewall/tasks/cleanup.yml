@@ -1,0 +1,79 @@
+---
+- name: Stop nftables service
+  ansible.builtin.service:
+    name: nftables
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Flush nftables rules
+  ansible.builtin.command: nft flush ruleset
+  ignore_errors: true
+
+- name: Stop UFW service
+  ansible.builtin.service:
+    name: ufw
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Disable UFW
+  ansible.builtin.command: ufw disable
+  ignore_errors: true
+
+- name: Remove UFW package
+  ansible.builtin.package:
+    name: ufw
+    state: absent
+
+- name: Stop firewalld service
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Remove firewalld package
+  ansible.builtin.package:
+    name: firewalld
+    state: absent
+
+- name: Stop Shorewall service
+  ansible.builtin.service:
+    name: shorewall
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Remove Shorewall package
+  ansible.builtin.package:
+    name: shorewall
+    state: absent
+
+- name: Stop CSF (ConfigServer Firewall) service
+  ansible.builtin.service:
+    name: csf
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Remove CSF package
+  ansible.builtin.package:
+    name: csf
+    state: absent
+
+- name: Flush iptables rules
+  ansible.builtin.command: iptables -F
+  ignore_errors: true
+
+- name: Flush ip6tables rules
+  ansible.builtin.command: ip6tables -F
+  ignore_errors: true
+
+- name: Remove iptables-related packages
+  ansible.builtin.package:
+    name:
+      - iptables
+      - iptables-persistent
+      - netfilter-persistent
+    state: absent

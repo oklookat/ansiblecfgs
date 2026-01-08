@@ -1,0 +1,12 @@
+---
+- name: Apply sysctl config
+  when: system_new_sysctl_config_path | length > 0
+  block:
+    - name: Deploy sysctl config
+      ansible.builtin.template:
+        src: sysctl.conf.j2
+        dest: "{{ system_new_sysctl_config_path }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload sysctl

@@ -1,0 +1,47 @@
+---
+- name: Check if identity exists
+  ansible.builtin.stat:
+    path: "{{ singbox_identity_path }}"
+  register: singbox_identity_stat
+
+- block:
+    - name: Generate sing-box short ID
+      ansible.builtin.command: sing-box generate rand --hex 8
+      register: singbox_short_id
+      changed_when: true
+
+    - name: Generate sing-box UUID
+      ansible.builtin.command: sing-box generate uuid
+      register: singbox_uuid
+      changed_when: true
+
+    - name: Generate sing-box reality-keypair
+      ansible.builtin.command: sing-box generate reality-keypair
+      register: singbox_keys
+      changed_when: true
+
+    - name: Save identity
+      ansible.builtin.copy:
+        dest: "{{ singbox_identity_path }}"
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          short_id: "{{ singbox_short_id.stdout | trim }}"
+          uuid: "{{ singbox_uuid.stdout | trim }}"
+          private_key: "{{ singbox_keys.stdout | regex_search('PrivateKey:\\s*(\\S+)', '\1') }}"
+          public_key: "{{ singbox_keys.stdout | regex_search('PublicKey:\\s*(\\S+)', '\1') }}"
+
+  when: not singbox_identity_stat.stat.exists
+
+- name: Fail if identity file is empty or broken
+  ansible.builtin.fail:
+    msg: "Шdentity file exists but is empty or invalid"
+  when:
+    - singbox_identity_stat.stat.exists
+    - singbox_identity_stat.stat.size | default(0) == 0
+
+- name: Load identity
+  ansible.builtin.include_vars:
+    file: "{{ singbox_identity_path }}"
+    name: singbox_identity

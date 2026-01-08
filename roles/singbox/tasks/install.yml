@@ -1,0 +1,27 @@
+---
+- name: Ensure /etc/apt/keyrings exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download SagerNet GPG key
+  ansible.builtin.get_url:
+    url: "{{ singbox_apt_gpg_url }}"
+    dest: "{{ singbox_apt_gpg_path }}"
+    mode: "0644"
+
+- name: Add SagerNet APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb {{ singbox_apt_repo }} * *"
+    state: present
+    filename: sagernet
+    codename: "*"
+    components: "*"
+    update_cache: yes
+    key: "{{ singbox_apt_gpg_path }}"
+
+- name: Install sing-box
+  ansible.builtin.apt:
+    name: "sing-box"
+    state: present

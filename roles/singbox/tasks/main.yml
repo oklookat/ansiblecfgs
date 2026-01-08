@@ -1,0 +1,18 @@
+---
+- include_tasks: install.yml
+  tags: singbox_install
+
+- include_tasks: reality.yml
+  tags: singbox_reality
+
+- include_tasks: reality_sfy.yml
+  tags: singbox_reality_sfy
+
+- include_tasks: vless_tls.yml
+  tags: singbox_vless_tls
+
+- include_tasks: shadowsocks.yml
+  tags: singbox_shadowsocks
+
+- include_tasks: wireguard.yml
+  tags: singbox_wireguard

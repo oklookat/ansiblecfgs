@@ -1,0 +1,29 @@
+---
+# Automatically sets
+system_reboot_required: false
+
+# Upgrade
+system_new_pkg_mirror: ""
+
+# SSH
+system_ssh_public_key_path: "{{ lookup('env','HOME') + '/.ssh/id_rsa.pub' }}"
+system_new_root_password: ""
+system_new_user_name: ""
+system_new_user_password: ""
+system_new_ssh_port: -1
+
+# Network
+system_new_resolved_path: "/etc/systemd/resolved.conf.d/99-cloudflare-dns.conf"
+system_new_dns: "1.1.1.1"
+system_new_fallback_dns: "1.0.0.1"
+
+# kernel
+system_new_sysctl_config_path: "/etc/sysctl.d/99-custom.conf"
+
+# journald
+system_journald_file: "limits.conf"
+system_journald_storage: persistent
+system_journald_system_max_use: 500M
+system_journald_system_max_file_size: 50M
+system_journald_runtime_max_use: 100M
+system_journald_compress: yes

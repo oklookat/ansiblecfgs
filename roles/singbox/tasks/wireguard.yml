@@ -1,0 +1,18 @@
+---
+- include_tasks: wireguard_identity.yml
+
+- name: Install wireguard
+  apt:
+    name:
+      - wireguard
+    state: present
+    update_cache: yes
+
+- name: Deploy sing-box server config
+  ansible.builtin.template:
+    src: wireguard.json.j2
+    dest: "{{ singbox_config_path }}"
+    mode: "0644"
+  notify:
+    - Enable and start sing-box
+    - Restart sing-box
