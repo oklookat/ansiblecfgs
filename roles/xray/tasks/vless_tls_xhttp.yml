@@ -1,0 +1,10 @@
+---
+- include_tasks: vless_tls_identity.yml
+
+- name: Generate config
+  ansible.builtin.template:
+    src: vless_tls_xhttp.json.j2
+    dest: "{{ xray_config_path }}"
+  notify:
+    - Enable and start Xray
+    - Restart xray

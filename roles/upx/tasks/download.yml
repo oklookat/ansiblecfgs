@@ -1,0 +1,49 @@
+---
+- name: Download UPX
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure compress_workdir exists
+      file:
+        path: "{{ compress_workdir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Ensure upx_workdir exists
+      file:
+        path: "{{ upx_workdir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download UPX tarball if not present
+      get_url:
+        url: "{{ upx_url }}"
+        dest: "{{ upx_workdir }}/upx.tar.xz"
+        mode: "0644"
+        force: no
+
+    - name: Extract UPX if binary does not exist
+      unarchive:
+        src: "{{ upx_workdir }}/upx.tar.xz"
+        dest: "{{ upx_workdir }}"
+        remote_src: yes
+        creates: "{{ upx_workdir }}/upx"
+
+    - name: Move UPX binary to root of workdir if not already there
+      command: mv "{{ item }}" "{{ upx_workdir }}/upx"
+      args:
+        removes: "{{ item }}"
+      loop: "{{ lookup('fileglob', upx_workdir + '/**/upx', wantlist=True) }}"
+      when: not lookup('file', upx_workdir + '/upx', errors='ignore')
+
+    - name: Ensure UPX binary is executable
+      file:
+        path: "{{ upx_workdir }}/upx"
+        mode: "0755"
+        state: file
+
+    - name: Clean up unnecessary files in upx_workdir
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ lookup('fileglob', upx_workdir + '/*', wantlist=True) | difference([upx_workdir + '/upx']) }}"

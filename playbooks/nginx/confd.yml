@@ -1,0 +1,16 @@
+---
+- name: "nginx: deploy .conf file"
+  hosts: all
+  become: true
+  tasks:
+    - name: "nginx: generate, apply config"
+      block:
+        - name: Generate
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: confd.yml
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: apply.yml

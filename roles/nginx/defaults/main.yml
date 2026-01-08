@@ -1,8 +1,15 @@
 ---
+# base
 nginx_user: "www-data"
-nginx_port: 443
+
+# confd | reality_sfy
 nginx_domain: ""
 
+# confd
+nginx_conf_src: "example.conf.j2"
+
+# reality_sfy
+nginx_port: 443
 nginx_web_root_path: >-
   {{ '/var/www/' + (nginx_domain | default('')) 
      if (nginx_domain | default('')) | length > 0 else '' }}

@@ -1,11 +1,11 @@
 ---
-- name: Ensure deploy group exists
+- name: Ensure group exists
   ansible.builtin.group:
     name: "{{ group_name }}"
     state: present
   when: group_name is defined
 
-- name: Add users to deploy group
+- name: Add users to group
   ansible.builtin.user:
     name: "{{ item }}"
     groups: "{{ group_name }}"

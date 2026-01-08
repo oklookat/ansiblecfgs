@@ -1,0 +1,56 @@
+---
+- name: Render locally
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure workdir exist
+      file:
+        path: "{{ singbox_local_temp_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Render uci config
+      template:
+        src: install_singbox/uci.j2
+        dest: "{{ singbox_local_uci }}"
+
+    - name: Render init config
+      template:
+        src: install_singbox/init.j2
+        dest: "{{ singbox_local_init }}"
+
+- name: Update opkg
+  raw: opkg update
+
+- name: Install SFTP server
+  raw: opkg install openssh-sftp-server
+
+- name: Install kmod-tun
+  raw: opkg install kmod-tun
+
+- name: Stop sing-box service (ignore errors)
+  raw: service sing-box stop || true
+
+- name: Ensure required directories exist
+  raw: |
+    mkdir -p "{{ singbox_bin | dirname }}"
+    mkdir -p "{{ singbox_config | dirname }}"
+    mkdir -p "{{ singbox_workdir }}"
+
+- name: Copy binary
+  local_action: shell scp -P {{ ansible_port }} {{ singbox_local_bin }} 'root@{{ ansible_host }}:{{ singbox_bin }}'
+
+- name: Make binary executable
+  raw: chmod +x "{{ sb_bin }}"
+
+- name: Copy uci config
+  local_action: shell scp -P {{ ansible_port }} {{ singbox_local_uci }} 'root@{{ ansible_host }}:{{ singbox_uci }}'
+
+- name: Copy init config
+  local_action: shell scp -P {{ ansible_port }} {{ singbox_local_init }} 'root@{{ ansible_host }}:{{ singbox_init }}'
+
+- name: Make init config executable
+  raw: chmod +x "{{ singbox_init }}"
+
+- name: Copy config
+  local_action: shell scp -P {{ ansible_port }} {{ singbox_local_config }} 'root@{{ ansible_host }}:{{ singbox_config }}'

@@ -1,0 +1,12 @@
+---
+- include_tasks: download_singbox_locally.yml
+  tags: openwrt_download_singbox_locally
+
+- include_tasks: install_singbox.yml
+  tags: openwrt_install_singbox
+
+- include_tasks: download_xray_locally.yml
+  tags: openwrt_download_xray_locally
+
+- include_tasks: install_xray.yml
+  tags: openwrt_install_xray

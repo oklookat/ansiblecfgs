@@ -1,0 +1,128 @@
+---
+- name: Validate required Xray variables
+  assert:
+    that:
+      - xray_username is defined
+      - xray_bin is defined
+      - xray_config_dir is defined
+    fail_msg: "xray_username, xray_bin and xray_config_dir must be defined"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Create xray system user
+  user:
+    name: "{{ xray_username }}"
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: no
+    state: present
+
+- name: Install Xray
+  shell: |
+    bash -c "$(curl -fsSL https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u {{ xray_username }}
+  args:
+    creates: "{{ xray_bin }}"
+    executable: /bin/bash
+
+- name: Ensure config directory exists
+  file:
+    path: "{{ xray_config_dir }}"
+    state: directory
+    owner: "{{ xray_username }}"
+    group: "{{ xray_username }}"
+    mode: "0750"
+
+- name: Ensure log directory exists
+  file:
+    path: "{{ xray_log_dir }}"
+    state: directory
+    owner: "{{ xray_username }}"
+    group: "{{ xray_username }}"
+    mode: "0750"
+
+- name: Ensure systemd override directory exists
+  file:
+    path: "{{ xray_systemd_override_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Generate systemd override for xray
+  ansible.builtin.template:
+    src: install_systemd.conf.j2
+    dest: "{{ xray_systemd_override_dir }}/{{ xray_systemd_override_conf }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - systemd daemon-reload
+    - Enable and start Xray
+    - Restart xray
+
+# Autoupdate scripts and units
+
+- name: Create xray_autoupdate helper script
+  ansible.builtin.template:
+    src: install_autoupdate.sh.j2
+    dest: "/usr/local/bin/{{ xray_autoupdate_helper }}"
+    owner: root
+    group: root
+    mode: "0755"
+  when: xray_autoupdate | default(false)
+
+- name: Install xray_autoupdate systemd service
+  ansible.builtin.template:
+    src: install_autoupdate.service.j2
+    dest: "/etc/systemd/system/{{ xray_autoupdate_service }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: xray_autoupdate | default(false)
+  notify: systemd daemon-reload
+
+- name: Install xray-update systemd timer
+  ansible.builtin.template:
+    src: install_autoupdate.timer.j2
+    dest: "/etc/systemd/system/{{ xray_autoupdate_timer }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: xray_autoupdate | default(false)
+  notify: systemd daemon-reload
+
+- name: Enable and start xray_autoupdate timer
+  ansible.builtin.systemd:
+    name: "{{ xray_autoupdate_timer }}"
+    enabled: true
+    state: started
+  when: xray_autoupdate | default(false)
+
+# Remove timer/service if autoupdate disabled
+
+- name: Stop and disable xray-update timer if autoupdate disabled
+  ansible.builtin.systemd:
+    name: "{{ xray_autoupdate_timer }}"
+    enabled: false
+    state: stopped
+  when: not (xray_autoupdate | default(false))
+
+- name: Remove xray-update systemd timer if autoupdate disabled
+  file:
+    path: "/etc/systemd/system/{{ xray_autoupdate_timer }}"
+    state: absent
+  when: not (xray_autoupdate | default(false))
+
+- name: Remove xray-update systemd service if autoupdate disabled
+  file:
+    path: "/etc/systemd/system/{{ xray_autoupdate_service }}"
+    state: absent
+  when: not (xray_autoupdate | default(false))
+
+- name: Remove xray-update helper script if autoupdate disabled
+  file:
+    path: "/usr/local/bin/{{ xray_autoupdate_helper }}"
+    state: absent
+  when: not (xray_autoupdate | default(false))
+
+- meta: flush_handlers

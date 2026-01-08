@@ -1,0 +1,10 @@
+---
+# ALL
+upx_workdir: "{{ role_path }}/workdir"
+
+# download
+upx_url: "https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-amd64_linux.tar.xz"
+
+# compress
+upx_input: ""
+upx_output: ""

@@ -1,0 +1,9 @@
+---
+- include_tasks: install.yml
+  tags: xray_install
+
+- include_tasks: vless_tls_xhttp.yml
+  tags: xray_vless_tls_xhttp
+
+- include_tasks: reality_sfy.yml
+  tags: xray_reality_sfy

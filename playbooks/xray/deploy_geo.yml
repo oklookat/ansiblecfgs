@@ -1,0 +1,21 @@
+---
+- name: "xray: deploy geofiles"
+  hosts: vps
+  become: true
+  tasks:
+    - name: Copy geoip to remote host
+      copy:
+        src: "{{ xray_geoip_local }}"
+        dest: "{{ xray_geoip }}"
+        mode: "0644"
+
+    - name: Copy geosite to remote host
+      copy:
+        src: "{{ xray_geosite_local }}"
+        dest: "{{ xray_geosite }}"
+        mode: "0644"
+
+    - name: Restart Xray
+      systemd:
+        name: xray
+        state: restarted

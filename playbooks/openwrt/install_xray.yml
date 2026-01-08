@@ -1,0 +1,33 @@
+---
+- name: "OpenWrt: install Xray"
+  hosts: openwrt
+  gather_facts: false
+  tasks:
+    - name: "upx: download"
+      ansible.builtin.include_role:
+        name: upx
+        tasks_from: download.yml
+
+    - name: "xray: download locally"
+      ansible.builtin.include_role:
+        name: openwrt
+        tasks_from: download_xray_locally.yml
+
+    - name: "upx: set compressed Xray bin"
+      ansible.builtin.set_fact:
+        xray_local_compressed_bin: "{{ xray_local_temp_dir }}/xray.upxc"
+
+    - name: "upx: compress Xray"
+      ansible.builtin.include_role:
+        name: upx
+        tasks_from: compress.yml
+      vars:
+        upx_input: "{{ xray_local_bin }}"
+        upx_output: "{{ xray_local_compressed_bin }}"
+
+    - name: "xray: install"
+      ansible.builtin.include_role:
+        name: openwrt
+        tasks_from: install_xray.yml
+      vars:
+        xray_local_bin: "{{ xray_local_compressed_bin }}"

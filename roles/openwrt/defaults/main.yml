@@ -1,0 +1,58 @@
+---
+# download_xray_locally | install_xray
+xray_local_temp_dir: "{{ role_path }}/xray_temp"
+
+# download_xray_locally
+xray_url: "https://github.com/XTLS/Xray-core/releases/download/v25.12.8/Xray-linux-arm64-v8a.zip"
+# optional
+xray_sha256: "fdffb733313d784afea143e6bd3fd6ad7d521fb337e966a0e042bb823172309e"
+
+# download_singbox_locally | install_singbox
+singbox_local_temp_dir: "{{ role_path }}/singbox_temp"
+
+# download_singbox_locally
+singbox_url: "https://github.com/SagerNet/sing-box/releases/download/v1.12.15/sing-box-1.12.15-linux-arm64.tar.gz"
+# optional
+singbox_sha256: "11f6cd1d33a3a35794af06b446fba5ddcefc3970fb6f57c4927a8c610db3093b"
+
+# install_xray
+xray_local_files: "{{ role_path }}/files/install_xray"
+
+xray_tproxy_port: 3000
+xray_confdir: ""
+xray_asset: "/usr/local/share/xray"
+
+xray_bin: "/usr/local/bin/xray"
+xray_local_bin: "{{ xray_local_temp_dir }}/xray"
+
+xray_uci: "/etc/config/xray"
+xray_local_uci: "{{ xray_local_temp_dir }}/uci"
+
+xray_init: "/etc/init.d/xray"
+xray_local_init: "{{ xray_local_temp_dir }}/init"
+
+xray_config: "{{ xray_asset }}/config.json"
+xray_local_config: "{{ xray_local_temp_dir }}/config.json"
+
+xray_geosite: "{{ xray_location_asset }}/geosite.dat"
+xray_local_geosite: "{{ xray_local_files }}/files/geosite.dat"
+
+xray_geoip: "{{ xray_location_asset }}/geoip.dat"
+xray_local_geoip: "{{ xray_local_files }}/files/geosite.dat"
+
+# install_singbox
+singbox_local_files: "{{ role_path }}/files/install_singbox"
+
+singbox_bin: "/usr/local/bin/sing-box"
+singbox_local_bin: "{{ singbox_local_temp_dir }}/sing-box"
+
+singbox_uci: "/etc/config/sing-box"
+singbox_local_uci: "{{ singbox_local_temp_dir }}/uci"
+
+singbox_init: "/etc/init.d/sing-box"
+singbox_local_init: "{{ singbox_local_temp_dir }}/init"
+
+singbox_config: "/etc/sing-box/config.json"
+singbox_local_config: "{{ singbox_local_files }}/config.json"
+
+singbox_workdir: "/usr/share/sing-box"

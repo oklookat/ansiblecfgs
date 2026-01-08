@@ -1,0 +1,34 @@
+---
+- name: Check if identity exists
+  ansible.builtin.stat:
+    path: "{{ xray_identity_path }}"
+  register: xray_identity_stat
+
+- block:
+    - name: Generate Xray UUID
+      ansible.builtin.command: xray uuid
+      register: xray_uuid
+      changed_when: true
+
+    - name: Save identity
+      ansible.builtin.copy:
+        dest: "{{ xray_identity_path }}"
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          uuid: "{{ xray_uuid.stdout | trim }}"
+
+  when: not xray_identity_stat.stat.exists
+
+- name: Fail if identity file is empty or broken
+  ansible.builtin.fail:
+    msg: "Identity file exists but is empty or invalid"
+  when:
+    - xray_identity_stat.stat.exists
+    - xray_identity_stat.stat.size | default(0) == 0
+
+- name: Load identity
+  ansible.builtin.include_vars:
+    file: "{{ xray_identity_path }}"
+    name: xray_identity

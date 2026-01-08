@@ -1,0 +1,14 @@
+---
+- name: systemd daemon-reload
+  ansible.builtin.command: systemctl daemon-reload
+
+- name: Enable and start Xray
+  systemd:
+    name: xray
+    enabled: true
+    state: started
+
+- name: Restart xray
+  service:
+    name: xray
+    state: restarted

@@ -1,0 +1,7 @@
+---
+# ALL
+polkit_rules_dir: "/etc/polkit-1/rules.d"
+polkit_rule_name: "10-singbox"
+# systemd_manage_units
+# polkit_systemd_service_name: "sing-box"
+# polkit_rule_path: "/etc/polkit-1/rules.d/{{ polkit_rule_name }}.rules"

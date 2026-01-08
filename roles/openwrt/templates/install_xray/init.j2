@@ -1,0 +1,161 @@
+#!/bin/sh /etc/rc.common
+
+USE_PROCD=1
+START=99
+STOP=10
+
+PROG="{{ xray_bin }}"
+TPROXY_MARK=255
+TPROXY_TABLE=100
+NFT_FILE="/etc/nftables.d/30-xray-tproxy.nft"
+
+start_service() {
+    config_load "xray"
+
+    local enabled
+    config_get_bool enabled "main" "enabled" 0
+    [ "$enabled" -eq 1 ] || return 0
+
+    local log_stderr log_stdout location_config location_asset location_confdir tproxy_port
+    
+    config_get_bool log_stderr "main" "log_stderr" 1
+    config_get_bool log_stdout "main" "log_stdout" 1
+    config_get_int tproxy_port "main" "tproxy_port" 3000
+
+    # https://xtls.github.io/en/config/features/env.html
+    config_get location_config "main" "location_config" ""
+    config_get location_asset "main" "location_asset" ""
+    config_get location_confdir "main" "location_confdir" ""
+
+    # Clean old rules & chains
+    logger -t xray "Cleaning old policy routing and TPROXY table"
+
+    # Remove old IP rules
+    ip rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
+    ip -6 rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
+
+    # Flush old TPROXY table routes
+    ip route flush table $TPROXY_TABLE 2>/dev/null || true
+    ip -6 route flush table $TPROXY_TABLE 2>/dev/null || true
+
+    # Delete old nftables chains
+    logger -t xray "Removing old nftables chains (if any)"
+    nft delete chain inet fw4 xray_prerouting 2>/dev/null || true
+    nft delete chain inet fw4 xray_output 2>/dev/null || true
+
+    # Disable dnsmasq DNS
+    logger -t xray "Disabling dnsmasq DNS"
+    uci -q set dhcp.@dnsmasq[0].port='0'
+    uci commit dhcp
+    /etc/init.d/dnsmasq restart
+
+    # TPROXY & policy routing
+    logger -t xray "Setting up TPROXY and policy routing"
+
+    # Ensure rules exist
+    ip rule add fwmark $TPROXY_MARK lookup $TPROXY_TABLE prio 1000 2>/dev/null || true
+    ip -6 rule add fwmark $TPROXY_MARK lookup $TPROXY_TABLE prio 1000 2>/dev/null || true
+
+    # Clean the table first
+    ip route flush table $TPROXY_TABLE 2>/dev/null || true
+    ip -6 route flush table $TPROXY_TABLE 2>/dev/null || true
+
+    # Add the local routes
+    ip route add local default dev lo table $TPROXY_TABLE 2>/dev/null || true
+    ip -6 route add local default dev lo table $TPROXY_TABLE 2>/dev/null || true
+
+    # nftables rules
+    cat > "$NFT_FILE" <<EOF
+table inet fw4 {
+    define x_bypass4 = { 0.0.0.0/8, 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16, 224.0.0.0/4, 240.0.0.0/4 }
+    define x_bypass6 = { ::1/128, fe80::/10, fc00::/7, ff00::/8 }
+
+    chain xray_prerouting {
+        type filter hook prerouting priority mangle + 1; policy accept;
+
+        iifname "lo" return
+        ip daddr \$x_bypass4 return
+        ip6 daddr \$x_bypass6 return
+        tcp dport 53 return
+        udp dport 53 return
+
+        meta l4proto { tcp, udp } meta mark set $TPROXY_MARK
+        meta l4proto { tcp, udp } tproxy to :$tproxy_port accept
+    }
+
+    chain xray_output {
+        type route hook output priority mangle + 1; policy accept;
+
+        ip daddr \$x_bypass4 return
+        ip6 daddr \$x_bypass6 return
+
+        meta mark 0x2 return
+        iifname "lo" return
+
+        meta l4proto { tcp, udp } meta mark set $TPROXY_MARK
+    }
+}
+EOF
+
+    logger -t xray "Applying nftables rules"
+    if ! nft -f "$NFT_FILE"; then
+        logger -t xray "nft load failed, reloading firewall"
+        /etc/init.d/firewall reload
+    fi
+
+    # Start Xray
+    procd_open_instance
+    procd_set_param command "$PROG"
+    procd_set_param env XRAY_LOCATION_ASSET="$location_asset" XRAY_LOCATION_CONFIG="$location_asset" XRAY_LOCATION_CONFDIR="$location_confdir"
+    procd_set_param respawn
+    procd_set_param stdout "$log_stdout"
+    procd_set_param stderr "$log_stderr"
+    procd_set_param limits core="unlimited"
+    procd_set_param limits nofile="65535 65535"
+    procd_close_instance
+
+    logger -t xray "Xray started"
+}
+
+stop_service() {
+    logger -t xray "Stopping Xray"
+
+    # Stop Xray
+    procd_kill_instance xray 2>/dev/null || true
+
+    # Restore dnsmasq DNS
+    logger -t xray "Restoring dnsmasq"
+    if uci -q get dhcp.@dnsmasq[0].port >/dev/null; then
+        uci delete dhcp.@dnsmasq[0].port 2>/dev/null || true
+        uci commit dhcp
+        /etc/init.d/dnsmasq restart
+        logger -t xray "dnsmasq DNS restored"
+    fi
+
+    # Remove nftables chains
+    logger -t xray "Removing custom nftables chains"
+    nft delete chain inet fw4 xray_prerouting 2>/dev/null || true
+    nft delete chain inet fw4 xray_output 2>/dev/null || true
+    rm -f "$NFT_FILE" 2>/dev/null || true
+
+    # Reload firewall
+    /etc/init.d/firewall reload 2>/dev/null || /etc/init.d/firewall restart 2>/dev/null || true
+
+    # Remove policy routing
+    logger -t xray "Removing policy routing rules"
+    ip rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
+    ip -6 rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
+    ip route flush table $TPROXY_TABLE 2>/dev/null || true
+    ip -6 route flush table $TPROXY_TABLE 2>/dev/null || true
+
+    logger -t xray "Xray stopped"
+}
+
+reload_service() {
+    stop_service
+    start_service
+}
+
+service_triggers() {
+    procd_add_reload_trigger "xray"
+}

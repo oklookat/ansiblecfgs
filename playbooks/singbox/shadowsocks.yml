@@ -1,6 +1,6 @@
 ---
 - name: "sing-box: Shadowsocks"
-  hosts: sing-box-shadowsocks
+  hosts: sing_box
   become: true
   tasks:
     - name: "sing-box: install"

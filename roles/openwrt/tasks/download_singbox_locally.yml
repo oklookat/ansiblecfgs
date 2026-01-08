@@ -1,0 +1,41 @@
+---
+- name: Download and extract sing-box
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure temp dir exists
+      file:
+        path: "{{ singbox_local_temp_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download sing-box archive
+      get_url:
+        url: "{{ singbox_url }}"
+        dest: "{{ singbox_local_temp_dir }}/sing-box.tar.gz"
+        mode: "0644"
+        checksum: "sha256:{{ singbox_sha256 | default('') }}"
+        force: true
+
+    - name: Extract sing-box to temp folder
+      unarchive:
+        src: "{{ singbox_local_temp_dir }}/sing-box.tar.gz"
+        dest: "{{ singbox_local_temp_dir }}/extract_tmp"
+        mode: "0755"
+        remote_src: true
+
+    - name: Move sing-box binary to root of temp dir
+      shell: |
+        set -e
+        sing_bin=$(find "{{ singbox_local_temp_dir }}/extract_tmp" -type f -name 'sing-box' | head -n1)
+        if [ ! -f "{{ singbox_local_temp_dir }}/sing-box" ] || ! cmp -s "$sing_bin" "{{ singbox_local_temp_dir }}/sing-box"; then
+          mv -f "$sing_bin" "{{ singbox_local_bin }}"
+        fi
+      args:
+        executable: /bin/bash
+
+    - name: Remove everything else except sing-box
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ lookup('fileglob', singbox_local_temp_dir + '/extract_tmp/*', wantlist=True) }}"

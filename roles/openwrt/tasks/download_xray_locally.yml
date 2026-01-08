@@ -1,0 +1,25 @@
+---
+- name: Download and extract Xray
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure temp dir exists
+      file:
+        path: "{{ xray_local_temp_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download Xray
+      get_url:
+        url: "{{ xray_url }}"
+        dest: "{{ xray_local_temp_dir }}/xray.zip"
+        mode: "0644"
+        checksum: "sha256:{{ xray_sha256 | default('') }}"
+        force: true
+
+    - name: Extract Xray
+      unarchive:
+        src: "{{ xray_local_temp_dir }}/xray.zip"
+        dest: "{{ xray_local_temp_dir }}"
+        mode: "0755"
+        remote_src: true

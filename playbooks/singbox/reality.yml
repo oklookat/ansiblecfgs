@@ -1,6 +1,6 @@
 ---
 - name: "sing-box: REALITY"
-  hosts: sing-box-reality
+  hosts: sing_box
   become: true
   tasks:
     - name: "sing-box: install"

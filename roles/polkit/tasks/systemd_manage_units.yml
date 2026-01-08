@@ -1,0 +1,36 @@
+---
+- name: Determine whether polkit rule should exist
+  ansible.builtin.set_fact:
+    polkit_rule_enabled: >-
+      {{
+        polkit_systemd_service_name | default('') | length > 0
+        and polkit_rules_dir | default('') | length > 0
+        and polkit_rule_name | default('') | length > 0
+      }}
+
+- name: Ensure polkit rules directory exists
+  ansible.builtin.file:
+    path: "{{ polkit_rules_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: polkit_rule_enabled
+
+- name: Generate polkit rule
+  ansible.builtin.template:
+    src: systemd_manage_units.rules.j2
+    dest: "{{ polkit_rules_dir }}/{{ polkit_rule_name }}.rules"
+    owner: root
+    group: root
+    mode: "0644"
+  when: polkit_rule_enabled
+
+- name: Remove polkit rule when disabled
+  ansible.builtin.file:
+    path: "{{ polkit_rules_dir }}/{{ polkit_rule_name }}.rules"
+    state: absent
+  when:
+    - not polkit_rule_enabled
+    - polkit_rules_dir | default('') | length > 0
+    - polkit_rule_name | default('') | length > 0

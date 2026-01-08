@@ -1,0 +1,38 @@
+---
+- name: "nginx: base"
+  hosts: all
+  become: true
+  tasks:
+    - name: "firewall: apply rules"
+      block:
+        - name: "Allow: 80, 443 (TCP/UDP); 443 (UDP)"
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+          vars:
+            firewall_rule_name: "allow_http"
+            firewall_rules:
+              - "add rule inet filter input tcp dport {80, 443} accept"
+              - "add rule inet filter input udp dport 443 accept"
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: apply.yml
+
+    - name: "nginx: install, apply base config"
+      block:
+        - name: Install
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: install.yml
+
+        - name: Create base config
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: base.yml
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: apply.yml

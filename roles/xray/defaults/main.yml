@@ -1,0 +1,34 @@
+---
+# install
+xray_username: "xray"
+xray_group: "{{ xray_username }}"
+
+xray_bin: "/usr/local/bin/xray"
+xray_config_dir: "/usr/local/etc/xray"
+xray_log_dir: "/var/log/xray"
+
+xray_systemd_override_dir: "/etc/systemd/system/xray.service.d"
+xray_systemd_override_conf: "override.conf"
+
+xray_autoupdate: true
+xray_autoupdate_without_geodata: false
+xray_autoupdate_calendar: monthly
+xray_autoupdate_random_delay: 6h
+xray_autoupdate_helper: "xray_update.sh"
+xray_autoupdate_service: "xray_update.service"
+xray_autoupdate_timer: "xray_update.timer"
+
+# vless_tls_xhttp | reality_sfy
+xray_config_path: "{{ xray_config_dir }}/config.json"
+xray_identity_path: "{{ xray_config_dir }}/identity.yml"
+xray_sni: ""
+xray_listen_port: 443
+xray_fingerprint: "chrome"
+
+# vless_tls_xhttp
+xray_certificate_path: ""
+xray_key_path: ""
+xray_xhttp_path: "/hello"
+
+# reality_sfy
+xray_dest_port: 443

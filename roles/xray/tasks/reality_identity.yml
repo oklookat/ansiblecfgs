@@ -1,0 +1,44 @@
+---
+- name: Check if identity exists
+  ansible.builtin.stat:
+    path: "{{ xray_identity_path }}"
+  register: xray_identity_stat
+
+- block:
+    - name: Generate shortID
+      command: openssl rand -hex 8
+      register: xray_short_id
+
+    - name: Generate UUID
+      command: xray uuid
+      register: xray_uuid
+
+    - name: Generate keys
+      command: xray x25519
+      register: xray_keys
+
+    - name: Save identity
+      ansible.builtin.copy:
+        dest: "{{ xray_identity_path }}"
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          short_id: "{{ xray_short_id.stdout | trim }}"
+          uuid: "{{ xray_uuid.stdout | trim }}"
+          private_key: "{{ xray_keys.stdout | regex_search('Private key:\\s*(\\S+)', '\1') }}"
+          public_key: "{{ xray_keys.stdout | regex_search('Public key:\\s*(\\S+)', '\1') }}"
+
+  when: not xray_identity_stat.stat.exists
+
+- name: Fail if identity file is empty or broken
+  ansible.builtin.fail:
+    msg: "Шdentity file exists but is empty or invalid"
+  when:
+    - xray_identity_stat.stat.exists
+    - xray_identity_stat.stat.size | default(0) == 0
+
+- name: Load identity
+  ansible.builtin.include_vars:
+    file: "{{ xray_identity_path }}"
+    name: xray_identity

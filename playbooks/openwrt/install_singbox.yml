@@ -1,0 +1,33 @@
+---
+- name: "OpenWrt: install sing-box"
+  hosts: openwrt
+  gather_facts: false
+  tasks:
+    - name: "upx: download"
+      ansible.builtin.include_role:
+        name: upx
+        tasks_from: download.yml
+
+    - name: "sing-box: download locally"
+      ansible.builtin.include_role:
+        name: openwrt
+        tasks_from: download_singbox_locally.yml
+
+    - name: "upx: set compressed sing-box bin"
+      ansible.builtin.set_fact:
+        singbox_local_compressed_bin: "{{ singbox_local_temp_dir }}/sing-box.upxc"
+
+    - name: "upx: compress sing-box"
+      ansible.builtin.include_role:
+        name: upx
+        tasks_from: compress.yml
+      vars:
+        upx_input: "{{ singbox_local_bin }}"
+        upx_output: "{{ singbox_local_compressed_bin }}"
+
+    - name: "sing-box: install"
+      ansible.builtin.include_role:
+        name: openwrt
+        tasks_from: install_singbox.yml
+      vars:
+        singbox_local_bin: "{{ xray_local_compressed_bin }}"

@@ -1,0 +1,9 @@
+---
+- name: "polkit: systemd (manage units)"
+  hosts: all
+  become: true
+  tasks:
+    - name: "Run: systemd_manage_units"
+      ansible.builtin.include_role:
+        name: polkit
+        tasks_from: systemd_manage_units.yml

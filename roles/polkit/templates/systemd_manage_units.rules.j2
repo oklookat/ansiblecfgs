@@ -1,0 +1,7 @@
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        action.lookup("unit") == "{{ polkit_systemd_service_name }}" &&
+        subject.isInGroup("{{ polkit_group_name }}")) {
+        return polkit.Result.YES;
+    }
+});

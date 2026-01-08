@@ -14,21 +14,22 @@
   - [x] wildcard-cloudflare
 - [x] deploy-group
 - [x] deploy-nginx-conf
-  - [ ] Currently for reality_sfy only, need to extend.
+  - [ ] Currently for reality_sfy only. Need to extend?
 - [x] generate-cert
 - [x] sing-box
   - [x] install
-  - [ ] install-openwrt
+  - [x] install-openwrt
   - [x] reality-sfy
   - [x] reality
   - [x] shadowsocks
     - [ ] Make idempotent
   - [x] tls
   - [x] wireguard
-- [ ] xray
-  - [ ] install
-  - [ ] install-openwrt
-  - [ ] reality-sfy
-  - [ ] tls
-  - [ ] deploy-geo
-- [ ] polkit-manage-units
+- [x] xray
+  - [x] install
+  - [x] install-openwrt
+  - [x] reality-sfy
+  - [x] tls
+  - [x] deploy-geo
+- [x] polkit-manage-units
+- [ ] deploy-teletrack

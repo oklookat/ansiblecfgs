@@ -1,0 +1,8 @@
+---
+- name: Compress
+  delegate_to: localhost
+  command: >
+    {{ upx_workdir }}/upx --best --lzma -f -o {{ upx_output }} {{ upx_input }}
+  args:
+    chdir: "{{ upx_workdir }}"
+  creates: "{{ upx_output }}"

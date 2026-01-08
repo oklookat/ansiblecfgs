@@ -1,0 +1,6 @@
+---
+- include_tasks: download.yml
+  tags: upx_download
+
+- include_tasks: compress.yml
+  tags: upx_compress

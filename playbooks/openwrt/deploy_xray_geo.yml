@@ -1,0 +1,14 @@
+- name: "openwrt: deploy Xray geofiles"
+  hosts: openwrt
+  gather_facts: false
+  tasks:
+    - name: Copy geoip
+      delegate_to: localhost
+      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} "{{ openwrt_xray_geoip_local }}" {{ ansible_user }}@{{ ansible_host }}:"{{ openwrt_xray_geoip }}"
+
+    - name: Copy geosite
+      delegate_to: localhost
+      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} "{{ openwrt_xray_geosite_local }}" {{ ansible_user }}@{{ ansible_host }}:"{{ openwrt_xray_geoip }}"
+
+    - name: Restart Xray
+      raw: "/etc/init.d/xray restart"

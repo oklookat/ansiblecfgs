@@ -1,0 +1,8 @@
+config xray 'main'
+	option enabled '1'
+	option log_stderr '1'
+	option log_stdout '1'
+	option tproxy_port '{{ xray_tproxy_port }}'
+	option location_config '{{ xray_asset }}'
+	option location_asset '{{ xray_asset }}'
+	option location_confdir '{{ xray_confdir }}'

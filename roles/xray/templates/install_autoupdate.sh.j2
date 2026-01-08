@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "[xray-update] starting update"
+bash -c "$(curl -fsSL https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install{% if xray_autoupdate_without_geodata %} --without-geodata{% endif %} -u {{ xray_username | quote }}
+systemctl daemon-reload
+systemctl restart xray
+echo "[xray-update] update finished"

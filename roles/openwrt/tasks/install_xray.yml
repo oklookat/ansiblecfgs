@@ -1,0 +1,69 @@
+---
+- name: Render locally
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure workdir exist
+      file:
+        path: "{{ xray_local_temp_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Render Xray config
+      template:
+        src: install_xray/config.json.j2
+        dest: "{{ xray_local_config }}"
+
+    - name: Render uci config
+      template:
+        src: install_xray/uci.j2
+        dest: "{{ xray_local_uci }}"
+
+    - name: Render init config
+      template:
+        src: install_xray/init.j2
+        dest: "{{ xray_local_init }}"
+
+- name: Update opkg
+  raw: opkg update
+
+- name: Install openssh-sftp-server
+  raw: opkg install openssh-sftp-server
+
+- name: Install kmod-nft-tproxy
+  raw: opkg install kmod-nft-tproxy
+
+- name: Stop service (ignore errors)
+  raw: service xray stop || true
+
+- name: Ensure required directories exist
+  raw: |
+    mkdir -p "{{ xray_bin | dirname }}"
+    mkdir -p "{{ xray_asset }}"
+    {% if xray_confdir is defined and xray_confdir != '' %}
+    mkdir -p "{{ xray_confdir }}"
+    {% endif %}
+
+- name: Copy binary
+  local_action: shell scp -P {{ ansible_port }} {{ xray_local_bin }} 'root@{{ ansible_host }}:{{ xray_bin }}'
+
+- name: Make binary executable
+  raw: chmod +x "{{ xray_bin }}"
+
+- name: Copy uci config
+  local_action: shell scp -P {{ ansible_port }} {{ xray_local_uci }} 'root@{{ ansible_host }}:{{ xray_uci }}'
+
+- name: Copy init config
+  local_action: shell scp -P {{ ansible_port }} {{ xray_local_init }} 'root@{{ ansible_host }}:{{ xray_init }}'
+
+- name: Make init config executable
+  raw: chmod +x "{{ xray_init }}"
+
+- name: Copy config
+  local_action: shell scp -P {{ ansible_port }} {{ xray_local_config }} 'root@{{ ansible_host }}:{{ xray_config }}'
+
+- name: Copy geosite
+  local_action: shell scp -P {{ ansible_port }} {{ xray_local_geosite }} 'root@{{ ansible_host }}:{{ xray_geosite }}'
+
+- name: Copy geoip
+  local_action: shell scp -P {{ ansible_port }} {{ xray_local_geoip }} 'root@{{ ansible_host }}:{{ xray_geoip }}'
