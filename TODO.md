@@ -9,11 +9,12 @@
 ## Code
 
 - [x] basic
-- [x] cerbot
+- [x] certbot
   - [x] default
   - [x] wildcard-cloudflare
 - [x] deploy-group
-- [ ] deploy-nginx-conf
+- [x] deploy-nginx-conf
+  - [ ] Currently for reality_sfy only, need to extend.
 - [x] generate-cert
 - [x] sing-box
   - [x] install
@@ -21,6 +22,7 @@
   - [x] reality-sfy
   - [x] reality
   - [x] shadowsocks
+    - [ ] Make idempotent
   - [x] tls
   - [x] wireguard
 - [ ] xray
