@@ -2,6 +2,8 @@
 - include_tasks: dns.yml
   tags: system_dns
 
+- meta: flush_handlers
+
 - include_tasks: upgrade.yml
   tags: system_upgrade
 

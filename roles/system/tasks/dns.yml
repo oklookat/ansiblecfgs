@@ -1,4 +1,8 @@
 ---
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
 - name: Patch NetworkManager config if installed
   when: "'network-manager' in ansible_facts.packages"
   block:
@@ -37,7 +41,9 @@
     owner: root
     group: root
     mode: "0644"
-  notify: Restart systemd-resolved
+  notify: 
+    - Enable and start systemd-resolved
+    - Restart systemd-resolved
 
 - name: Ensure /etc/resolv.conf points to systemd stub
   when: "'systemd-resolved' in ansible_facts.packages"
@@ -46,3 +52,4 @@
     state: link
     src: /run/systemd/resolve/stub-resolv.conf
     force: yes
+    follow: false

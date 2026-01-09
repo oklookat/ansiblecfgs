@@ -25,7 +25,3 @@
   set_fact:
     system_reboot_required: true
   when: apt_upgrade.changed | default(false)
-
-- name: Gather installed packages
-  ansible.builtin.package_facts:
-    manager: auto

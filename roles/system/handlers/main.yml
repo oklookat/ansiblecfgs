@@ -5,6 +5,12 @@
     state: restarted
     enabled: true
 
+- name: Enable and start systemd-resolved
+  ansible.builtin.service:
+    name: systemd-resolved
+    state: started
+    enabled: true
+
 - name: Restart systemd-resolved
   ansible.builtin.systemd:
     name: systemd-resolved
