@@ -1,0 +1,9 @@
+---
+- name: "routine: deploy files"
+  hosts: routine
+  become: true
+  tasks:
+    - name: Deploy
+      ansible.builtin.include_role:
+        name: routine
+        tasks_from: deploy_files.yml

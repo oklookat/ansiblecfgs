@@ -1,0 +1,9 @@
+---
+- name: "sing-box: deploy-config"
+  hosts: sing_box
+  become: true
+  tasks:
+    - name: Deploy
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: deploy_config.yml

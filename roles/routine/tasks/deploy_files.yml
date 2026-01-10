@@ -1,0 +1,46 @@
+---
+- name: Ensure destination directories exist
+  ansible.builtin.file:
+    path: "{{ item.dest | dirname }}"
+    state: directory
+    mode: "0755"
+    recurse: true
+  loop: "{{ routine_files_to_deploy }}"
+  loop_control:
+    label: "{{ item.dest | dirname }}"
+
+- name: Upload files
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+    force: yes
+  loop: "{{ routine_files_to_deploy }}"
+  loop_control:
+    label: "{{ item.src }}"
+
+- name: Remove files if routine_files_to_delete is defined
+  ansible.builtin.file:
+    path: "{{ item.dest }}"
+    state: absent
+  loop: "{{ routine_files_to_delete | default([]) }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  when: routine_files_to_delete is defined
+
+- name: Find empty directories under target paths
+  ansible.builtin.find:
+    paths: "{{ item.dest | dirname }}"
+    file_type: directory
+    recurse: yes
+  loop: "{{ routine_files_to_deploy }}"
+  loop_control:
+    label: "{{ item.dest | dirname }}"
+  register: found_dirs
+
+- name: Remove empty directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ found_dirs.results | map(attribute='files') | flatten }}"
+  when: item.matched == 0 # only remove empty directories

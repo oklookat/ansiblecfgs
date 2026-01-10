@@ -23,3 +23,7 @@ singbox_key_path: ""
 singbox_password: ""
 singbox_up_mbps: 1000
 singbox_down_mbps: 1000
+
+# deploy_config
+singbox_config_source: ""
+singbox_cache_file: "/var/lib/sing-box/cache.db"

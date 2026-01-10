@@ -1,0 +1,10 @@
+---
+# deploy_files
+# routine_files_to_deploy:
+#   - src: "localfile.txt"
+#     dest: "/home/user/remotefile.txt"
+#   # etc...
+
+# routine_files_to_delete:
+#   - dest: "/home/user/remotefile.txt"
+#   # etc...
