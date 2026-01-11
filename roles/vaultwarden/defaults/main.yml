@@ -1,0 +1,5 @@
+---
+vaultwarden_data: "/vw-data/"
+vaultwarden_port: 8000
+vaultwarden_signups_allowed: true
+vaultwarden_admin_token: ""

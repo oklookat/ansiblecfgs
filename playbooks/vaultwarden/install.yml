@@ -1,0 +1,29 @@
+---
+- name: "vaultwarden: install"
+  hosts: all
+  become: true
+  tasks:
+    - name: "nginx: generate, apply configs"
+      block:
+        - name: Set nginx domain and src
+          ansible.builtin.set_fact:
+            nginx_sites:
+              - domain: "{{ vaultwarden_domain }}"
+                src: "{{ vaultwarden_nginx_conf }}"
+
+        - name: Generate
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: confd.yml
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: apply.yml
+
+    - name: "vaultwarden: install"
+      block:
+        - name: Run
+          ansible.builtin.include_role:
+            name: vaultwarden
+            tasks_from: install.yml

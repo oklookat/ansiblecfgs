@@ -1,0 +1,26 @@
+---
+- name: Pull Vaultwarden image
+  community.docker.docker_image:
+    name: vaultwarden/server
+    tag: latest
+    source: pull
+
+- name: Run Vaultwarden container
+  community.docker.docker_container:
+    name: vaultwarden
+    image: vaultwarden/server:latest
+    state: started
+    restart_policy: unless-stopped
+    recreate: true
+    env:
+      SIGNUPS_ALLOWED: "{{ vaultwarden_signups_allowed | string }}"
+      ADMIN_TOKEN: >-
+        {{
+          vaultwarden_admin_token
+          if vaultwarden_admin_token is defined and vaultwarden_admin_token | length > 0
+          else omit
+        }}
+    volumes:
+      - "{{ vaultwarden_data }}:/data/"
+    published_ports:
+      - "127.0.0.1:{{ vaultwarden_port }}:80"
