@@ -1,0 +1,27 @@
+# ================= OpenWRT Router Deployment =================
+- name: "openwrt: deploy sing-box config"
+  hosts: openwrt
+  gather_facts: no
+  vars:
+    singbox_config: "/etc/sing-box/config.json"
+  tasks:
+    - name: Ensure singbox_config_local is defined
+      assert:
+        that:
+          - singbox_config_local is defined
+          - singbox_config_local | length > 0
+        fail_msg: "Variable 'local_file' must be defined"
+
+    - name: Upload router config via SCP
+      delegate_to: localhost
+      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} {{ singbox_config_local }} {{ ansible_user }}@{{ ansible_host }}:{{ singbox_config }}
+
+    - name: Restart sing-box
+      raw: "/etc/init.d/sing-box restart"
+
+    - name: Remove files if singbox_files_to_delete is defined
+      raw: rm -f "{{ item.dest }}"
+      loop: "{{ singbox_files_to_delete | default([]) }}"
+      loop_control:
+        label: "{{ item.dest }}"
+      when: singbox_files_to_delete is defined
