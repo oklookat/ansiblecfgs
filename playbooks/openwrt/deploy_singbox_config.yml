@@ -1,4 +1,3 @@
-# ================= OpenWRT Router Deployment =================
 - name: "openwrt: deploy sing-box config"
   hosts: openwrt
   gather_facts: no
@@ -10,9 +9,9 @@
         that:
           - singbox_config_local is defined
           - singbox_config_local | length > 0
-        fail_msg: "Variable 'local_file' must be defined"
+        fail_msg: "singbox_config_local must be defined"
 
-    - name: Upload router config via SCP
+    - name: Upload config
       delegate_to: localhost
       command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} {{ singbox_config_local }} {{ ansible_user }}@{{ ansible_host }}:{{ singbox_config }}
 
