@@ -1,6 +1,6 @@
 ---
 - name: "routine: deploy files"
-  hosts: routine
+  hosts: all
   become: true
   tasks:
     - name: Deploy

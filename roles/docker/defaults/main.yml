@@ -1,0 +1,21 @@
+---
+# install
+docker_packages_remove:
+  - docker.io
+  - docker-compose
+  - docker-compose-v2
+  - docker-doc
+  - podman-docker
+  - containerd
+  - runc
+
+docker_packages_install:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+docker_apt_key_path: /etc/apt/keyrings/docker.asc
+docker_apt_key_url: https://download.docker.com/linux/ubuntu/gpg
+docker_apt_sources_file: /etc/apt/sources.list.d/docker.sources

@@ -1,0 +1,43 @@
+---
+- name: "docker: install"
+  hosts: all
+  become: true
+  tasks:
+    - name: "firewall: allow Docker"
+      block:
+        - name: Set rules
+          ansible.builtin.set_fact:
+            firewall_rule_name: "allow_docker"
+            firewall_rules:
+              # Published ports (-p), container to internet, container connection between different bridges
+
+              # Default bridge (docker0)
+              - "add rule inet filter forward iifname \"docker0\" accept comment \"Docker default bridge - incoming\""
+              - "add rule inet filter forward oifname \"docker0\" accept comment \"Docker default bridge - outgoing\""
+
+              # User bridge networks (br-abcdef123456...)
+              - "add rule inet filter forward iifname \"br-*\" accept comment \"Docker custom bridges - incoming\""
+              - "add rule inet filter forward oifname \"br-*\" accept comment \"Docker custom bridges - outgoing\""
+
+              # Masquerade (NAT) - container to internet
+              # All docker bridges (172.16–172.31)
+              - "add rule ip nat postrouting ip saddr 172.16.0.0/12 oifname != { \"docker0\", \"br-*\" } masquerade comment \"All Docker bridges masquerade (172.16.0.0/12)\""
+
+              # Forward
+              # Connection between various Docker networks (inter-network)
+              - "add rule inet filter forward iifname { \"docker0\", \"br-*\" } oifname { \"docker0\", \"br-*\" } accept comment \"Inter-Docker network communication\""
+
+        - name: Add rules
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+
+    - name: Install Docker
+      ansible.builtin.include_role:
+        name: docker
+        tasks_from: install.yml
+
+    - name: Apply firewall rules
+      ansible.builtin.include_role:
+        name: firewall
+        tasks_from: apply.yml

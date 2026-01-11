@@ -7,6 +7,8 @@ table inet filter {
         type filter hook input priority 0;
         policy drop;
 
+        ct state invalid drop
+
         # allow loopback
         iif lo accept
 
@@ -14,18 +16,29 @@ table inet filter {
         ct state established,related accept
 
         # allow ICMP (IPv4 and IPv6)
-        ip protocol icmp accept
-        ip6 nexthdr icmpv6 accept
+        meta l4proto icmp accept
+        meta l4proto icmpv6 accept
+
+        # allow SSH
+        tcp dport {{ firewall_ssh_port }} ct state new accept
     }
 
     chain forward {
-        type filter hook forward priority 0;
-        policy drop;
+        type filter hook forward priority 0; policy drop;
+
+        ct state invalid drop
+        ct state established,related accept
     }
 
     chain output {
         type filter hook output priority 0;
         policy accept;
+    }
+}
+
+table ip nat {
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
     }
 }
 

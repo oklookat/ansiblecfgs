@@ -1,0 +1,39 @@
+---
+- name: "certbot: obtain wildcard (Cloudflare DNS)"
+  hosts: all
+  become: true
+  tasks:
+    - name: "certbot: install, obtain, autorenew"
+      block:
+        - name: Install
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: install.yml
+
+        - name: Install certbot-nginx
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: install_nginx.yml
+
+        - name: Install dns-cloudflare
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: install_dns_cloudflare.yml
+
+        - name: Obtain
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: obtain_wildcard_dns_cloudflare.yml
+
+        - name: Autorenew
+          ansible.builtin.include_role:
+            name: certbot
+            tasks_from: autorenew.yml
+
+    # in this case just reload throws: invalid PID number "" in "/var/run/nginx.pid". Why?
+    # so restart.
+    - name: Restart Nginx via systemd
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        enabled: yes

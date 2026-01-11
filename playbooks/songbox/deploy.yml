@@ -1,0 +1,93 @@
+---
+- name: "songbox: deploy"
+  hosts: all
+  become: true
+  tasks:
+    - name: localhost actions
+      become: false
+      delegate_to: localhost
+      block:
+      - name: Check that song-box.exe exists
+        stat:
+          path: "{{ songbox_exe }}"
+        register: song_box_stat
+
+      - name: Fail if song-box.exe not found
+        fail:
+          msg: "song-box.exe not found in current folder!"
+        when: not song_box_stat.stat.exists
+
+      - name: Zip song-box.exe (always recreate)
+        archive:
+          path: "{{ songbox_exe }}"
+          dest: "{{ songbox_zip }}"
+          format: zip
+          force_archive: yes
+        when: song_box_stat.stat.exists
+
+      - name: Check if sing-box.zip exists locally
+        stat:
+          path: "{{ songbox_singbox_zip_local }}"
+        register: sing_box_stat
+
+      - name: Download sing-box.zip if not exists
+        get_url:
+          url: "{{ songbox_singbox_url }}"
+          dest: "{{ songbox_singbox_zip_local }}"
+          mode: "0644"
+        when: not sing_box_stat.stat.exists
+
+      - name: Calculate SHA256 for song-box.zip
+        shell: sha256sum "{{ songbox_zip }}"
+        register: song_box_sha_result
+        changed_when: false
+
+      - name: Calculate SHA256 for sing-box.zip
+        shell: sha256sum "{{ songbox_singbox_zip_local }}"
+        register: sing_box_zip_sha_result
+        changed_when: false
+
+      - name: Calculate SHA256 for sing-box.json
+        shell: sha256sum "{{ songbox_singbox_json }}"
+        register: songbox_sing_box_json_sha_result
+        changed_when: false
+
+      - name: Compute SHA256 for sing-box.exe inside ZIP
+        command: "python3 {{ songbox_sha256_script }} {{ songbox_singbox_zip_local }}"
+        register: sing_box_exe_sha_result
+
+      - name: Set SHA variables
+        set_fact:
+          song_box_sha: "{{ song_box_sha_result.stdout.split()[0] }}"
+          sing_box_zip_sha: "{{ sing_box_zip_sha_result.stdout.split()[0] }}"
+          sing_box_exe_sha: "{{ sing_box_exe_sha_result.stdout.split()[0] }}"
+          songbox_sing_box_json_sha: "{{ songbox_sing_box_json_sha_result.stdout.split()[0] }}"
+
+      - name: Render updateManifest.json
+        template:
+          src: "{{ songbox_update_manifest_template }}"
+          dest: "{{ songbox_update_manifest }}"
+        vars:
+          songbox_sha: "{{ song_box_sha }}"
+          songbox_singbox_exe_sha: "{{ sing_box_exe_sha }}"
+          songbox_singbox_zip_sha: "{{ sing_box_zip_sha }}"
+          songbox_singbox_json_sha: "{{ songbox_sing_box_json_sha }}"
+
+    - name: Ensure deploy directory exists
+      file:
+        path: "{{ songbox_deploy_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Upload files to VPS (force overwrite)
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ songbox_deploy_dir }}/{{ item.dest }}"
+        mode: "0644"
+        force: yes
+      loop:
+        - { src: "{{ songbox_zip }}", dest: "song-box.zip" }
+        - { src: "{{ songbox_singbox_zip_local }}", dest: "sing-box.zip" }
+        - { src: "{{ songbox_singbox_json }}", dest: "sing-box.json" }
+        - { src: "{{ songbox_update_manifest }}", dest: "updateManifest.json" }
+        - { src: "{{ songbox_whats_new_file }}", dest: "whats-new.txt" }

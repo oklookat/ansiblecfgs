@@ -1,4 +1,5 @@
 firewall_rules_dir: "/etc/nftables.d"
+firewall_ssh_port: 22
 # firewall_rule_name: "allow_http"
 # firewall_rules:
 #   - "add rule inet filter input tcp dport 443 accept"

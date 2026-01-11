@@ -1,9 +1,9 @@
 ---
-- name: "nginx: deploy .conf file"
+- name: "nginx: deploy .conf files"
   hosts: all
   become: true
   tasks:
-    - name: "nginx: generate, apply config"
+    - name: "nginx: generate, apply configs"
       block:
         - name: Generate
           ansible.builtin.include_role:

@@ -1,0 +1,5 @@
+---
+nextcloud_datadir: ""
+nextcloud_aio_port: 8080
+nextcloud_apache_port: 11000
+nextcloud_apache_ip_binding: "0.0.0.0"

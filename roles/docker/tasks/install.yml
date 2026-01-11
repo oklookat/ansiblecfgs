@@ -1,0 +1,66 @@
+---
+- name: Remove old Docker/Podman packages
+  ansible.builtin.apt:
+    name: "{{ docker_packages_remove }}"
+    state: absent
+    purge: yes
+
+- name: Ensure required packages for apt over HTTPS
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: yes
+
+- name: Ensure keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: "{{ docker_apt_key_url }}"
+    dest: "{{ docker_apt_key_path }}"
+    mode: '0644'
+
+- name: Add Docker repository
+  ansible.builtin.copy:
+    dest: "{{ docker_apt_sources_file }}"
+    content: |
+      Types: deb
+      URIs: https://download.docker.com/linux/ubuntu
+      Suites: {{ ansible_facts['lsb']['codename'] }}
+      Components: stable
+      Signed-By: {{ docker_apt_key_path }}
+    mode: '0644'
+
+- name: Update apt cache after adding Docker repo
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name: "{{ docker_packages_install }}"
+    state: present
+
+- name: Configure Docker daemon (dns + nftables)
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    mode: '0644'
+    content: |
+      {
+        "firewall-backend": "nftables"
+      }
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Restart Docker
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted

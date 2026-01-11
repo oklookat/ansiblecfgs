@@ -1,10 +1,16 @@
 ---
+- name: Check nftables configuration syntax
+  ansible.builtin.command: nft -c -f /etc/nftables.conf
+  register: nft_check
+  failed_when: nft_check.rc != 0
+  changed_when: false
+
+- name: Apply nftables rules
+  ansible.builtin.command: nft -f /etc/nftables.conf
+  when: nft_check.rc == 0
+
 - name: Ensure nftables service is enabled and started
   ansible.builtin.systemd:
     name: nftables
     enabled: true
     state: started
-
-- name: Reload nftables
-  ansible.builtin.command: nft -f /etc/nftables.conf
-  changed_when: false

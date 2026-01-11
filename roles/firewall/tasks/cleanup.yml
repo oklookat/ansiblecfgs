@@ -10,6 +10,55 @@
   ansible.builtin.command: nft flush ruleset
   ignore_errors: true
 
+- name: Flush all IPv4 tables and allow all
+  ansible.builtin.shell: |
+    iptables -F      # flush all rules in filter
+    iptables -t nat -F
+    iptables -t mangle -F
+    iptables -t raw -F
+    iptables -X      # delete user-defined chains
+    iptables -P INPUT ACCEPT
+    iptables -P FORWARD ACCEPT
+    iptables -P OUTPUT ACCEPT
+  ignore_errors: true
+
+- name: Flush all IPv6 tables and allow all
+  ansible.builtin.shell: |
+    ip6tables -F
+    ip6tables -t nat -F
+    ip6tables -t mangle -F
+    ip6tables -t raw -F
+    ip6tables -X
+    ip6tables -P INPUT ACCEPT
+    ip6tables -P FORWARD ACCEPT
+    ip6tables -P OUTPUT ACCEPT
+  ignore_errors: true
+
+- name: Stop netfilter-persistent service
+  ansible.builtin.service:
+    name: netfilter-persistent
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Remove netfilter-persistent package
+  ansible.builtin.apt:
+    name:
+      - netfilter-persistent
+      - iptables-persistent
+    state: absent
+    purge: yes
+  ignore_errors: true
+
+- name: Remove saved iptables rules files (IPv4/IPv6)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/iptables/rules.v4
+    - /etc/iptables/rules.v6
+  ignore_errors: true
+
 - name: Stop UFW service
   ansible.builtin.service:
     name: ufw
@@ -60,20 +109,4 @@
 - name: Remove CSF package
   ansible.builtin.package:
     name: csf
-    state: absent
-
-- name: Flush iptables rules
-  ansible.builtin.command: iptables -F
-  ignore_errors: true
-
-- name: Flush ip6tables rules
-  ansible.builtin.command: ip6tables -F
-  ignore_errors: true
-
-- name: Remove iptables-related packages
-  ansible.builtin.package:
-    name:
-      - iptables
-      - iptables-persistent
-      - netfilter-persistent
     state: absent

@@ -1,9 +1,27 @@
 ---
-- name: Ensure nftables package is installed
+- name: Check firewall_ssh_port is defined
+  ansible.builtin.assert:
+    that:
+      - firewall_ssh_port is defined
+      - firewall_ssh_port | int >= 1
+      - firewall_ssh_port | int <= 65535
+    fail_msg: "firewall_ssh_port must be defined and be a valid TCP port (1-65535)."
+
+- name: Ensure nftables and iptables (nft backend) are installed
   ansible.builtin.apt:
-    name: nftables
+    name:
+      - nftables
+      - iptables
     state: present
     update_cache: yes
+
+- name: Ensure iptables uses nft backend
+  ansible.builtin.command: update-alternatives --set iptables /usr/sbin/iptables-nft
+  changed_when: false
+
+- name: Ensure ip6tables uses nft backend
+  ansible.builtin.command: update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
+  changed_when: false
 
 - name: Deploy base nftables config
   ansible.builtin.template:

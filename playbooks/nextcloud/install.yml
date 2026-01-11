@@ -1,0 +1,57 @@
+---
+- name: "nextcloud: install"
+  hosts: all
+  become: true
+  tasks:
+    - name: Download DH parameters for SSL
+      ansible.builtin.get_url:
+        url: https://ssl-config.mozilla.org/ffdhe2048.txt
+        dest: /etc/dhparam
+        mode: '0644'
+      become: yes
+
+    - name: "nginx: generate, apply configs"
+      block:
+        - name: Set nginx domain and src
+          ansible.builtin.set_fact:
+            nginx_sites:
+              - domain: "{{ nextcloud_domain }}"
+                src: "{{ nextcloud_nginx_conf }}"
+
+        - name: Generate
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: confd.yml
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: apply.yml
+
+    - name: "firewall: allow Nextcloud ports (TCP/UDP)"
+      block:
+        - name: Set rules
+          ansible.builtin.set_fact:
+            firewall_rule_name: "allow_nextcloud"
+            firewall_rules:
+              - "add rule inet filter input tcp dport {{ nextcloud_aio_port }} accept"
+              - "add rule inet filter input udp dport {{ nextcloud_aio_port }} accept"
+              # Talk container
+              - "add rule inet filter input tcp dport 3478 accept"
+              - "add rule inet filter input udp dport 3478 accept"
+        - name: Add rules
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+
+        - name: Apply rules
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: apply.yml
+
+    - name: "nextcloud: run"
+      block:
+        - name: Run
+          ansible.builtin.include_role:
+            name: nextcloud
+            tasks_from: install.yml

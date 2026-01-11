@@ -14,40 +14,18 @@
         name: system
         tasks_from: main.yml
 
-    - name: Determine effective SSH port
-      ansible.builtin.set_fact:
-        effective_ssh_port: >-
-          {{
-            system_new_ssh_port
-            if (
-              system_new_ssh_port is defined and
-              (system_new_ssh_port | int(default=0)) > 0 and
-              (system_new_ssh_port | int) <= 65535
-            )
-            else (
-              ansible_port
-              if ansible_port is defined
-              else 22
-            )
-          }}
-
     - name: "firewall: setup"
       block:
+        - name: Set SSH port
+          ansible.builtin.set_fact:
+            firewall_ssh_port: "{{ system_new_ssh_port }}"
+
         - name: Install
           ansible.builtin.include_role:
             name: firewall
             tasks_from: install.yml
 
-        - name: Allow SSH
-          ansible.builtin.include_role:
-            name: firewall
-            tasks_from: rules.yml
-          vars:
-            firewall_rule_name: "99-allow_ssh"
-            firewall_rules:
-              - "add rule inet filter input tcp dport {{ effective_ssh_port }} accept"
-
-        - name: Apply
+        - name: Apply rules
           ansible.builtin.include_role:
             name: firewall
             tasks_from: apply.yml

@@ -1,6 +1,5 @@
 ---
 - name: Reboot host if required
-  ansible.builtin.reboot:
-    reboot_timeout: 300
-    connect_timeout: 30
+  ansible.builtin.command: shutdown -r now
   when: system_reboot_required | default(false)
+  ignore_errors: true

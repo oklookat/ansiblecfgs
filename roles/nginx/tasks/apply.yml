@@ -6,7 +6,7 @@
     state: started
 
 - name: Check nginx config and reload
-  ansible.builtin.block:
+  block:
     - name: Test Nginx configuration
       ansible.builtin.command: nginx -t
       register: nginx_test
@@ -21,3 +21,4 @@
       ansible.builtin.service:
         name: nginx
         state: reloaded
+

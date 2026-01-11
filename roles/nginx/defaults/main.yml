@@ -6,7 +6,13 @@ nginx_user: "www-data"
 nginx_domain: ""
 
 # confd
-nginx_conf_src: "example.conf.j2"
+# nginx_sites:
+#   - domain: example.com
+#     src: templates/example.com.conf.j2
+#   - domain: test.com
+#     src: templates/test.com.conf.j2
+#   - domain: blog.example.com
+#     src: "" # empty src: will be deleted in remote
 
 # reality_sfy
 nginx_port: 443

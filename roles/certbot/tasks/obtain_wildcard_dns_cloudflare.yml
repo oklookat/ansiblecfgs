@@ -1,4 +1,12 @@
 ---
+- name: Ensure directory for Cloudflare credentials exists
+  ansible.builtin.file:
+    path: "{{ certbot_dns_cloudflare_api_token_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
 - name: Create Cloudflare credentials ini
   ansible.builtin.template:
     src: dns_cloudflare.ini.j2
@@ -16,4 +24,3 @@
     -m {{ certbot_email }} --no-eff-email
     -d {{ certbot_domain }}
     -d *.{{ certbot_domain }}
-    -i nginx

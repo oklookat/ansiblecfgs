@@ -1,5 +1,5 @@
 ---
-- include_tasks: upgrade_pip
+- include_tasks: upgrade_pip.yml
 
 - name: Install certbot-nginx
   ansible.builtin.pip:

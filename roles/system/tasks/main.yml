@@ -17,6 +17,3 @@
 
 - include_tasks: journald.yml
   tags: system_journald
-
-- include_tasks: reboot.yml
-  tags: system_reboot

@@ -10,10 +10,6 @@
       - gcc
     state: present
     update_cache: yes
-  register: apt_result
-  until: apt_result is succeeded
-  retries: 10
-  delay: 15
 
 - name: Enable and start cron
   ansible.builtin.systemd:
@@ -26,7 +22,7 @@
   args:
     creates: "{{ certbot_path }}"
 
-- include_tasks: upgrade_pip
+- include_tasks: upgrade_pip.yml
 
 - name: Install certbot in virtual environment
   ansible.builtin.pip:
