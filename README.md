@@ -24,7 +24,3 @@ If you haven't logged into the server yet, do so because otherwise it will compl
 Limit to specific host:
 
 - `ansible-playbook -i inventories/prod playbooks/system/setup.yml --limit myhost`
-
-### TODO
-
-- [ ] deploy-teletrack

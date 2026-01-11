@@ -1,0 +1,70 @@
+---
+- name: Build locally
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Get Go version
+      command: go version
+      register: go_check
+      failed_when: go_check.rc != 0
+      changed_when: false
+
+    - name: Build
+      command: go build -o "{{ teletrack_bin_local }}"
+      args:
+        chdir: "{{ teletrack_sources_local }}"
+
+- name: Install
+  block:
+    - name: Stop and disable old teletrack service if exists
+      ignore_errors: true
+      systemd:
+        name: "{{ teletrack_service_name }}.service"
+        state: stopped
+        enabled: false
+
+    - name: Remove previous installation
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ teletrack_install_dir }}"
+        - "{{ teletrack_service }}"
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: true
+
+    - name: Ensure install dir exists
+      ansible.builtin.file:
+        path: "{{ teletrack_install_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy files
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ teletrack_install_dir }}/{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - src: "{{ teletrack_bin_local }}"
+          dest: teletrack
+        - src: "{{ teletrack_config_local }}"
+          dest: config.json
+
+    - name: Install systemd unit
+      template:
+        src: "teletrack.service.j2"
+        dest: "{{ teletrack_service }}"
+        mode: "0644"
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: true
+
+    - name: Enable and restart service
+      systemd:
+        name: "{{ teletrack_service_name }}"
+        enabled: true
+        state: restarted
+      tags: install
