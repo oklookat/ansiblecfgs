@@ -3,11 +3,6 @@
   hosts: sing_box
   become: true
   tasks:
-    - name: "sing-box: install"
-      ansible.builtin.include_role:
-        name: singbox
-        tasks_from: install.yml
-
     - name: "firewall: add, apply rules"
       block:
         - name: "Allow: sing-box {{ singbox_listen_port }} (TCP/UDP)"

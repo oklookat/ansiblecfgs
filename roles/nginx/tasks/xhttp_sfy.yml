@@ -11,5 +11,5 @@
 
 - name: Generate config
   ansible.builtin.template:
-    src: reality_sfy.conf.j2
+    src: xhttp_sfy.conf.j2
     dest: /etc/nginx/conf.d/{{ nginx_domain }}.conf

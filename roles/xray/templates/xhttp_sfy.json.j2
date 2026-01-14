@@ -1,0 +1,82 @@
+{
+    "log": {
+        "loglevel": "warning"
+    },
+    "dns": {
+        "tag": "dns-in",
+        "queryStrategy": "UseIP",
+        "servers": [
+            {
+                "address": "https+local://1.1.1.1/dns-query"
+            },
+            {
+                "address": "https+local://8.8.8.8/dns-query"
+            }
+        ]
+    },
+    "routing": {
+        "domainStrategy": "AsIs",
+        "rules": [
+            {
+                "type": "field",
+                "outboundTag": "block-out",
+                "protocol": [
+                    "bittorrent",
+                    "quic"
+                ]
+            }
+        ]
+    },
+  "inbounds": [
+    {
+      "tag": "vless-in",
+      "protocol": "vless",
+      "listen": "{{ xray_listen }}",
+      "settings": {
+        "clients": [
+          {
+            "id": "{{ xray_identity.uuid }}",
+            "email": "love@xray.com",
+            "flow": ""
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "xhttpSettings": {
+          "host": "",
+          "path": "{{ xray_xhttp_path }}",
+          "mode": "auto"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "routeOnly": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "direct-out",  
+      "protocol": "freedom",
+      "settings": {
+          "targetStrategy": "UseIP"
+      }
+    },
+    {
+      "tag": "block-out",
+      "protocol": "blackhole",
+      "settings": {
+          "response": {
+              "type": "http"
+          }
+      }
+    }
+  ]
+}

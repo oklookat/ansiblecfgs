@@ -1,8 +1,9 @@
 ---
 # base
 nginx_user: "www-data"
+nginx_redirect_http: false
 
-# confd | reality_sfy
+# confd | reality_sfy | xhttp_sfy
 nginx_domain: ""
 
 # confd
@@ -14,7 +15,7 @@ nginx_domain: ""
 #   - domain: blog.example.com
 #     src: "" # empty src: will be deleted in remote
 
-# reality_sfy
+# reality_sfy | xhttp_sfy
 nginx_port: 443
 nginx_web_root_path: >-
   {{ '/var/www/' + (nginx_domain | default('')) 
@@ -27,3 +28,7 @@ nginx_fullchain_path: >-
 nginx_private_key_path: >-
   {{ '/etc/letsencrypt/live/' + (nginx_domain | default('')) + '/privkey.pem'
      if (nginx_domain | default('')) | length > 0 else '' }}
+
+# xhttp_sfy
+nginx_location: "/test-is-test"
+nginx_grpc_pass: "grpc://unix:/dev/shm/uds2023.sock"

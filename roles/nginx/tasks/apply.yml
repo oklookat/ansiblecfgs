@@ -5,20 +5,20 @@
     enabled: true
     state: started
 
-- name: Check nginx config and reload
+- name: Check nginx config and restart
   block:
     - name: Test Nginx configuration
       ansible.builtin.command: nginx -t
       register: nginx_test
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Fail if Nginx config test failed
       ansible.builtin.fail:
         msg: "Nginx configuration test failed! Check the config."
       when: nginx_test.rc != 0
 
-    - name: Reload Nginx
-      ansible.builtin.service:
+    - name: Restart nginx
+      ansible.builtin.systemd:
         name: nginx
-        state: reloaded
-
+        state: restarted
+        enabled: yes

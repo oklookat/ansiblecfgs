@@ -1,0 +1,10 @@
+---
+- name: Deploy config
+  ansible.builtin.copy:
+    src: "{{ xray_config_source }}"
+    dest: "{{ xray_config_path }}"
+
+- name: Restart Xray
+  ansible.builtin.systemd:
+    name: xray
+    state: restarted

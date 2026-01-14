@@ -1,0 +1,30 @@
+---
+- name: "Xray: REALITY (steal from yourself)"
+  hosts: xray
+  become: true
+  tasks:
+    - name: "xray: install"
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: install.yml
+
+    - name: "nginx: generate XHTTP-SFY config, apply"
+      block:
+        - name: Generate
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: xhttp_sfy.yml
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: nginx
+            tasks_from: apply.yml
+
+    - name: Set Xray XHTTP path
+      set_fact:
+        xray_xhttp_path: "{{ nginx_location }}"
+
+    - name: "Xray: apply XHTTP-SFY config"
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: xhttp_sfy.yml

@@ -4,8 +4,16 @@
     path: "{{ singbox_identity_path }}"
   register: singbox_identity_stat
 
-- block:
-    - name: Generate sing-box UUID
+- name: Generate Identity
+  when: not singbox_identity_stat.stat.exists
+  block:
+    - name: Ensure identity dir exists
+      ansible.builtin.file:
+        path: "{{ singbox_identity_path | dirname }}"
+        state: directory
+        mode: "0755"
+
+    - name: Generate UUID
       ansible.builtin.command: sing-box generate uuid
       register: singbox_uuid
       changed_when: true
@@ -13,22 +21,26 @@
     - name: Save identity
       ansible.builtin.copy:
         dest: "{{ singbox_identity_path }}"
-        owner: root
-        group: root
         mode: "0600"
         content: |
           uuid: "{{ singbox_uuid.stdout | trim }}"
+      register: identity_created
 
-  when: not singbox_identity_stat.stat.exists
-
-- name: Fail if identity file is empty or broken
-  ansible.builtin.fail:
-    msg: "Identity file exists but is empty or invalid"
-  when:
-    - singbox_identity_stat.stat.exists
-    - singbox_identity_stat.stat.size | default(0) == 0
+- name: Re-check if identity file exists
+  ansible.builtin.stat:
+    path: "{{ singbox_identity_path }}"
+  register: singbox_identity_stat
 
 - name: Load identity
-  ansible.builtin.include_vars:
-    file: "{{ singbox_identity_path }}"
-    name: singbox_identity
+  when:
+    - singbox_identity_stat.stat.exists | default(false)
+    - (singbox_identity_stat.stat.size | default(0)) > 0
+  block:
+    - name: Slurp identity file
+      ansible.builtin.slurp:
+        src: "{{ singbox_identity_path }}"
+      register: singbox_identity_raw
+
+    - name: Parse identity YAML
+      ansible.builtin.set_fact:
+        singbox_identity: "{{ singbox_identity_raw['content'] | b64decode | from_yaml }}"

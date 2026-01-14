@@ -20,7 +20,6 @@ singbox_certificate_path: ""
 singbox_key_path: ""
 
 # shadowsocks
-singbox_password: ""
 singbox_up_mbps: 1000
 singbox_down_mbps: 1000
 

@@ -1,0 +1,26 @@
+- name: "openwrt: deploy Xray config"
+  hosts: openwrt
+  gather_facts: no
+  vars:
+    xray_config: "/etc/xray/config.json"
+  tasks:
+    - name: Ensure xray_config_local is defined
+      assert:
+        that:
+          - xray_config_local is defined
+          - xray_config_local | length > 0
+        fail_msg: "xray_config_local must be defined"
+
+    - name: Upload config
+      delegate_to: localhost
+      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} {{ xray_config_local }} {{ ansible_user }}@{{ ansible_host }}:{{ xray_config }}
+
+    - name: Restart Xray
+      raw: "/etc/init.d/xray restart"
+
+    - name: Remove files if xray_files_to_delete is defined
+      raw: rm -f "{{ item.dest }}"
+      loop: "{{ xray_files_to_delete | default([]) }}"
+      loop_control:
+        label: "{{ item.dest }}"
+      when: xray_files_to_delete is defined
