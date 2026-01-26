@@ -25,23 +25,15 @@
         - "rc-manager=unmanaged"
       notify: Restart NetworkManager
 
-- name: Ensure systemd-resolved override directory exists
-  ansible.builtin.file:
-    path: /etc/systemd/resolved.conf.d
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-
 - name: Configure static DNS via systemd-resolved
   when: "'systemd-resolved' in ansible_facts.packages"
   ansible.builtin.template:
     src: resolved.conf.j2
-    dest: "{{ system_new_resolved_path }}"
+    dest: "/etc/systemd/resolved.conf"
     owner: root
     group: root
     mode: "0644"
-  notify: 
+  notify:
     - Enable and start systemd-resolved
     - Restart systemd-resolved
 
