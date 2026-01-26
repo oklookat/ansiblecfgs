@@ -3,7 +3,6 @@ USE_PROCD=1
 START=99
 STOP=10
 PROG="{{ xray_bin }}"
-TPROXY_PORT=3000
 DNS_REDIRECT_PORT=1053
 TPROXY_MARK=255
 TPROXY_TABLE=100
@@ -25,14 +24,14 @@ start_service() {
     # https://xtls.github.io/en/config/features/env.html
     config_get location_config "main" "location_config" ""
     config_get location_asset "main" "location_asset" ""
-    config_get location_confdir "main" "location_confdir" ""   
+    config_get location_confdir "main" "location_confdir" ""
+
+    local TPROXY_PORT=$tproxy_port
 
     # ===== Clean old rules & chains =====
     logger -t xray "Cleaning old policy routing and TPROXY table"
     ip rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
-    ip -6 rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
     ip route flush table $TPROXY_TABLE 2>/dev/null || true
-    ip -6 route flush table $TPROXY_TABLE 2>/dev/null || true
 
     logger -t xray "Removing old nftables chains (if any)"
     nft delete chain inet fw4 xray_dns_redirect 2>/dev/null || true
@@ -42,18 +41,14 @@ start_service() {
     # ===== Setup TPROXY & policy routing =====
     logger -t xray "Setting up TPROXY and policy routing"
     ip rule add fwmark $TPROXY_MARK lookup $TPROXY_TABLE prio 1000 2>/dev/null || true
-    ip -6 rule add fwmark $TPROXY_MARK lookup $TPROXY_TABLE prio 1000 2>/dev/null || true
     ip route flush table $TPROXY_TABLE 2>/dev/null || true
-    ip -6 route flush table $TPROXY_TABLE 2>/dev/null || true
     ip route add local default dev lo table $TPROXY_TABLE 2>/dev/null || true
-    ip -6 route add local default dev lo table $TPROXY_TABLE 2>/dev/null || true
 
-    # ===== nftables rules (imperative syntax for OpenWrt fw4) =====
+    # ===== nftables rules =====
     cat > "$NFT_FILE" <<EOF
 define x_bypass4 = { 0.0.0.0/8, 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16, 224.0.0.0/4, 240.0.0.0/4 }
-define x_bypass6 = { ::1/128, fe80::/10, fc00::/7, ff00::/8 }
 
-# DNS redirect chain (nat prerouting, priority dstnat = -100)
+# DNS redirect chain
 add chain inet fw4 xray_dns_redirect { type nat hook prerouting priority -100; policy accept; }
 add rule inet fw4 xray_dns_redirect iifname != "lo" tcp dport 53 redirect to :$DNS_REDIRECT_PORT
 add rule inet fw4 xray_dns_redirect iifname != "lo" udp dport 53 redirect to :$DNS_REDIRECT_PORT
@@ -61,15 +56,15 @@ add rule inet fw4 xray_dns_redirect iifname != "lo" udp dport 53 redirect to :$D
 # TPROXY prerouting chain
 add chain inet fw4 xray_prerouting { type filter hook prerouting priority mangle + 1; policy accept; }
 add rule inet fw4 xray_prerouting iifname "lo" return
+add rule inet fw4 xray_prerouting meta nfproto ipv6 drop
 add rule inet fw4 xray_prerouting ip daddr \$x_bypass4 return
-add rule inet fw4 xray_prerouting ip6 daddr \$x_bypass6 return
 add rule inet fw4 xray_prerouting meta l4proto { tcp, udp } meta mark set $TPROXY_MARK
 add rule inet fw4 xray_prerouting meta l4proto { tcp, udp } tproxy to :$TPROXY_PORT accept
 
 # Output chain for router's own traffic
 add chain inet fw4 xray_output { type route hook output priority mangle + 1; policy accept; }
+add rule inet fw4 xray_output meta nfproto ipv6 drop
 add rule inet fw4 xray_output ip daddr \$x_bypass4 return
-add rule inet fw4 xray_output ip6 daddr \$x_bypass6 return
 add rule inet fw4 xray_output meta mark 0x2 return
 add rule inet fw4 xray_output iifname "lo" return
 add rule inet fw4 xray_output meta l4proto { tcp, udp } meta mark set $TPROXY_MARK
@@ -109,9 +104,7 @@ stop_service() {
 
     logger -t xray "Removing policy routing rules"
     ip rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
-    ip -6 rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
     ip route flush table $TPROXY_TABLE 2>/dev/null || true
-    ip -6 route flush table $TPROXY_TABLE 2>/dev/null || true
 
     logger -t xray "Xray stopped"
 }
