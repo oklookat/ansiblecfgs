@@ -12,8 +12,8 @@
     group: root
     mode: "{{ item.mode }}"
   loop:
-    - "{{ openssl_key_path | dirname }}"
-    - "{{ openssl_certificate_path | dirname }}"
+    - { path: "{{ openssl_key_path | dirname }}", mode: "0750" }
+    - { path: "{{ openssl_certificate_path | dirname }}", mode: "0755" }
 
 - name: Generate private key if not exists
   community.crypto.openssl_privatekey:
