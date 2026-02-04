@@ -4,13 +4,13 @@
     name: python3-cryptography
     state: present
 
-- name: Ensure certificate directories exist
+- name: Ensure selfsigned directories exist
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
     state: directory
     owner: root
-    group: "{{ openssl_group_name }}"
-    mode: "0750"
+    group: root
+    mode: "{{ item.mode }}"
   loop:
     - "{{ openssl_key_path | dirname }}"
     - "{{ openssl_certificate_path | dirname }}"
@@ -20,8 +20,9 @@
     path: "{{ openssl_key_path }}"
     size: 2048
     type: RSA
-    mode: "0640"
-    group: "{{ openssl_group_name }}"
+    mode: "0600"
+    owner: root
+    group: root
   register: key_result
   changed_when: key_result.changed
 
@@ -49,7 +50,8 @@
     selfsigned_not_after: "+{{ openssl_cert_days }}d"
     selfsigned_not_before: "+0s"
     mode: "0644"
-    group: "{{ openssl_group_name }}"
+    owner: root
+    group: root
     force: false
   register: cert_result
 
