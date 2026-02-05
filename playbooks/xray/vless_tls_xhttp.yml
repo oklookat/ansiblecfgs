@@ -8,6 +8,16 @@
         name: xray
         tasks_from: install.yml
 
+    - name: "xray: autoupdate"
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: autoupdate.yml
+
+    - name: "xray: geo autoupdate"
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: geo_autoupdate.yml
+
     - name: "openssl: generate self-signed certificate"
       ansible.builtin.include_role:
         name: openssl
@@ -15,7 +25,7 @@
 
     - name: "firewall: add, apply rules"
       block:
-        - name: "Allow: {{ xray_listen_port }} (TCP)"
+        - name: "Allow Xray (TCP, UDP)"
           ansible.builtin.include_role:
             name: firewall
             tasks_from: rules.yml
@@ -23,16 +33,19 @@
             firewall_rule_name: "allow_xray"
             firewall_rules:
               - "add rule inet filter input tcp dport {{ xray_listen_port }} accept"
+              - "add rule inet filter input udp dport {{ xray_listen_port }} accept"
         - name: Apply
           ansible.builtin.include_role:
             name: firewall
             tasks_from: apply.yml
 
+    - name: Set vars
+      ansible.builtin.set_fact:
+        xray_sni: "{{ openssl_sni }}"
+        xray_certificate_path: "{{ openssl_certificate_path }}"
+        xray_key_path: "{{ openssl_key_path }}"
+
     - name: "xray: apply VLESS-TLS-XHTTP config"
       ansible.builtin.include_role:
         name: xray
         tasks_from: vless_tls_xhttp.yml
-      vars:
-        xray_sni: "{{ openssl_sni }}"
-        xray_certificate_path: "{{ openssl_certificate_path }}"
-        xray_key_path: "{{ openssl_key_path }}"

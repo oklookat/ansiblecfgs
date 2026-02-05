@@ -1,0 +1,19 @@
+---
+- name: "Xray: install"
+  hosts: xray
+  become: true
+  tasks:
+    - name: "xray: install"
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: install.yml
+
+    - name: "xray: autoupdate"
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: autoupdate.yml
+
+    - name: "xray: geo autoupdate"
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: geo_autoupdate.yml

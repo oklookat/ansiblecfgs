@@ -4,24 +4,24 @@
     },
     "dns": {
         "tag": "dns-in",
+        "queryStrategy": "UseIP",
         "servers": [
             {
-                "address": "https://1.1.1.1/dns-query"
+                "address": "https+local://1.1.1.1/dns-query"
             },
             {
-                "address": "https://8.8.8.8/dns-query"
+                "address": "https+local://8.8.8.8/dns-query"
             }
         ]
     },
     "routing": {
-        "domainStrategy": "IpOnDemand",
+        "domainStrategy": "AsIs",
         "rules": [
             {
                 "type": "field",
                 "outboundTag": "block",
                 "protocol": [
-                    "bittorrent",
-                    "quic"
+                    "bittorrent"
                 ]
             }
         ]
@@ -47,9 +47,7 @@
                 "security": "tls",
                 "tlsSettings": {
                     "serverName": "{{ xray_sni }}",
-                    "fingerprint": {{ xray_fingerprint }},
-                    "minVersion": "1.2",
-                    "maxVersion": "1.3",
+                    "fingerprint": "{{ xray_fingerprint }}",
                     "rejectUnknownSni": true,
                     "disableSystemRoot": true,
                     "alpn": [
@@ -60,14 +58,17 @@
                             "certificateFile": "{{ xray_certificate_path }}",
                             "keyFile": "{{ xray_key_path }}"
                         }
-                    ],
-                    "sockopt": {
-                        "tcpCongestion": "bbr"
-                    }
+                    ]
                 },
                 "xhttpSettings": {
                     "host": "{{ xray_sni }}",
                     "path": "{{ xray_xhttp_path }}"
+                },
+                "sockopt": {
+                    "tcpFastOpen": true,
+                    "tcpMptcp": true,
+                    "tcpNoDelay": true,
+                    "tcpcongestion": "bbr"
                 }
             },
             "sniffing": {
@@ -75,8 +76,7 @@
                 "routeOnly": true,
                 "destOverride": [
                     "http",
-                    "tls",
-                    "quic"
+                    "tls"
                 ]
             }
         }
@@ -84,11 +84,19 @@
     "outbounds": [
         {
             "tag": "direct-out",
-            "protocol": "freedom"
+            "protocol": "freedom",
+            "settings": {
+                "domainStrategy": "UseIP"
+            }
         },
         {
             "tag": "block-out",
-            "protocol": "blackhole"
+            "protocol": "blackhole",
+            "settings": {
+                "response": {
+                    "type": "http"
+                }
+            }
         }
     ]
 }
