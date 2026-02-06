@@ -1,7 +1,31 @@
 ---
-- name: Install nginx
+- name: Install prerequisites
   ansible.builtin.apt:
     name:
-      - nginx
+      - curl
+      - gnupg
+      - ca-certificates
+      - lsb-release
+    state: present
+    update_cache: yes
+
+- name: Add nginx signing key
+  ansible.builtin.get_url:
+    url: https://nginx.org/keys/nginx_signing.key
+    dest: /usr/share/keyrings/nginx-archive-keyring.gpg
+    mode: "0644"
+
+- name: Add nginx mainline repository
+  ansible.builtin.apt_repository:
+    repo: >
+      deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg]
+      http://nginx.org/packages/mainline/{{ ansible_distribution | lower }}
+      {{ ansible_distribution_release }} nginx
+    state: present
+    filename: nginx
+
+- name: Install nginx (mainline)
+  ansible.builtin.apt:
+    name: nginx
     state: present
     update_cache: yes
