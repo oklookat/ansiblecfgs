@@ -17,6 +17,7 @@
         url: "{{ mihomo_download_url }}"
         dest: "/tmp/mihomo.gz"
         mode: "0644"
+        force: yes
 
     - name: Decompress mihomo binary to destination
       ansible.builtin.shell:
@@ -28,7 +29,12 @@
         mode: "0755"
         owner: root
         group: root
-  when: not mihomo_bin.stat.exists or mihomo_version not in (mihomo_bin.stat.path | default(''))
+
+  always:
+    - name: Cleanup temporary archive
+      ansible.builtin.file:
+        path: "/tmp/mihomo.gz"
+        state: absent
 
 - name: Deploy configuration
   ansible.builtin.template:
