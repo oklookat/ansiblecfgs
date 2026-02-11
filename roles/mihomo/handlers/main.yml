@@ -1,0 +1,5 @@
+- name: Restart mihomo
+  ansible.builtin.systemd:
+    name: mihomo
+    state: restarted
+    daemon_reload: yes
