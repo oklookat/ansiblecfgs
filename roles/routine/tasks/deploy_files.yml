@@ -1,46 +1,62 @@
 ---
-- name: Ensure destination directories exist
-  ansible.builtin.file:
-    path: "{{ item.dest | dirname }}"
-    state: directory
-    mode: "0755"
-    recurse: true
-  loop: "{{ routine_files_to_deploy }}"
-  loop_control:
-    label: "{{ item.dest | dirname }}"
+- name: Install rsync
+  ansible.builtin.package:
+    name: rsync
+    state: present
 
-- name: Upload files
-  ansible.builtin.copy:
+- name: Allow {{ ansible_user }} to run rsync without password
+  ansible.builtin.lineinfile:
+    path: "/etc/sudoers.d/ansible-rsync"
+    create: yes
+    mode: "0440"
+    owner: root
+    group: root
+    line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: /usr/bin/rsync"
+    state: present
+    validate: "visudo -cf %s"
+  become: true
+
+- name: Sync dirs
+  ansible.posix.synchronize:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-    mode: "0644"
-    force: yes
-  loop: "{{ routine_files_to_deploy }}"
+    dest_port: "{{ ansible_port | int }}"
+    mode: push
+    rsync_opts: "{{ routine_rsync_opts + item.rsync_opts | default([]) }}"
+    rsync_path: sudo rsync
+    delete: "{{ item.delete | default(false) }}"
+    checksum: "{{ item.checksum | default(false) }}"
+    compress: "{{ item.compress | default(true) if ansible_fqdn != 'localhost' else false }}"
+    recursive: yes
+    archive: yes
+  become: "{{ item.become | default(true) }}"
+  loop: "{{ routine_files }}"
   loop_control:
-    label: "{{ item.src }}"
+    label: "{{ item.src }} - {{ item.dest }}"
+  register: sync_result
+  changed_when: sync_result.changed or sync_result.msg is search("files transferred")
 
-- name: Remove files if routine_files_to_delete is defined
+- name: Set rights on directories (recursive)
   ansible.builtin.file:
     path: "{{ item.dest }}"
-    state: absent
-  loop: "{{ routine_files_to_delete | default([]) }}"
-  loop_control:
-    label: "{{ item.dest }}"
-  when: routine_files_to_delete is defined
-
-- name: Find empty directories under target paths
-  ansible.builtin.find:
-    paths: "{{ item.dest | dirname }}"
-    file_type: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0755') }}"
+    state: directory
     recurse: yes
-  loop: "{{ routine_files_to_deploy }}"
-  loop_control:
-    label: "{{ item.dest | dirname }}"
-  register: found_dirs
+  loop: "{{ routine_files }}"
+  when:
+    - item.owner is defined or item.group is defined or item.mode is defined
+    - item.is_directory | default(true)
 
-- name: Remove empty directories
+- name: Set rights on individual files (no recurse)
   ansible.builtin.file:
-    path: "{{ item.path }}"
-    state: absent
-  loop: "{{ found_dirs.results | map(attribute='files') | flatten }}"
-  when: item.matched == 0 # only remove empty directories
+    path: "{{ item.dest }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+    state: file
+  loop: "{{ routine_files }}"
+  when:
+    - item.owner is defined or item.group is defined or item.mode is defined
+    - not (item.is_directory | default(true))

@@ -1,10 +1,14 @@
 ---
 # deploy_files
-# routine_files_to_deploy:
-#   - src: "localfile.txt"
-#     dest: "/home/user/remotefile.txt"
-#   # etc...
-
-# routine_files_to_delete:
-#   - dest: "/home/user/remotefile.txt"
-#   # etc...
+routine_rsync_opts:
+  - "--no-motd"
+  - "--human-readable"
+# routine_files:
+#   - src: "files/frontend/dist/"
+#     dest: "/var/www/frontend/"
+#     owner: "www-data"
+#     group: "www-data"
+#     mode: "0755"
+#     rsync_opts:
+#       - "--exclude=*.map"
+#       - "--exclude=.gitkeep"
