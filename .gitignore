@@ -28,3 +28,6 @@ env/
 *.log
 
 secrets/
+
+# WSL?
+*Zone.Identifier
