@@ -2,7 +2,7 @@
   hosts: openwrt
   gather_facts: no
   vars:
-    xray_config: "/etc/xray/config.json"
+    xray_config: "/usr/local/share/xray/config.json"
   tasks:
     - name: Ensure xray_config_local is defined
       assert:

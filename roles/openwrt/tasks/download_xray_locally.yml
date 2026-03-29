@@ -1,4 +1,4 @@
----
+# !!!! unzip required (sudo apt install unzip) !!!!
 - name: Download and extract Xray
   delegate_to: localhost
   become: false
@@ -8,6 +8,13 @@
         path: "{{ xray_local_temp_dir }}"
         state: directory
         mode: "0755"
+
+    - name: Check if unzip is installed
+      command: which unzip
+      register: unzip_check
+      ignore_errors: true
+      changed_when: false
+      failed_when: false
 
     - name: Download Xray
       get_url:

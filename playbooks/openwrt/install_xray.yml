@@ -2,6 +2,9 @@
 - name: "OpenWrt: install Xray"
   hosts: openwrt
   gather_facts: false
+  vars:
+    xray_local_temp_dir: "{{ playbook_dir }}/../../roles/openwrt/xray_temp"
+    xray_local_bin: "{{ xray_local_temp_dir }}/xray"
   tasks:
     - name: "upx: download"
       ansible.builtin.include_role:

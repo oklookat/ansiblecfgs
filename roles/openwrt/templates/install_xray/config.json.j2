@@ -3,28 +3,35 @@
         "loglevel": "warning"
     },
     "dns": {
-        "queryStrategy": "UseIP",
+        "queryStrategy": "UseIPv4",
         "servers": [
             {
                 "address": "fakedns"
             },
             {
-                "tag": "dns-direct",
-                "address": "https://77.88.8.8/dns-query"
+                "address": "https://1.1.1.1/dns-query"
             },
             {
                 "tag": "dns-direct",
-                "address": "62.76.76.62"
+                "address": "https://77.88.8.8/dns-query",
+                "domains": [
+                    "geosite:category-ru"
+                ],
+                "skipFallback": true
+            },
+            {
+                "tag": "dns-direct",
+                "address": "77.88.8.1",
+                "domains": [
+                    "geosite:category-ru"
+                ],
+                "skipFallback": true
             }
         ]
     },
     "fakedns": [
         {
             "ipPool": "198.19.0.0/16",
-            "poolSize": 65535
-        },
-        {
-            "ipPool": "fd88:1234:5678::/48",
             "poolSize": 65535
         }
     ],
@@ -47,17 +54,15 @@
             },
             {
                 "type": "field",
-                "ip": [
-                    "geoip:private",
-                    "77.88.8.8",
-                    "62.76.76.62"
+                "domain": [
+                    "geosite:category-ru"
                 ],
                 "outboundTag": "direct-out"
             },
             {
                 "type": "field",
-                "domain": [
-                    "geosite:category-ru"
+                "ip": [
+                    "geoip:private"
                 ],
                 "outboundTag": "direct-out"
             },
@@ -67,12 +72,6 @@
                     "bittorrent"
                 ],
                 "outboundTag": "direct-out"
-            },
-            {
-                "type": "field",
-                "network": "udp",
-                "port": "443",
-                "outboundTag": "block-out"
             }
         ]
     },
@@ -103,7 +102,7 @@
         {
             "tag": "doko-in-dns",
             "listen": "0.0.0.0",
-            "port": 53,
+            "port": 5353,
             "protocol": "dokodemo-door",
             "settings": {
                 "network": "tcp,udp",
@@ -119,11 +118,10 @@
             "tag": "direct-out",
             "protocol": "freedom",
             "settings": {
-                "targetStrategy": "UseIP"
+                "domainStrategy": "UseIPv4"
             },
             "streamSettings": {
                 "sockopt": {
-                    "domainStrategy": "UseIP",
                     "mark": 2
                 }
             }
@@ -131,15 +129,8 @@
         {
             "protocol": "dns",
             "tag": "dns-out",
-            "settings": {
-                "network": "tcp",
-                "address": "1.1.1.1",
-                "port": 53,
-                "nonIPQuery": "drop"
-            },
             "streamSettings": {
                 "sockopt": {
-                    "domainStrategy": "UseIP",
                     "mark": 2
                 }
             }

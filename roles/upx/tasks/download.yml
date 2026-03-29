@@ -3,12 +3,6 @@
   delegate_to: localhost
   become: false
   block:
-    - name: Ensure compress_workdir exists
-      file:
-        path: "{{ compress_workdir }}"
-        state: directory
-        mode: "0755"
-
     - name: Ensure upx_workdir exists
       file:
         path: "{{ upx_workdir }}"
@@ -29,12 +23,20 @@
         remote_src: yes
         creates: "{{ upx_workdir }}/upx"
 
-    - name: Move UPX binary to root of workdir if not already there
-      command: mv "{{ item }}" "{{ upx_workdir }}/upx"
-      args:
-        removes: "{{ item }}"
-      loop: "{{ lookup('fileglob', upx_workdir + '/**/upx', wantlist=True) }}"
-      when: not lookup('file', upx_workdir + '/upx', errors='ignore')
+    - name: Find and move UPX binary to root of workdir
+      find:
+        paths: "{{ upx_workdir }}"
+        patterns: "upx"
+        file_type: file
+        recurse: yes
+      register: upx_files
+
+    - name: Move UPX binary to root of workdir
+      command: mv "{{ item.path }}" "{{ upx_workdir }}/upx"
+      loop: "{{ upx_files.files }}"
+      when:
+        - upx_files.files | length > 0
+        - not (upx_workdir + '/upx') is exists
 
     - name: Ensure UPX binary is executable
       file:
