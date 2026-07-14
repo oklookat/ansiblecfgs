@@ -12,6 +12,7 @@
       ansible.builtin.include_role:
         name: openwrt
         tasks_from: download_singbox_locally.yml
+        public: true
 
     - name: "upx: set compressed sing-box bin"
       ansible.builtin.set_fact:
@@ -30,4 +31,4 @@
         name: openwrt
         tasks_from: install_singbox.yml
       vars:
-        singbox_local_bin: "{{ xray_local_compressed_bin }}"
+        singbox_local_bin: "{{ singbox_local_compressed_bin }}"

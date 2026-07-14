@@ -1,19 +1,19 @@
 - name: "openwrt: deploy sing-box config"
   hosts: openwrt
-  gather_facts: no
+  gather_facts: false
   vars:
     singbox_config: "/etc/sing-box/config.json"
   tasks:
-    - name: Ensure singbox_config_local is defined
+    - name: Ensure singbox_local_config is defined
       assert:
         that:
-          - singbox_config_local is defined
-          - singbox_config_local | length > 0
-        fail_msg: "singbox_config_local must be defined"
+          - singbox_local_config is defined
+          - singbox_local_config | length > 0
+        fail_msg: "singbox_local_config must be defined"
 
     - name: Upload config
       delegate_to: localhost
-      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} {{ singbox_config_local }} {{ ansible_user }}@{{ ansible_host }}:{{ singbox_config }}
+      command: scp -o StrictHostKeyChecking=no -P {{ ansible_port }} {{ singbox_local_config }} {{ ansible_user }}@{{ ansible_host }}:{{ singbox_config }}
 
     - name: Restart sing-box
       raw: "/etc/init.d/sing-box restart"

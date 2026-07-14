@@ -32,8 +32,10 @@
           vars:
             firewall_rule_name: "allow_xray"
             firewall_rules:
-              - "add rule inet filter input tcp dport {{ xray_listen_port }} accept"
-              - "add rule inet filter input udp dport {{ xray_listen_port }} accept"
+              - "add rule inet filter input tcp dport {{ xray_listen_port }}
+                accept"
+              - "add rule inet filter input udp dport {{ xray_listen_port }}
+                accept"
         - name: Apply
           ansible.builtin.include_role:
             name: firewall

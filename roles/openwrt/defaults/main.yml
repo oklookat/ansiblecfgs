@@ -11,9 +11,9 @@ xray_sha256: "4d30283ae614e3057f730f67cd088a42be6fdf91f8639d82cb69e48cde80413c"
 singbox_local_temp_dir: "{{ role_path }}/singbox_temp"
 
 # download_singbox_locally
-singbox_url: "https://github.com/SagerNet/sing-box/releases/download/v1.12.15/sing-box-1.12.15-linux-arm64.tar.gz"
+singbox_url: "https://github.com/SagerNet/sing-box/releases/download/v1.14.0-alpha.44/sing-box-1.14.0-alpha.44-linux-arm64-musl.tar.gz"
 # optional
-singbox_sha256: "11f6cd1d33a3a35794af06b446fba5ddcefc3970fb6f57c4927a8c610db3093b"
+singbox_sha256: "03ea34e62030151aaa0988f54573548f74a979f323f5fdbc77e00f64d759651a"
 
 # install_xray
 xray_local_files: "{{ role_path }}/files/install_xray"

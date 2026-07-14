@@ -17,6 +17,16 @@
         checksum: "sha256:{{ singbox_sha256 | default('') }}"
         force: true
 
+    - name: Resolve singbox_local_temp_dir to an absolute path
+      ansible.builtin.set_fact:
+        singbox_local_temp_dir: "{{ singbox_local_temp_dir }}"
+
+    - name: Ensure extract_tmp directory exists
+      file:
+        path: "{{ singbox_local_temp_dir }}/extract_tmp"
+        state: directory
+        mode: "0755"
+
     - name: Extract sing-box to temp folder
       unarchive:
         src: "{{ singbox_local_temp_dir }}/sing-box.tar.gz"
