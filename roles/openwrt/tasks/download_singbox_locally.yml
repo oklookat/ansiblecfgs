@@ -14,7 +14,7 @@
         url: "{{ singbox_url }}"
         dest: "{{ singbox_local_temp_dir }}/sing-box.tar.gz"
         mode: "0644"
-        checksum: "sha256:{{ singbox_sha256 | default('') }}"
+        checksum: "{{ 'sha256:' + singbox_sha256 if (singbox_sha256 | default('') | length) > 0 else omit }}"
         force: true
 
     - name: Resolve singbox_local_temp_dir to an absolute path

@@ -60,3 +60,12 @@
 
 - name: Copy config
   local_action: shell scp -P {{ ansible_port }} {{ singbox_local_config }} 'root@{{ ansible_host }}:{{ singbox_config }}'
+
+- name: Remove temporary sing-box files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ singbox_local_bin }}"
+    - "{{ singbox_local_uci }}"
+    - "{{ singbox_local_init }}"
