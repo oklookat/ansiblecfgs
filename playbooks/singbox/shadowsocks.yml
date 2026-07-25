@@ -1,6 +1,6 @@
 ---
 - name: "sing-box: Shadowsocks"
-  hosts: sing_box
+  hosts: singbox
   become: true
   tasks:
     - name: "firewall: add, apply rules"

@@ -1,6 +1,6 @@
 ---
 - name: "sing-box: deploy-config"
-  hosts: sing_box
+  hosts: singbox
   become: true
   tasks:
     - name: Deploy

@@ -1,10 +1,13 @@
 {
+    "$schema": "https://sing-box.sagernet.org/schema.json",
     "log": {
         "level": "warning",
         "timestamp": true
     },
     "dns": {
         "final": "cloudflare-direct",
+        "strategy": "ipv4_only",
+        "reverse_mapping": true
         "servers": [
             {
                 "tag": "cloudflare-direct",
@@ -18,6 +21,14 @@
             }
         ]
     },
+    "http_clients": [
+        {
+            "tag": "client-auto",
+            "engine": "go",
+            "version": 2,
+            "detour": "auto"
+        }
+    ],
     "inbounds": [
         {
             "type": "vless",
@@ -59,8 +70,9 @@
         }
     ],
     "route": {
-        "final": "direct-out",
+        "final": "auto",
         "default_domain_resolver": "cloudflare-direct",
+        "default_http_client": "client-auto"
         "rules": [
             {
                 "action": "sniff"

@@ -1,8 +1,8 @@
 ---
+# install
+singbox_version: "1.14.0-beta.2"
+
 # ALL
-singbox_apt_repo: "https://deb.sagernet.org/"
-singbox_apt_gpg_url: "https://sing-box.app/gpg.key"
-singbox_apt_gpg_path: "/etc/apt/keyrings/sagernet.asc"
 singbox_config_path: "/etc/sing-box/config.json"
 singbox_listen_port: 443
 

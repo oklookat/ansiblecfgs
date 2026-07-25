@@ -1,6 +1,6 @@
 ---
 - name: "sing-box: Wireguard"
-  hosts: sing_box
+  hosts: singbox
   become: true
   tasks:
     - name: "sing-box: install"
