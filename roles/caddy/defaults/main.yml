@@ -1,0 +1,29 @@
+---
+caddy_user: "caddy"
+
+# confd | reality_sfy | xhttp_sfy
+caddy_domain: ""
+
+# xhttp_sfy
+caddy_acme_email: ""
+
+# confd
+# caddy_sites:
+#   - domain: example.com
+#     src: templates/example.com.Caddyfile.j2
+#   - domain: test.com
+#     src: templates/test.com.Caddyfile.j2
+#   - domain: blog.example.com
+#     src: "" # empty src: will be deleted in remote
+
+# reality_sfy | xhttp_sfy
+caddy_port: 443
+caddy_webroot_path: "/var/www/{{ caddy_domain }}"
+
+caddy_fullchain_path: ""
+
+caddy_private_key_path: ""
+
+# xhttp_sfy
+caddy_location: "/test-is-test"
+caddy_grpc_pass: "grpc://unix:/dev/shm/uds2023.sock"

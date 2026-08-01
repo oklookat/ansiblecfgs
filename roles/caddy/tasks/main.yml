@@ -1,0 +1,12 @@
+---
+- include_tasks: install.yml
+  tags: caddy_install
+
+- include_tasks: base.yml
+  tags: caddy_base
+
+- include_tasks: reality_sfy.yml
+  tags: caddy_reality_sfy
+
+- include_tasks: apply.yml
+  tags: caddy_apply

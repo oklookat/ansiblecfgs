@@ -1,0 +1,27 @@
+---
+- name: Check if fullchain exists (if custom cert path specified)
+  ansible.builtin.stat:
+    path: "{{ caddy_fullchain_path }}"
+  register: fullchain_stat
+  when: caddy_fullchain_path is defined and caddy_fullchain_path | length > 0
+
+- name: Check if private key exists (if custom cert path specified)
+  ansible.builtin.stat:
+    path: "{{ caddy_private_key_path }}"
+  register: privkey_stat
+  when: caddy_private_key_path is defined and caddy_private_key_path | length > 0
+
+- name: Fail if custom certificates were specified but not found on host
+  ansible.builtin.fail:
+    msg: "Custom SSL certificates specified, but file missing on host!"
+  when: >
+    (caddy_fullchain_path is defined and caddy_fullchain_path | length > 0 and not fullchain_stat.stat.exists) or
+    (caddy_private_key_path is defined and caddy_private_key_path | length > 0 and not privkey_stat.stat.exists)
+
+- name: Ensure web root exists
+  ansible.builtin.file:
+    path: "{{ caddy_webroot_path }}"
+    state: directory
+    owner: "{{ caddy_user | default('caddy') }}"
+    group: "{{ caddy_user | default('caddy') }}"
+    mode: "0755"
