@@ -1,5 +1,5 @@
 ---
-- name: "caddy: deploy .conf files"
+- name: "caddy: deploy caddyfiles"
   hosts: all
   become: true
   tasks:
