@@ -4,7 +4,7 @@ caddy_user: "caddy"
 # confd | reality_sfy | xhttp_sfy
 caddy_domain: ""
 
-# xhttp_sfy
+# xhttp_sfy (not required if caddy_fullchain and private_key paths present)
 caddy_acme_email: ""
 
 # confd
@@ -20,8 +20,8 @@ caddy_acme_email: ""
 caddy_port: 443
 caddy_webroot_path: "/var/www/{{ caddy_domain }}"
 
+# reality_sfy (required) | xhttp_sfy (not required if caddy_acme_email present)
 caddy_fullchain_path: ""
-
 caddy_private_key_path: ""
 
 # xhttp_sfy

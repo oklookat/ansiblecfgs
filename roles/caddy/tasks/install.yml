@@ -7,27 +7,45 @@
       - debian-archive-keyring
       - apt-transport-https
       - curl
+      - gnupg
     state: present
     update_cache: true
 
-- name: Download Caddy GPG key
-  ansible.builtin.get_url:
-    url: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
-    dest: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+- name: Download and dearmor Caddy GPG key
+  ansible.builtin.shell: |
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+      | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  become: true
+
+- name: Ensure key permissions
+  ansible.builtin.file:
+    path: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
     mode: "0644"
-    force: true
+    owner: root
+    group: root
 
 - name: Add Caddy APT repository
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg]
-      https://dl.cloudsmith.io/public/caddy/stable/deb/debian any main
-    filename: caddy-stable
-    state: present
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/caddy-stable.list
     mode: "0644"
+    content: |
+      # Source: Caddy
+      # Site: https://github.com/caddyserver/caddy
+      # Repository: Caddy / stable
+      deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main
 
 - name: Install Caddy
   ansible.builtin.apt:
     name: caddy
     state: present
     update_cache: true
+
+- name: Ensure /etc/caddy/conf.d exists
+  ansible.builtin.file:
+    path: /etc/caddy/conf.d
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
