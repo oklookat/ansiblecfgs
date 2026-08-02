@@ -1,0 +1,67 @@
+---
+- name: "sing-box: naive"
+  hosts: singbox
+  become: true
+  vars:
+    singbox_username: "{{ lookup('ansible.builtin.password', '/dev/null chars=ascii_letters,digits length=16') }}"
+    singbox_password: "{{ lookup('ansible.builtin.password', '/dev/null chars=ascii_letters,digits length=32') }}"
+    singbox_listen_port: 1080
+    caddy_pass: "h2c://127.0.0.1:{{ singbox_listen_port }}"
+    caddy_proxy_authorization: >-
+      {{ (singbox_username ~ ':' ~ singbox_password) | b64encode }}
+  tasks:
+    - name: "sing-box: install"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: install.yml
+
+    - name: "firewall: apply rules"
+      block:
+        - name: "Allow: 80, 443 (TCP) for caddy"
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+          vars:
+            firewall_rule_name: "allow_http"
+            firewall_rules:
+              - "add rule inet filter input tcp dport 80 accept"
+              - "add rule inet filter input tcp dport 443 accept"
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: apply.yml
+
+    - name: "caddy: install, apply base config"
+      block:
+        - name: Install
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: install.yml
+
+        - name: Create base config
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: base.yml
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: apply.yml
+
+    - name: "caddy: generate naive config, apply"
+      block:
+        - name: Generate
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: naive.yml
+
+        - name: Apply
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: apply.yml
+
+    - name: "sing-box: apply naive config"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: naive.yml

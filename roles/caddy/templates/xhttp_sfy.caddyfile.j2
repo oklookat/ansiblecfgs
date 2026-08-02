@@ -13,13 +13,15 @@
 		}
 	{% endif %}
 
-	# HSTS
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    # HSTS
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
 
-	# Deny robots
-	respond /robots.txt "User-agent: *\nDisallow: /\n" 200 {
-		header Content-Type "text/plain"
-	}
+    handle /robots.txt {
+        header Content-Type "text/plain"
+        respond "User-agent: *\nDisallow: /\n" 200
+    }
 
 	# gRPC Proxy for VLESS / XHTTP
 	reverse_proxy {{ caddy_location }} {{ caddy_grpc_pass }} {

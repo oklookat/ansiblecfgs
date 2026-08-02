@@ -4,7 +4,9 @@
 	tls {{ caddy_fullchain_path }} {{ caddy_private_key_path }}
 
 	# HSTS
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+	header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
 
 	root * {{ caddy_webroot_path }}
 	file_server

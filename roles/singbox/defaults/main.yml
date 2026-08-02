@@ -26,3 +26,7 @@ singbox_down_mbps: 1000
 # deploy_config
 singbox_config_source: ""
 singbox_cache_file: "/var/lib/sing-box/cache.db"
+
+# naive
+singbox_username: ""
+singbox_password: ""

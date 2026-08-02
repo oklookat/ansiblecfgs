@@ -1,0 +1,21 @@
+{{ caddy_domain }} {
+    tls {{ caddy_acme_email }}
+
+    route {
+        @naive {
+            method CONNECT
+            header Proxy-Authorization "Basic {{ caddy_proxy_authorization }}"
+        }
+
+        handle @naive {
+            reverse_proxy {{ caddy_pass }} {
+                header_up Proxy-Authorization {header.Proxy-Authorization}
+            }
+        }
+
+        handle {
+            root * {{ caddy_webroot_path }}
+            file_server
+        }
+    }
+}
