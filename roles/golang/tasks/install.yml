@@ -1,0 +1,66 @@
+---
+- name: Determine Go architecture
+  ansible.builtin.set_fact:
+    golang_arch: "{{ golang_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+
+- name: Check if Go is already installed with the correct version
+  ansible.builtin.command: "{{ golang_bin_path }}/go version"
+  register: golang_version_check
+  changed_when: false
+  failed_when: false
+
+- name: Set fact whether Go needs to be installed/updated
+  ansible.builtin.set_fact:
+    golang_needs_install: >-
+      {{
+        golang_version_check.rc != 0 or
+        (golang_version_check.stdout is defined and
+         ('go version go' + golang_version) not in golang_version_check.stdout)
+      }}
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - tar
+    state: present
+    update_cache: true
+  when: golang_needs_install | bool
+
+- name: Download Go {{ golang_version }}
+  ansible.builtin.get_url:
+    url: "https://go.dev/dl/go{{ golang_version }}.linux-{{ golang_arch }}.tar.gz"
+    dest: "/tmp/go{{ golang_version }}.linux-{{ golang_arch }}.tar.gz"
+    mode: "0644"
+  when: golang_needs_install | bool
+
+- name: Remove old Go installation (if exists)
+  ansible.builtin.file:
+    path: "{{ golang_install_dir }}/go"
+    state: absent
+  when: golang_needs_install | bool
+
+- name: Extract Go {{ golang_version }}
+  ansible.builtin.unarchive:
+    src: "/tmp/go{{ golang_version }}.linux-{{ golang_arch }}.tar.gz"
+    dest: "{{ golang_install_dir }}"
+    remote_src: true
+    creates: "{{ golang_install_dir }}/go/bin/go"
+  when: golang_needs_install | bool
+  notify: Refresh shell profile
+
+- name: Create profile script for Go
+  ansible.builtin.copy:
+    dest: /etc/profile.d/golang.sh
+    mode: "0644"
+    content: |
+      export PATH=$PATH:{{ golang_bin_path }}
+      export GOPATH=$HOME/go
+      export PATH=$PATH:$GOPATH/bin
+  notify: Refresh shell profile
+
+- name: Clean up downloaded archive
+  ansible.builtin.file:
+    path: "/tmp/go{{ golang_version }}.linux-{{ golang_arch }}.tar.gz"
+    state: absent
+  when: golang_needs_install | bool

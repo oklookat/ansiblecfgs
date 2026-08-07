@@ -1,0 +1,9 @@
+---
+- name: "golang: install"
+  hosts: all
+  become: true
+  tasks:
+    - name: "golang: install"
+      ansible.builtin.include_role:
+        name: golang
+        tasks_from: install.yml
