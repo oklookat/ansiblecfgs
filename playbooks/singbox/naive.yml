@@ -3,12 +3,7 @@
   hosts: singbox
   become: true
   vars:
-    singbox_username: "{{ lookup('ansible.builtin.password', '/dev/null chars=ascii_letters,digits length=16') }}"
-    singbox_password: "{{ lookup('ansible.builtin.password', '/dev/null chars=ascii_letters,digits length=32') }}"
-    singbox_listen_port: 1080
-    caddy_pass: "h2c://127.0.0.1:{{ singbox_listen_port }}"
-    caddy_proxy_authorization: >-
-      {{ (singbox_username ~ ':' ~ singbox_password) | b64encode }}
+    singbox_listen: "127.0.0.1:1080"
   tasks:
     - name: "sing-box: install"
       ansible.builtin.include_role:
@@ -32,36 +27,26 @@
             name: firewall
             tasks_from: apply.yml
 
-    - name: "caddy: install, apply base config"
+    - name: "caddy: install go, xcaddy, naive"
       block:
-        - name: Install
+        - name: "golang: install"
           ansible.builtin.include_role:
-            name: caddy
+            name: golang
             tasks_from: install.yml
 
-        - name: Create base config
+        - name: "caddy: install xcaddy"
           ansible.builtin.include_role:
             name: caddy
-            tasks_from: base.yml
+            tasks_from: install_xcaddy.yml
 
-        - name: Apply
+        - name: "caddy: install naive"
           ansible.builtin.include_role:
             name: caddy
-            tasks_from: apply.yml
+            tasks_from: install_naive.yml
+          vars:
+            caddy_naive_upstream_socks: "socks5://{{ singbox_listen }}"
 
-    - name: "caddy: generate naive config, apply"
-      block:
-        - name: Generate
-          ansible.builtin.include_role:
-            name: caddy
-            tasks_from: naive.yml
-
-        - name: Apply
-          ansible.builtin.include_role:
-            name: caddy
-            tasks_from: apply.yml
-
-    - name: "sing-box: apply naive config"
+    - name: "sing-box: apply mixed config"
       ansible.builtin.include_role:
         name: singbox
-        tasks_from: naive.yml
+        tasks_from: mixed.yml

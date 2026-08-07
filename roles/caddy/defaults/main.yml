@@ -1,10 +1,23 @@
 ---
-caddy_user: "caddy"
+# confd | https_check | install_naive | reality_sfy | xhttp_sfy
+caddy_system_user: caddy
+caddy_system_group: "{{ caddy_system_user }}"
 
-# confd | reality_sfy | xhttp_sfy | naive
+# base | confd | install_naive
+caddy_config_dir: /etc/caddy
+
+# reality_sfy | confd | install_naive
+caddy_configs_dir: "{{ caddy_config_dir }}/conf.d"
+
+# install_naive
+caddy_bin_path: /usr/local/bin/caddy
+caddy_data_dir: /var/lib/caddy
+caddy_build_dir: /opt/caddy-build
+
+# confd | reality_sfy | xhttp_sfy | install_naive
 caddy_domain: ""
 
-# xhttp_sfy (not required if caddy_fullchain and private_key paths present) | naive
+# xhttp_sfy (not required if caddy_fullchain and private_key paths present) | install_naive
 caddy_acme_email: ""
 
 # confd
@@ -18,8 +31,10 @@ caddy_acme_email: ""
 
 # reality_sfy | xhttp_sfy
 caddy_port: 443
-# reality_sfy | xhttp_sfy | naive
-caddy_webroot_path: "/var/www/{{ caddy_domain }}"
+
+# reality_sfy | xhttp_sfy | install_naive
+caddy_webroot_dir: "/var/www"
+caddy_domain_dir: "{{ caddy_webroot_dir }}/{{ caddy_domain }}"
 
 # reality_sfy (required) | xhttp_sfy (not required if caddy_acme_email present)
 caddy_fullchain_path: ""
@@ -29,6 +44,8 @@ caddy_private_key_path: ""
 caddy_location: "/test-is-test"
 caddy_grpc_pass: "grpc://unix:/dev/shm/uds2023.sock"
 
-# naive
-caddy_pass: "h2c://127.0.0.1:1080"
-caddy_proxy_authorization: "" # base64 from "username:password" of naive client "username, password".
+# install_naive
+caddy_forwardproxy_module: "github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive" # module@version=repo@branch passed to xcaddy --with
+caddy_naive_username: "{{ lookup('ansible.builtin.password', '/dev/null chars=ascii_letters,digits length=16') }}"
+caddy_naive_password: "{{ lookup('ansible.builtin.password', '/dev/null chars=ascii_letters,digits length=32') }}"
+caddy_naive_upstream_socks: "socks5://127.0.0.1:1080"

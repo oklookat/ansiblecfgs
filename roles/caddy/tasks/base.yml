@@ -2,4 +2,4 @@
 - name: Generate base Caddyfile
   ansible.builtin.template:
     src: base.Caddyfile.j2
-    dest: /etc/caddy/Caddyfile
+    dest: "{{ caddy_config_dir }}/Caddyfile"

@@ -29,6 +29,6 @@
 	}
 
 	# Fallback to static web root
-	root * {{ caddy_webroot_path }}
+	root * {{ caddy_domain_dir }}
 	file_server
 }

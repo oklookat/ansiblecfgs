@@ -8,6 +8,6 @@
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
     }
 
-	root * {{ caddy_webroot_path }}
+	root * {{ caddy_domain_dir }}
 	file_server
 }

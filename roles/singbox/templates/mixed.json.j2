@@ -30,18 +30,10 @@
     ],
     "inbounds": [
         {
-            "type": "naive",
-            "tag": "naive-in",
-            "network": "tcp",
-            "listen": "127.0.0.1",
-            "listen_port": {{ singbox_listen_port }},
-            "tcp_fast_open": true,
-            "users": [
-                {
-                    "username": "{{ singbox_username }}",
-                    "password": "{{ singbox_password }}"
-                }
-            ]
+            "type": "mixed",
+            "tag": "mixed-in",
+            "listen": "{{ singbox_listen }}",
+            "listen_port": {{ singbox_listen_port }}
         }
     ],
     "outbounds": [

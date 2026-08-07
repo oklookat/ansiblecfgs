@@ -1,0 +1,4 @@
+---
+- name: Install xcaddy
+  ansible.builtin.command:
+    cmd: go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest

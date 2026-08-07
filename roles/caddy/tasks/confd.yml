@@ -1,10 +1,10 @@
 ---
-- name: Ensure web root exists
+- name: Ensure domain dir exists
   ansible.builtin.file:
-    path: "/var/www/{{ item.domain }}"
+    path: "{{ caddy_webroot_dir }}/{{ item.domain }}"
     state: directory
-    owner: www-data
-    group: www-data
+    owner: "{{ caddy_system_user }}"
+    group: "{{ caddy_system_group }}"
     mode: "0755"
   loop: "{{ caddy_sites }}"
   loop_control:
@@ -14,9 +14,9 @@
 - name: Render Caddy site configs
   ansible.builtin.template:
     src: "{{ item.src }}"
-    dest: "/etc/caddy/conf.d/{{ item.domain }}.caddyfile"
-    owner: root
-    group: root
+    dest: "{{ caddy_configs_dir }}/{{ item.domain }}.caddyfile"
+    owner: "{{ caddy_system_user }}"
+    group: "{{ caddy_system_group }}"
     mode: "0644"
   loop: "{{ caddy_sites }}"
   loop_control:
@@ -25,7 +25,7 @@
 
 - name: Remove Caddy site configs if not needed
   ansible.builtin.file:
-    path: "/etc/caddy/conf.d/{{ item.domain }}.caddyfile"
+    path: "{{ caddy_configs_dir }}/{{ item.domain }}.caddyfile"
     state: absent
   loop: "{{ caddy_sites }}"
   loop_control:

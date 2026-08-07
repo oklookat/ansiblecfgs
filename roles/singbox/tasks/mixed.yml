@@ -1,7 +1,7 @@
 ---
 - name: Generate config
   ansible.builtin.template:
-    src: naive.json.j2
+    src: mixed.json.j2
     dest: "{{ singbox_config_path }}"
   notify:
     - Enable and start sing-box

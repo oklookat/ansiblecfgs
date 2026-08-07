@@ -18,10 +18,10 @@
     (caddy_fullchain_path is defined and caddy_fullchain_path | length > 0 and not fullchain_stat.stat.exists) or
     (caddy_private_key_path is defined and caddy_private_key_path | length > 0 and not privkey_stat.stat.exists)
 
-- name: Ensure web root exists
+- name: Ensure domain dir exists
   ansible.builtin.file:
-    path: "{{ caddy_webroot_path }}"
+    path: "{{ caddy_domain_dir }}"
     state: directory
-    owner: "{{ caddy_user | default('caddy') }}"
-    group: "{{ caddy_user | default('caddy') }}"
+    owner: "{{ caddy_system_user }}"
+    group: "{{ caddy_system_group }}"
     mode: "0755"

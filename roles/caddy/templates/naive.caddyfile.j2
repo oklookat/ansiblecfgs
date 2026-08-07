@@ -1,21 +1,17 @@
-{{ caddy_domain }} {
+:443, {{ caddy_domain }} {
     tls {{ caddy_acme_email }}
 
     route {
-        @naive {
-            method CONNECT
-            header Proxy-Authorization "Basic {{ caddy_proxy_authorization }}"
+        forward_proxy {
+            basic_auth {{ caddy_naive_username }} {{ caddy_naive_password }}
+            hide_ip
+            hide_via
+            probe_resistance
+            upstream {{ caddy_naive_upstream_socks }}
         }
 
-        handle @naive {
-            reverse_proxy {{ caddy_pass }} {
-                header_up Proxy-Authorization {header.Proxy-Authorization}
-            }
-        }
-
-        handle {
-            root * {{ caddy_webroot_path }}
-            file_server
+        file_server {
+            root {{ caddy_domain_dir }}
         }
     }
 }

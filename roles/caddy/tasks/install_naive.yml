@@ -1,0 +1,116 @@
+---
+- name: Check currently installed caddy version
+  ansible.builtin.command: "{{ caddy_bin_path }} version"
+  register: caddy_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Check whether current caddy build has the naive forwardproxy plugin
+  ansible.builtin.command: "{{ caddy_bin_path }} list-modules"
+  register: caddy_modules_check
+  changed_when: false
+  failed_when: false
+
+- name: Build caddy with naive forwardproxy plugin via xcaddy
+  ansible.builtin.command:
+    cmd: >-
+      xcaddy build
+      --output {{ caddy_build_dir }}/caddy
+      --with {{ caddy_forwardproxy_module }}
+  environment:
+    HOME: "{{ caddy_build_dir }}"
+  args:
+    chdir: "{{ caddy_build_dir }}"
+  when: >-
+    caddy_current_version.rc != 0 or
+    "'http.handlers.forward_proxy'" not in caddy_modules_check.stdout
+
+- name: Install built caddy binary
+  ansible.builtin.copy:
+    src: "{{ caddy_build_dir }}/caddy"
+    dest: "{{ caddy_bin_path }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart Caddy
+  when: >-
+    caddy_current_version.rc != 0 or
+    "'http.handlers.forward_proxy'" not in caddy_modules_check.stdout
+
+- name: Allow caddy binary to bind privileged ports without root
+  community.general.capabilities:
+    path: "{{ caddy_bin_path }}"
+    capability: cap_net_bind_service=+ep
+    state: present
+
+- name: Create caddy system group
+  ansible.builtin.group:
+    name: "{{ caddy_system_group }}"
+    system: true
+    state: present
+
+- name: Create caddy system user
+  ansible.builtin.user:
+    name: "{{ caddy_system_user }}"
+    group: "{{ caddy_system_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ caddy_data_dir }}"
+    create_home: false
+    state: present
+
+- name: Create caddy config/data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ caddy_system_user }}"
+    group: "{{ caddy_system_group }}"
+    mode: "0750"
+  loop:
+    - "{{ caddy_config_dir }}"
+    - "{{ caddy_configs_dir }}"
+    - "{{ caddy_data_dir }}"
+
+- name: Create domain dir
+  ansible.builtin.file:
+    path: "{{ caddy_domain_dir }}"
+    state: directory
+    owner: "{{ caddy_system_user }}"
+    group: "{{ caddy_system_group }}"
+    mode: "0755"
+
+- name: Deploy domain index page (skip if you already customized it)
+  ansible.builtin.copy:
+    src: naive.html
+    dest: "{{ caddy_domain_dir }}/index.html"
+    owner: "{{ caddy_system_user }}"
+    group: "{{ caddy_system_group }}"
+    mode: "0644"
+    force: false
+
+- name: Deploy base caddyfile
+  ansible.builtin.include_tasks: base.yml
+
+- name: Deploy naive caddyfile
+  ansible.builtin.include_tasks: confd.yml
+  vars:
+    caddy_sites:
+      - domain: "{{ caddy_domain }}"
+        src: naive.caddyfile.j2
+
+- name: Deploy caddy systemd unit
+  ansible.builtin.template:
+    src: caddy.naive.service.j2
+    dest: /etc/systemd/system/caddy.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Caddy
+
+- name: Enable and start caddy
+  ansible.builtin.systemd:
+    name: caddy
+    enabled: true
+    state: started
+    daemon_reload: true

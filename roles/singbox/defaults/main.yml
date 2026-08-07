@@ -27,6 +27,5 @@ singbox_down_mbps: 1000
 singbox_config_source: ""
 singbox_cache_file: "/var/lib/sing-box/cache.db"
 
-# naive
-singbox_username: ""
-singbox_password: ""
+# mixed
+singbox_listen: "127.0.0.1:1080"

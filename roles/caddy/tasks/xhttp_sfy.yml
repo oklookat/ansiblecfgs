@@ -4,9 +4,9 @@
 - name: Copy HTML file
   ansible.builtin.copy:
     src: reality_sfy.html
-    dest: "{{ caddy_webroot_path }}/index.html"
-    owner: "{{ caddy_user | default('caddy') }}"
-    group: "{{ caddy_user | default('caddy') }}"
+    dest: "{{ caddy_domain_dir }}/index.html"
+    owner: "{{ caddy_system_user }}"
+    group: "{{ caddy_system_group }}"
     mode: "0755"
 
 - name: Generate Caddy site config
