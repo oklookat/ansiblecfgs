@@ -1,0 +1,23 @@
+{
+    storage file_system {
+        root /data
+    }
+
+    order forward_proxy before file_server
+}
+
+:443, {{ docker_caddy_domain }} {
+    tls {{ docker_caddy_email }}
+
+    forward_proxy {
+        basic_auth {{ docker_caddy_naive_username }} {{ docker_caddy_naive_password }}
+        hide_ip
+        hide_via
+        probe_resistance
+        upstream socks5://127.0.0.1:1080
+    }
+
+    file_server {
+        root /var/www/{{ docker_caddy_domain }}
+    }
+}

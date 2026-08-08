@@ -7,8 +7,8 @@
       ansible.builtin.get_url:
         url: https://ssl-config.mozilla.org/ffdhe2048.txt
         dest: /etc/dhparam
-        mode: '0644'
-      become: yes
+        mode: "0644"
+      become: true
 
     - name: "nginx: generate, apply configs"
       block:

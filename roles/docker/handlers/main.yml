@@ -1,0 +1,15 @@
+---
+- name: Restart Docker
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+
+- name: Docker Compose apply caddy-naive-singbox
+  ansible.builtin.command:
+    cmd: >-
+      docker compose
+      -f {{ docker_dir }}/caddy-naive-singbox.yml
+      up -d
+      --build
+      --force-recreate
+    chdir: "{{ docker_dir }}"

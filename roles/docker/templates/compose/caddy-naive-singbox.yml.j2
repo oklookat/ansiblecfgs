@@ -1,0 +1,35 @@
+services:
+  caddy:
+    build:
+      context: "{{ docker_caddy_dir }}"
+    image: caddy-naive:latest
+    container_name: caddy_naive
+    restart: unless-stopped
+
+    network_mode: "service:sing-box"
+
+    ports: []
+
+    volumes:
+      - {{ docker_caddy_caddyfile }}:/etc/caddy/Caddyfile:ro
+      - {{ docker_caddy_data }}:/data
+      - {{ docker_caddy_config }}:/config
+      - {{ docker_caddy_file_server }}:/var/www/{{ docker_caddy_domain }}
+
+    depends_on:
+      - sing-box
+
+  sing-box:
+    build:
+      context: "{{ docker_singbox_dir }}"
+    image: sing-box:latest
+    container_name: sing_box
+    restart: unless-stopped
+
+    ports:
+      - "443:443"
+      - "80:80"
+
+    volumes:
+      - {{ docker_singbox_config }}:/etc/sing-box/config.json:ro
+      - {{ docker_singbox_data }}:/var/lib/sing-box

@@ -19,3 +19,34 @@ docker_packages_install:
 docker_apt_key_path: /etc/apt/keyrings/docker.asc
 docker_apt_key_url: https://download.docker.com/linux/ubuntu/gpg
 docker_apt_sources_file: /etc/apt/sources.list.d/docker.sources
+
+docker_group: "docker"
+
+# custom dirs on remote, for data, images, etc
+docker_dir: "/opt/ansiblecfgs/docker"
+
+# Caddy
+docker_caddy_domain: "example.com"
+docker_caddy_email: "example@example.com"
+docker_caddy_dir: "{{ docker_dir }}/caddy"
+docker_caddy_image: "{{ docker_caddy_dir }}/Dockerfile"
+
+# sing-box
+docker_singbox_dir: "{{ docker_dir }}/sing-box"
+docker_singbox_image: "{{ docker_singbox_dir }}/Dockerfile"
+
+# sing-box: mount points
+docker_template_singbox_config: "sing-box/mixed.json.j2"
+docker_singbox_config: "{{ docker_singbox_dir }}/config.json"
+docker_singbox_data: "{{ docker_singbox_dir }}/data"
+
+# caddy: mount points
+docker_template_caddy_caddyfile: "caddy/caddyfile.naive.j2"
+docker_caddy_caddyfile: "{{ docker_caddy_dir }}/Caddyfile"
+docker_caddy_data: "{{ docker_caddy_dir }}/data"
+docker_caddy_config: "{{ docker_caddy_dir }}/config"
+docker_caddy_file_server: "{{ docker_caddy_dir }}/{{ docker_caddy_domain }}"
+
+# caddy-naive
+docker_caddy_naive_username: "{{ lookup('community.general.random_string', length=24, min_lower=1, min_upper=1, min_numeric=1, min_special=1, override_special='-_=+!#$()[]') }}"
+docker_caddy_naive_password: "{{ lookup('community.general.random_string', length=24, min_lower=1, min_upper=1, min_numeric=1, min_special=1, override_special='-_=+!#$()[]') }}"

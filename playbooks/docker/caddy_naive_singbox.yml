@@ -1,0 +1,25 @@
+---
+- name: "docker: caddy-naive-sing-box"
+  hosts: all
+  become: true
+  tasks:
+    - name: "firewall: add, apply rules"
+      block:
+        - name: "Allow: 80, 443 TCP"
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: rules.yml
+          vars:
+            firewall_rule_name: "allow_http"
+            firewall_rules:
+              - "add rule inet filter input tcp dport 80 accept"
+              - "add rule inet filter input tcp dport 443 accept"
+        - name: Apply
+          ansible.builtin.include_role:
+            name: firewall
+            tasks_from: apply.yml
+
+    - name: "caddy-naive-sing-box: apply"
+      ansible.builtin.include_role:
+        name: docker
+        tasks_from: caddy_naive_singbox.yml

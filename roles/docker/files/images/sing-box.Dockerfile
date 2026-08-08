@@ -1,0 +1,28 @@
+# Shared, reusable across any stack that needs sing-box.
+# No stack-specific config.json is baked in — mounted at runtime.
+
+FROM alpine:3.24.1
+
+ARG SING_BOX_VERSION=1.14.0-beta.9
+ARG TARGETARCH=amd64-musl
+ARG DOWNLOAD_LINK="https://github.com/SagerNet/sing-box/releases/download/v${SING_BOX_VERSION}/sing-box-${SING_BOX_VERSION}-linux-${TARGETARCH}.tar.gz"
+
+RUN set -ex \
+    && apk add --no-cache --upgrade ca-certificates curl tar tzdata
+
+RUN curl -fsSL ${DOWNLOAD_LINK} -o /tmp/sing-box.tar.gz \
+    && tar -xzf /tmp/sing-box.tar.gz -C /tmp \
+    && mv /tmp/sing-box-${SING_BOX_VERSION}-linux-${TARGETARCH}/sing-box /usr/local/bin/sing-box \
+    && chmod +x /usr/local/bin/sing-box \
+    && rm -rf /tmp/sing-box*
+
+RUN adduser -D -H -u 1000 singbox \
+    && mkdir -p /var/lib/sing-box /etc/sing-box \
+    && chown -R singbox:singbox /var/lib/sing-box /etc/sing-box
+
+RUN sing-box version
+
+USER singbox
+
+ENTRYPOINT ["sing-box"]
+CMD ["-D", "/var/lib/sing-box", "-c", "/etc/sing-box/config.json", "run"]
