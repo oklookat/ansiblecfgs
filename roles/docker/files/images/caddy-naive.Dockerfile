@@ -1,23 +1,20 @@
 FROM alpine:3.20
 
-RUN apk add --no-cache ca-certificates curl
+RUN apk add --no-cache \
+    ca-certificates \
+    curl \
+    xz
 
-ARG CADDY_VERSION=2.11.4
-ARG CADDY_BIN_NAME="caddy-linux-amd64"
-ARG CADDY_SHA_NAME="caddy-linux-amd64.sha256"
-
-ARG CADDY_BIN="https://github.com/oklookat/caddy-forwardproxy-naive/releases/download/v${CADDY_VERSION}/${CADDY_BIN_NAME}"
-ARG CADDY_SHA_FILE="https://github.com/oklookat/caddy-forwardproxy-naive/releases/download/v${CADDY_VERSION}/${CADDY_SHA_NAME}"
+ARG CADDY_VERSION=2.11.2-naive
+ARG CADDY_ARCHIVE_NAME="caddy-forwardproxy-naive.tar.xz"
+ARG CADDY_URL="https://github.com/klzgrad/forwardproxy/releases/download/v${CADDY_VERSION}/${CADDY_ARCHIVE_NAME}"
 
 RUN set -eux; \
     cd /tmp; \
-    curl -fsSL -o "${CADDY_BIN_NAME}" \
-    "${CADDY_BIN}"; \
-    curl -fsSL -o "${CADDY_SHA_NAME}" \
-    "${CADDY_SHA_FILE}"; \
-    sha256sum -c "${CADDY_SHA_NAME}"; \
-    install -m 0755 "${CADDY_BIN_NAME}" /usr/bin/caddy; \
-    rm "${CADDY_BIN_NAME}" "${CADDY_SHA_NAME}"
+    curl -fsSL -o "${CADDY_ARCHIVE_NAME}" "${CADDY_URL}"; \
+    tar -xJf "${CADDY_ARCHIVE_NAME}" "caddy-forwardproxy-naive/caddy"; \
+    install -m 0755 "caddy-forwardproxy-naive/caddy" /usr/bin/caddy; \
+    rm -rf "${CADDY_ARCHIVE_NAME}" caddy-forwardproxy-naive
 
 ENV XDG_DATA_HOME=/data
 
