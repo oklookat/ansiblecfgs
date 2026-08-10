@@ -3,21 +3,20 @@ services:
     build:
       context: "{{ docker_caddy_dir }}"
     image: caddy-naive:latest
-    container_name: caddy_naive
+    container_name: caddy
     restart: unless-stopped
 
-    network_mode: "service:sing-box"
-
-    ports: []
+    networks:
+      - proxy
+    ports:
+      - "443:443"
+      - "80:80"
 
     volumes:
       - {{ docker_caddy_caddyfile }}:/etc/caddy/Caddyfile:ro
       - {{ docker_caddy_data }}:/data
       - {{ docker_caddy_config }}:/config
       - {{ docker_caddy_file_server }}:/var/www/{{ docker_caddy_domain }}
-
-    depends_on:
-      - sing-box
 
   sing-box:
     build:
@@ -26,10 +25,14 @@ services:
     container_name: sing_box
     restart: unless-stopped
 
-    ports:
-      - "443:443"
-      - "80:80"
+    depends_on:
+      - caddy
+    networks:
+      - proxy
 
     volumes:
       - {{ docker_singbox_config }}:/etc/sing-box/config.json:ro
       - {{ docker_singbox_data }}:/var/lib/sing-box
+
+networks:
+  proxy:

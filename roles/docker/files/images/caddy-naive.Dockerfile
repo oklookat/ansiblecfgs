@@ -1,23 +1,23 @@
-# Shared, reusable across any stack that needs a naiveproxy-capable Caddy.
-# No stack-specific config is baked in here — that's mounted at runtime.
-
-FROM golang:1.25.12-alpine AS builder
-
-RUN apk add --no-cache git
-
-WORKDIR /build
-
-RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
-
-# Build Caddy with the naive fork of forwardproxy (adds the padding layer)
-RUN xcaddy build \
-    --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
-
 FROM alpine:3.20
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates curl
 
-COPY --from=builder /build/caddy /usr/bin/caddy
+ARG CADDY_VERSION=2.11.4
+ARG CADDY_BIN_NAME="caddy-linux-amd64"
+ARG CADDY_SHA_NAME="caddy-linux-amd64.sha256"
+
+ARG CADDY_BIN="https://github.com/oklookat/caddy-forwardproxy-naive/releases/download/v${CADDY_VERSION}/${CADDY_BIN_NAME}"
+ARG CADDY_SHA_FILE="https://github.com/oklookat/caddy-forwardproxy-naive/releases/download/v${CADDY_VERSION}/${CADDY_SHA_NAME}"
+
+RUN set -eux; \
+    cd /tmp; \
+    curl -fsSL -o "${CADDY_BIN_NAME}" \
+    "${CADDY_BIN}"; \
+    curl -fsSL -o "${CADDY_SHA_NAME}" \
+    "${CADDY_SHA_FILE}"; \
+    sha256sum -c "${CADDY_SHA_NAME}"; \
+    install -m 0755 "${CADDY_BIN_NAME}" /usr/bin/caddy; \
+    rm "${CADDY_BIN_NAME}" "${CADDY_SHA_NAME}"
 
 ENV XDG_DATA_HOME=/data
 

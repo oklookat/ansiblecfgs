@@ -1,78 +1,16 @@
 ---
-- name: Create Caddy directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    group: "{{ docker_group }}"
-    mode: "0755"
-  loop:
-    - "{{ docker_caddy_dir }}"
-    - "{{ docker_caddy_data }}"
-    - "{{ docker_caddy_config }}"
-    - "{{ docker_caddy_file_server }}"
-
-- name: Create sing-box directory
-  ansible.builtin.file:
-    path: "{{ docker_singbox_dir }}"
-    state: directory
-    group: "{{ docker_group }}"
-    mode: "0755"
-
-- name: Create sing-box data directory
-  ansible.builtin.file:
-    path: "{{ docker_singbox_data }}"
-    state: directory
-    owner: "1000"
-    group: "1000"
-    mode: "0755"
-
-- name: Copy Caddy Dockerfile
-  ansible.builtin.copy:
-    src: images/caddy-naive.Dockerfile
-    dest: "{{ docker_caddy_image }}"
-  notify: Docker Compose apply caddy-naive-singbox
+- name: Set docker_compose_file
+  ansible.builtin.set_fact:
+    docker_compose_file: "{{ docker_dir }}/caddy-naive-singbox.yml"
 
 - name: Copy caddy-naive.html as index.html
   ansible.builtin.copy:
     src: html/caddy-naive.html
     dest: "{{ docker_caddy_file_server }}/index.html"
-  notify: Docker Compose apply caddy-naive-singbox
-
-- name: Copy sing-box Dockerfile
-  ansible.builtin.copy:
-    src: images/sing-box.Dockerfile
-    dest: "{{ docker_singbox_image }}"
-  notify: Docker Compose apply caddy-naive-singbox
-
-- name: Render sing-box config
-  ansible.builtin.template:
-    src: "{{ docker_template_singbox_config }}"
-    dest: "{{ docker_singbox_config }}"
-    owner: "1000"
-    group: "1000"
-    mode: "0644"
-  notify: Docker Compose apply caddy-naive-singbox
-
-- name: Render Caddyfile
-  ansible.builtin.template:
-    src: "{{ docker_template_caddy_caddyfile }}"
-    dest: "{{ docker_caddy_caddyfile }}"
-    mode: "0644"
-  notify: Docker Compose apply caddy-naive-singbox
 
 - name: Render Compose file
   ansible.builtin.template:
     src: compose/caddy-naive-singbox.yml.j2
     dest: "{{ docker_dir }}/caddy-naive-singbox.yml"
     mode: "0644"
-  notify: Docker Compose apply caddy-naive-singbox
-
-- name: Start Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: "{{ docker_dir }}"
-    files:
-      - caddy-naive-singbox.yml
-    state: present
-
-- name: Apply pending Docker changes
-  ansible.builtin.meta: flush_handlers
+  notify: Start Docker Compose

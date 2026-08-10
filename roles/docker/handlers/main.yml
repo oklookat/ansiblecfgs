@@ -4,12 +4,23 @@
     name: docker
     state: restarted
 
-- name: Docker Compose apply caddy-naive-singbox
+- name: Restart sing-box
+  community.docker.docker_container:
+    name: sing_box
+    state: started
+    restart: true
+
+- name: Restart Caddy
+  community.docker.docker_container:
+    name: caddy
+    state: started
+    restart: true
+
+- name: Start Docker Compose
   ansible.builtin.command:
     cmd: >-
       docker compose
-      -f {{ docker_dir }}/caddy-naive-singbox.yml
+      -f {{ docker_compose_file }}
       up -d
       --build
-      --force-recreate
     chdir: "{{ docker_dir }}"

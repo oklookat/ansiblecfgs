@@ -19,7 +19,22 @@
             name: firewall
             tasks_from: apply.yml
 
+    - name: "caddy: install"
+      ansible.builtin.include_role:
+        name: docker
+        tasks_from: caddy_install.yml
+
+    - name: "sing-box: install"
+      ansible.builtin.include_role:
+        name: docker
+        tasks_from: sing_box_install.yml
+
     - name: "caddy-naive-sing-box: apply"
       ansible.builtin.include_role:
         name: docker
         tasks_from: caddy_naive_singbox.yml
+
+    - name: "sing-box: config"
+      ansible.builtin.include_role:
+        name: docker
+        tasks_from: sing_box_config.yml

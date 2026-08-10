@@ -1,5 +1,6 @@
 ---
-- name: Remove old Docker/Podman packages
+# https://docs.docker.com/engine/install/ubuntu/#uninstall-old-versions
+- name: Remove old Docker packages
   ansible.builtin.apt:
     name: "{{ docker_packages_remove }}"
     state: absent

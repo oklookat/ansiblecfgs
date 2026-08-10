@@ -1,0 +1,25 @@
+---
+- name: Create Caddy directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    group: "{{ docker_group }}"
+    mode: "0755"
+  loop:
+    - "{{ docker_caddy_dir }}"
+    - "{{ docker_caddy_data }}"
+    - "{{ docker_caddy_config }}"
+    - "{{ docker_caddy_file_server }}"
+
+- name: Copy Caddy Dockerfile
+  ansible.builtin.copy:
+    src: "{{ docker_caddy_dockerfile }}"
+    dest: "{{ docker_caddy_image }}"
+  notify: Start Docker Compose
+
+- name: Render Caddyfile
+  ansible.builtin.template:
+    src: "{{ docker_template_caddy_caddyfile }}"
+    dest: "{{ docker_caddy_caddyfile }}"
+    mode: "0644"
+  notify: Restart Caddy

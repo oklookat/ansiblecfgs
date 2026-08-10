@@ -1,0 +1,9 @@
+---
+- name: Render sing-box config
+  ansible.builtin.template:
+    src: "{{ docker_template_singbox_config }}"
+    dest: "{{ docker_singbox_config }}"
+    owner: "1000"
+    group: "1000"
+    mode: "0644"
+  notify: Restart sing-box
