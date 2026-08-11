@@ -27,7 +27,6 @@ docker_dir: "/opt/ansiblecfgs/docker"
 
 # Caddy
 docker_caddy_domain: "example.com"
-docker_caddy_email: "example@example.com"
 docker_caddy_dir: "{{ docker_dir }}/caddy"
 docker_caddy_image: "{{ docker_caddy_dir }}/Dockerfile"
 docker_caddy_dockerfile: "images/caddy-naive.Dockerfile"

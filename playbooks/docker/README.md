@@ -16,8 +16,6 @@ Installs Docker, nftables firewall.
 - Creates `{{ docker_dir }}`.
 - Starts docker.
 
-Required variables: none.
-
 ## caddy_naive_singbox
 
 Compose file: Caddy naive fork + upstream to sing-box mixed inbound.
