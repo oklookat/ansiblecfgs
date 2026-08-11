@@ -19,6 +19,11 @@
             name: firewall
             tasks_from: apply.yml
 
+    - name: "lego: install"
+      ansible.builtin.include_role:
+        name: docker
+        tasks_from: lego_install.yml
+
     - name: "caddy: install"
       ansible.builtin.include_role:
         name: docker

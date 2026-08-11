@@ -1,0 +1,9 @@
+---
+- name: "docker: lego-install"
+  hosts: all
+  become: true
+  tasks:
+    - name: "lego: install"
+      ansible.builtin.include_role:
+        name: docker
+        tasks_from: lego_install.yml

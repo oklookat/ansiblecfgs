@@ -16,6 +16,7 @@ RUN apk add --no-cache ca-certificates
 
 COPY --from=builder /build/caddy /usr/bin/caddy
 
+# To change caddy dir, to have a predictable mount point for certificate and account data.
 ENV XDG_DATA_HOME=/data
 
 EXPOSE 443 80

@@ -1,9 +1,6 @@
-# Shared, reusable across any stack that needs sing-box.
-# No stack-specific config.json is baked in — mounted at runtime.
-
 FROM alpine:3.24.1
 
-ARG SING_BOX_VERSION=1.14.0-beta.9
+ARG SING_BOX_VERSION=1.14.0-beta.13
 ARG TARGETARCH=amd64-musl
 ARG DOWNLOAD_LINK="https://github.com/SagerNet/sing-box/releases/download/v${SING_BOX_VERSION}/sing-box-${SING_BOX_VERSION}-linux-${TARGETARCH}.tar.gz"
 

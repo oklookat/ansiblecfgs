@@ -53,3 +53,19 @@ docker_singbox_data: "{{ docker_singbox_dir }}/data"
 # Start Docker Compose
 # caddy_install | sing_box_install
 docker_compose_file: "" # auto: fills depend on task
+
+# lego
+docker_lego_dir: "{{ docker_dir }}/lego"
+docker_lego_storage: "{{ docker_lego_dir }}/data/"
+docker_lego_email: "foo@example.com"
+docker_lego_config: "{{ docker_lego_dir }}/config.yml"
+docker_lego_cloudflare_api_token: ""
+docker_lego_cloudflare_env: "{{ docker_lego_dir }}/cloudflare.env"
+docker_lego_runner: "{{ docker_lego_dir }}/runner.sh"
+docker_lego_reload: "{{ docker_lego_dir }}/reload.sh"
+docker_lego_reload_hooks:
+  - docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+
+# docker_lego_domains:
+#   - example.com
+#   - "*.example.com"

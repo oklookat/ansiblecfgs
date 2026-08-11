@@ -14,9 +14,12 @@ services:
 
     volumes:
       - {{ docker_caddy_caddyfile }}:/etc/caddy/Caddyfile:ro
+      # Certificates and account data, see XDG_DATA_HOME in Caddy image.
       - {{ docker_caddy_data }}:/data
       - {{ docker_caddy_config }}:/config
       - {{ docker_caddy_file_server }}:/var/www/{{ docker_caddy_domain }}
+      - "{{ docker_lego_storage }}/certificates/{{ docker_caddy_domain }}.crt:/etc/caddy/certs/{{ docker_caddy_domain }}.crt:ro"
+      - "{{ docker_lego_storage }}/certificates/{{ docker_caddy_domain }}.key:/etc/caddy/certs/{{ docker_caddy_domain }}.key:ro"
 
   sing-box:
     build:

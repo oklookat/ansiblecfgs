@@ -1,4 +1,8 @@
 {
+    log {
+        format console
+    }
+
     storage file_system {
         root /data
     }
@@ -7,7 +11,7 @@
 }
 
 :443, {{ docker_caddy_domain }} {
-    tls {{ docker_caddy_email }}
+    tls /etc/caddy/certs/{{ docker_caddy_domain }}.crt /etc/caddy/certs/{{ docker_caddy_domain }}.key
 
     forward_proxy {
         basic_auth {{ docker_caddy_naive_username }} {{ docker_caddy_naive_password }}

@@ -1,0 +1,46 @@
+#!/bin/sh
+set -eu
+
+changed=0
+
+{% for domain in docker_lego_domains %}
+{% set cert_name = domain.replace('*.','_.') %}
+cert="{{ docker_lego_storage }}/certificates/{{ cert_name }}.crt"
+
+if [ -f "$cert" ]; then
+    before_{{ loop.index }}="$(sha256sum "$cert" | cut -d ' ' -f1)"
+else
+    before_{{ loop.index }}=""
+fi
+{% endfor %}
+
+docker run --rm \
+    -v "{{ docker_lego_config }}:/etc/lego/config.yml:ro" \
+    -v "{{ docker_lego_cloudflare_env }}:/etc/lego/cloudflare.env:ro" \
+    -v "{{ docker_lego_storage }}:/var/lib/lego" \
+    goacme/lego:v5.3.1 \
+    --config /etc/lego/config.yml
+
+{% for domain in docker_lego_domains %}
+{% set cert_name = domain.replace('*.','_.') %}
+cert="{{ docker_lego_storage }}/certificates/{{ cert_name }}.crt"
+
+if [ ! -f "$cert" ]; then
+    echo "ERROR: Certificate not found: $cert" >&2
+    exit 1
+fi
+
+after_{{ loop.index }}="$(sha256sum "$cert" | cut -d ' ' -f1)"
+
+if [ "$before_{{ loop.index }}" != "$after_{{ loop.index }}" ]; then
+    echo "Certificate changed: {{ domain }}"
+    changed=1
+fi
+{% endfor %}
+
+if [ "$changed" -eq 1 ]; then
+    echo "Certificates changed, reloading services..."
+    "{{ docker_lego_reload }}"
+else
+    echo "No certificates changed"
+fi
