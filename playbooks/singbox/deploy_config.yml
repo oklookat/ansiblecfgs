@@ -1,6 +1,6 @@
 ---
 - name: "sing-box: deploy-config"
-  hosts: singbox
+  hosts: proxy
   become: true
   tasks:
     - name: Deploy

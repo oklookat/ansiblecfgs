@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+{% for command in lego_reload_hooks %}
+echo "Running: {{ command }}"
+{{ command }}
+{% endfor %}

@@ -1,7 +1,0 @@
-#!/bin/sh
-set -eu
-
-{% for command in docker_lego_reload_hooks %}
-echo "Running: {{ command }}"
-{{ command }}
-{% endfor %}

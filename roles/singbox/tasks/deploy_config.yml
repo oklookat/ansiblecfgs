@@ -1,16 +1,9 @@
 ---
 - name: Deploy config
-  ansible.builtin.copy:
-    src: "{{ singbox_config_source }}"
-    dest: "{{ singbox_config_path }}"
-
-# If rule_set rules changed, need to refresh cache, if exists.
-- name: Delete cache file
-  ansible.builtin.file:
-    path: "{{ singbox_cache_file }}"
-    state: absent
-
-- name: Restart sing-box
-  ansible.builtin.systemd:
-    name: sing-box
-    state: restarted
+  ansible.builtin.template:
+    src: "{{ singbox_template_config }}"
+    dest: "{{ singbox_config }}"
+    owner: "1000"
+    group: "1000"
+    mode: "0644"
+  notify: Restart sing-box

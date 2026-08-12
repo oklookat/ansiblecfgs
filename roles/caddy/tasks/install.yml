@@ -1,0 +1,50 @@
+---
+- name: Set default Caddyfile templates
+  ansible.builtin.set_fact:
+    caddy_template_main_caddyfile: "{{ caddy_template_main_caddyfile | default('main.caddy.j2', true) }}"
+    caddy_template_site_caddyfile: "{{ caddy_template_site_caddyfile | default('site.caddy.j2', true) }}"
+    caddy_dockerfile: "{{ caddy_dockerfile | default('caddy.Dockerfile', true) }}"
+
+- name: Create Caddy directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    group: "{{ docker_group }}"
+    mode: "0755"
+  loop:
+    - "{{ caddy_dir }}"
+    - "{{ caddy_sites_dir }}"
+    - "{{ caddy_file_server }}"
+    - "{{ caddy_data }}"
+
+- name: Render Compose file
+  ansible.builtin.template:
+    src: compose.yml.j2
+    dest: "{{ caddy_compose }}"
+    mode: "0644"
+  notify: Start Docker Compose
+
+- name: Copy Caddy Dockerfile
+  ansible.builtin.copy:
+    src: "{{ caddy_dockerfile }}"
+    dest: "{{ caddy_image }}"
+  notify: Start Docker Compose
+
+- name: Render Caddyfile
+  ansible.builtin.template:
+    src: "{{ caddy_template_main_caddyfile }}"
+    dest: "{{ caddy_caddyfile }}"
+    mode: "0644"
+  notify: Reload Caddy
+
+- name: Render site Caddyfile
+  ansible.builtin.template:
+    src: "{{ caddy_template_site_caddyfile }}"
+    dest: "{{ caddy_site_caddyfile }}"
+    mode: "0644"
+  notify: Reload Caddy
+
+- name: Copy index.html
+  ansible.builtin.copy:
+    src: index.html
+    dest: "{{ caddy_file_server }}/index.html"

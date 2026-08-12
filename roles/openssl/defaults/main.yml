@@ -1,9 +1,0 @@
----
-# selfsigned
-openssl_cert_days: 365
-openssl_sni: ""
-openssl_dir: "/etc/ssl/selfsigned"
-openssl_key_path: "{{ openssl_dir }}/keys/{{ openssl_sni }}.key"
-openssl_certificate_path: "{{ openssl_dir }}/certs/{{ openssl_sni }}.crt"
-openssl_temp_csr_path: "{{ ansible_env.TMPDIR | default('/tmp') }}/{{ inventory_hostname }}-{{ openssl_sni }}.csr"
-openssl_output_dir: "{{ playbook_dir }}/certs"

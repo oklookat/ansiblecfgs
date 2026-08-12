@@ -1,0 +1,24 @@
+services:
+  caddy:
+    build:
+      context: "{{ caddy_dir }}"
+    image: caddy-naive:latest
+    container_name: caddy
+    restart: unless-stopped
+
+    networks:
+      - {{ docker_network }}
+    ports:
+      - "443:443"
+      - "80:80"
+
+    volumes:
+      - "{{ caddy_caddyfile }}:/etc/caddy/Caddyfile:ro"
+      - "{{ caddy_sites_dir }}:/etc/caddy/sites:ro"
+      - "{{ caddy_data }}:/data"
+      - "{{ caddy_file_server }}:/var/www/{{ caddy_domain }}"
+      - "{{ caddy_certificates }}:/etc/caddy/certs:ro"
+
+networks:
+  {{ docker_network }}:
+    external: true

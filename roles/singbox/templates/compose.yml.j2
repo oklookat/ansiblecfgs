@@ -1,0 +1,17 @@
+services:
+  sing-box:
+    build:
+      context: "{{ singbox_dir }}"
+    image: sing-box:latest
+    container_name: sing_box
+    restart: unless-stopped
+    networks:
+      - {{ docker_network }}
+
+    volumes:
+      - {{ singbox_config }}:/etc/sing-box/config.json:ro
+      - {{ singbox_data }}:/var/lib/sing-box
+
+networks:
+  {{ docker_network }}:
+    external: true

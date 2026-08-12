@@ -4,18 +4,6 @@
     name: docker
     state: restarted
 
-- name: Restart sing-box
-  community.docker.docker_container:
-    name: sing_box
-    state: started
-    restart: true
-
-- name: Restart Caddy
-  community.docker.docker_container:
-    name: caddy
-    state: started
-    restart: true
-
 - name: Start Docker Compose
   ansible.builtin.command:
     cmd: >-

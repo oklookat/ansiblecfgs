@@ -1,0 +1,47 @@
+---
+- name: "include: install Docker"
+  ansible.builtin.import_playbook: ../docker/install.yml
+
+- name: "include: firewall allow HTTP"
+  ansible.builtin.import_playbook: ../firewall/allow_http.yml
+
+- name: "proxy: caddy-naive-sing-box"
+  hosts: proxy
+  become: true
+  vars:
+    singbox_template_config: ""
+    singbox_config: ""
+    singbox_listen_port: 1080
+    lego_reload_hooks:
+      - docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+    caddy_disable_insecure_upstreams_check: true
+    caddy_upstream: "socks5://sing-box:{{ singbox_listen_port }}"
+
+  tasks:
+    - name: Ensure proxy network exists
+      community.docker.docker_network:
+        name: "{{ docker_network }}"
+        driver: bridge
+        state: present
+
+    - name: "lego: install"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: install.yml
+
+    - name: "caddy: install naive"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: install_naive.yml
+
+    - name: "sing-box: install"
+      block:
+        - name: "install"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: install.yml
+
+        - name: "deploy mixed config"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: deploy_config_mixed.yml

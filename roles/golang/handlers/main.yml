@@ -1,8 +1,0 @@
----
-- name: Refresh shell profile
-  ansible.builtin.shell: |
-    source /etc/profile.d/golang.sh
-  args:
-    executable: /bin/bash
-  listen: Refresh shell profile
-  changed_when: false

@@ -1,8 +1,0 @@
-[Unit]
-Description=Lego renew certificates
-After=docker.service
-Requires=docker.service
-
-[Service]
-Type=oneshot
-ExecStart={{ docker_lego_runner }}

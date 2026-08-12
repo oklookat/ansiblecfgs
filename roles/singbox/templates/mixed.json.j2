@@ -5,47 +5,32 @@
         "timestamp": true
     },
     "dns": {
-        "final": "cloudflare-direct",
-        "strategy": "ipv4_only",
-        "reverse_mapping": true,
         "servers": [
             {
-                "tag": "cloudflare-direct",
                 "type": "https",
+                "tag": "cloudflare",
                 "server": "1.1.1.1"
-            },
-            {
-                "tag": "google-direct",
-                "type": "https",
-                "server": "8.8.8.8"
             }
-        ]
+        ],
+        "final": "cloudflare",
+        "strategy": "ipv4_only",
+        "reverse_mapping": true
     },
-    "http_clients": [
-        {
-            "tag": "client-direct",
-            "engine": "go",
-            "version": 2
-        }
-    ],
     "inbounds": [
         {
             "type": "mixed",
             "tag": "mixed-in",
-            "listen": "{{ singbox_listen }}",
+            "listen": "0.0.0.0",
             "listen_port": {{ singbox_listen_port }}
         }
     ],
     "outbounds": [
         {
             "type": "direct",
-            "tag": "direct-out"
+            "tag": "direct"
         }
     ],
     "route": {
-        "final": "direct-out",
-        "default_domain_resolver": "cloudflare-direct",
-        "default_http_client": "client-direct",
         "rules": [
             {
                 "action": "sniff"
@@ -55,17 +40,31 @@
                 "action": "hijack-dns"
             },
             {
-                "action": "reject",
+                "protocol": "quic",
+                "action": "reject"
+            },
+            {
                 "protocol": [
                     "bittorrent",
-                    "quic"
-                ]
+                    "ssh"
+                ],
+                "outbound": "direct"
+            },
+            {
+                "ip_is_private": true,
+                "outbound": "direct"
             }
-        ]
+        ],
+        "final": "direct",
+        "default_domain_resolver": {
+            "server": "cloudflare",
+            "strategy": "ipv4_only"
+        }
     },
     "experimental": {
         "cache_file": {
-            "enabled": true
+            "enabled": true,
+            "path": "/var/lib/sing-box/cache.db"
         }
     }
 }

@@ -1,31 +1,19 @@
 ---
+# required vars: docker_dir; docker_group; docker_network
+
+# all
+singbox_dir: "{{ docker_dir }}/sing-box"
+
 # install
-singbox_version: "1.14.0-beta.2"
+singbox_image: "{{ singbox_dir }}/Dockerfile"
+singbox_data: "{{ singbox_dir }}/data"
+singbox_compose: "{{ singbox_dir }}/compose.yml"
 
-# ALL
-singbox_config_path: "/etc/sing-box/config.json"
-singbox_listen_port: 443
-
-# reality | reality_sfy | vless_tls | wireguard
-singbox_identity_path: "/etc/sing-box/identity.yml"
-
-# reality | reality_sfy | vless_tls
-singbox_sni: "example.com"
-
-# reality | reality_sfy
-singbox_handshake_port: 3000
-
-# vless_tls
-singbox_certificate_path: ""
-singbox_key_path: ""
-
-# shadowsocks
-singbox_up_mbps: 1000
-singbox_down_mbps: 1000
+# deploy_config | deploy_config_mixed
+singbox_template_config: "mixed.json.j2"
 
 # deploy_config
-singbox_config_source: ""
-singbox_cache_file: "/var/lib/sing-box/cache.db"
+singbox_config: "{{ singbox_dir }}/config.json"
 
 # mixed
-singbox_listen: "127.0.0.1:1080"
+singbox_listen_port: 1080

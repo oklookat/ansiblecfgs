@@ -1,3 +1,0 @@
----
-- include_tasks: systemd_manage_units.yml
-  tags: polkit_systemd_manage_units

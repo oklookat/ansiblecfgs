@@ -1,9 +1,0 @@
----
-- name: "mihomo: install"
-  hosts: mihomo
-  become: true
-  tasks:
-    - name: "mihomo: install"
-      ansible.builtin.include_role:
-        name: mihomo
-        tasks_from: install.yml

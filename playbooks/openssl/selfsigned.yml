@@ -1,9 +1,0 @@
----
-- name: "openssl: selfsigned"
-  hosts: all
-  become: true
-  tasks:
-    - name: Generate
-      ansible.builtin.include_role:
-        name: openssl
-        tasks_from: selfsigned.yml

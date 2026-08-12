@@ -1,0 +1,7 @@
+docker_dir: "/opt/ansiblecfgs/docker"
+docker_group: "docker"
+docker_network: "general"
+
+lego_dir: "{{ docker_dir }}/lego"
+certificates_dir: "{{ lego_dir }}/data/certificates"
+caddy_certificates: "{{ certificates_dir }}"

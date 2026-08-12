@@ -1,10 +1,14 @@
-- name: Restart sing-box
-  ansible.builtin.systemd:
-    name: sing-box
-    state: restarted
+---
+- name: Start Docker Compose
+  ansible.builtin.command:
+    cmd: >-
+      docker compose
+      -f {{ singbox_compose }}
+      up -d
+      --build
+    chdir: "{{ singbox_dir }}"
 
-- name: Enable and start sing-box
-  ansible.builtin.systemd:
-    name: sing-box
-    enabled: true
-    state: started
+- name: Restart sing-box
+  ansible.builtin.command:
+    cmd: docker compose -f {{ singbox_compose }} restart sing_box
+    chdir: "{{ singbox_dir }}"

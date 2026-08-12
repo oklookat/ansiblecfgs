@@ -1,9 +1,0 @@
----
-- name: "xray: geo autoupdate"
-  hosts: xray
-  become: true
-  tasks:
-    - name: Deploy
-      ansible.builtin.include_role:
-        name: xray
-        tasks_from: geo_autoupdate.yml

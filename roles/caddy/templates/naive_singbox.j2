@@ -1,0 +1,40 @@
+services:
+  caddy:
+    build:
+      context: "{{ caddy_dir }}"
+    image: caddy-naive:latest
+    container_name: caddy
+    restart: unless-stopped
+
+    networks:
+      - proxy
+    ports:
+      - "443:443"
+      - "80:80"
+
+    volumes:
+      - "{{ caddy_caddyfile }}:/etc/caddy/Caddyfile:ro"
+      - "{{ caddy_sites_dir }}:/etc/caddy/sites:ro"
+      - "{{ caddy_data }}:/data"
+      - "{{ caddy_file_server }}:/var/www/{{ caddy_domain }}"
+      - "{{ lego_storage }}/certificates/{{ caddy_domain }}.crt:/etc/caddy/certs/{{ caddy_domain }}.crt:ro"
+      - "{{ lego_storage }}/certificates/{{ caddy_domain }}.key:/etc/caddy/certs/{{ caddy_domain }}.key:ro"
+
+  sing-box:
+    build:
+      context: "{{ singbox_dir }}"
+    image: sing-box:latest
+    container_name: sing_box
+    restart: unless-stopped
+
+    depends_on:
+      - caddy
+    networks:
+      - proxy
+
+    volumes:
+      - {{ singbox_config }}:/etc/sing-box/config.json:ro
+      - {{ singbox_data }}:/var/lib/sing-box
+
+networks:
+  proxy:

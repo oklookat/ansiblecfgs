@@ -1,0 +1,28 @@
+---
+# required vars: docker_dir; docker_group; docker_network
+
+# all
+caddy_dir: "{{ docker_dir }}/caddy"
+
+## install | install_naive
+caddy_compose: "{{ caddy_dir }}/compose.yml"
+
+# mount points
+caddy_certificates: "" # dir with certificates
+caddy_file_server: "{{ caddy_dir }}/fileserver/{{ caddy_domain }}"
+caddy_sites_dir: "{{ caddy_dir }}/sites"
+caddy_domain: "example.com"
+caddy_caddyfile: "{{ caddy_dir }}/Caddyfile"
+caddy_data: "{{ caddy_dir }}/data" # certificates and account data, see XDG_DATA_HOME in Caddy image
+caddy_image: "{{ caddy_dir }}/Dockerfile"
+caddy_site_caddyfile: "{{ caddy_sites_dir }}/{{ caddy_domain }}.caddy"
+caddy_template_main_caddyfile: ""
+caddy_template_site_caddyfile: ""
+
+##
+
+# install_naive
+caddy_naive_username: "{{ lookup('community.general.random_string', length=24, min_lower=1, min_upper=1, min_numeric=1, min_special=1, override_special='-_=+!#$()[]') }}"
+caddy_naive_password: "{{ lookup('community.general.random_string', length=24, min_lower=1, min_upper=1, min_numeric=1, min_special=1, override_special='-_=+!#$()[]') }}"
+caddy_disable_insecure_upstreams_check: false
+caddy_upstream: ""

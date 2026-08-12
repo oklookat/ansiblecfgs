@@ -1,0 +1,58 @@
+---
+- name: Create lego directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    group: "{{ docker_group }}"
+    mode: "0755"
+  loop:
+    - "{{ lego_dir }}"
+    - "{{ lego_storage }}"
+
+- name: Render config
+  ansible.builtin.template:
+    src: config.yml.j2
+    dest: "{{ lego_config }}"
+    mode: "0644"
+
+- name: Render cloudflare env
+  ansible.builtin.template:
+    src: cloudflare.env.j2
+    dest: "{{ lego_cloudflare_env }}"
+    mode: "0644"
+
+- name: Render runner
+  ansible.builtin.template:
+    src: runner.sh.j2
+    dest: "{{ lego_runner }}"
+    mode: "0755"
+
+- name: Render renew service
+  ansible.builtin.template:
+    src: renew.service.j2
+    dest: /etc/systemd/system/lego-renew.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Render renew timer
+  ansible.builtin.template:
+    src: renew.timer.j2
+    dest: /etc/systemd/system/lego-renew.timer
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Render reload script
+  ansible.builtin.template:
+    src: reload.sh.j2
+    dest: "{{ lego_reload }}"
+    group: "{{ docker_group }}"
+    mode: "0755"
+
+- name: Enable and start lego renew timer
+  ansible.builtin.systemd_service:
+    name: lego-renew.timer
+    enabled: true
+    state: started
+    daemon_reload: true
