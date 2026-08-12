@@ -9,9 +9,6 @@
   hosts: proxy
   become: true
   vars:
-    singbox_template_config: ""
-    singbox_config: ""
-    singbox_listen_port: 1080
     lego_reload_hooks:
       - docker exec caddy caddy reload --config /etc/caddy/Caddyfile
     caddy_disable_insecure_upstreams_check: true

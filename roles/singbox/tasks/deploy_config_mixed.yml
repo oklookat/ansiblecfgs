@@ -2,5 +2,6 @@
 - name: Set default config templates
   ansible.builtin.set_fact:
     singbox_template_config: "{{ singbox_template_config | default('mixed.json.j2', true) }}"
+    singbox_listen_port: "{{ singbox_listen_port | default(1080, true) }}"
 
 - include_tasks: deploy_config.yml

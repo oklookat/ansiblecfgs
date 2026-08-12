@@ -1,4 +1,4 @@
-# ansiblecfgs (v2)
+# ansiblecfgs (v3)
 
 ## Installing Ansible
 
