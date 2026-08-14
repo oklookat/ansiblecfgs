@@ -18,11 +18,11 @@
   ansible.builtin.copy:
     src: sing-box.Dockerfile
     dest: "{{ singbox_image }}"
-  notify: Start Docker Compose
 
 - name: Render Compose file
   ansible.builtin.template:
     src: compose.yml.j2
     dest: "{{ singbox_compose }}"
     mode: "0644"
-  notify: Start Docker Compose
+
+- include_tasks: restart.yml

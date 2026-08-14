@@ -1,0 +1,95 @@
+{
+    "$schema": "https://sing-box.sagernet.org/schema.json",
+    "log": {
+        "level": "debug",
+        "timestamp": true
+    },
+    "dns": {
+        "servers": [
+            {
+                "type": "https",
+                "tag": "cloudflare",
+                "server": "1.1.1.1"
+            }
+        ],
+        "final": "cloudflare",
+        "strategy": "ipv4_only",
+        "reverse_mapping": true
+    },
+    "endpoints": [
+        {
+            "type": "wireguard",
+            "tag": "wg",
+            "system": false,
+            "mtu": {{ singbox_mtu }},
+            "address": [
+                    "{{ singbox_address_ipv4 }}"{% if singbox_address_ipv6 %},
+                    "{{ singbox_address_ipv6 }}"{% endif %}
+                ],
+            "private_key": "{{ singbox_private_key }}",
+            "peers": [
+                {
+                    "address": "{{ singbox_endpoint }}",
+                    "port": {{ singbox_port }},
+                    "public_key": "{{ singbox_public_key }}",
+                    "allowed_ips": [
+                        "0.0.0.0/0",
+                        "::/0"
+                    ],
+                    "persistent_keepalive_interval": 25
+                }
+            ]
+        }
+    ],
+    "inbounds": [
+        {
+            "type": "mixed",
+            "tag": "mixed-in",
+            "listen": "0.0.0.0",
+            "listen_port": {{ singbox_listen_port }}
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "direct",
+            "tag": "direct"
+        }
+    ],
+    "route": {
+        "rules": [
+            {
+                "action": "sniff"
+            },
+            {
+                "protocol": "dns",
+                "action": "hijack-dns"
+            },
+            {
+                "protocol": "quic",
+                "action": "reject"
+            },
+            {
+                "protocol": [
+                    "bittorrent",
+                    "ssh"
+                ],
+                "outbound": "direct"
+            },
+            {
+                "ip_is_private": true,
+                "outbound": "direct"
+            }
+        ],
+        "final": "wg",
+        "default_domain_resolver": {
+            "server": "cloudflare",
+            "strategy": "ipv4_only"
+        }
+    },
+    "experimental": {
+        "cache_file": {
+            "enabled": true,
+            "path": "/var/lib/sing-box/cache.db"
+        }
+    }
+}

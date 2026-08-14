@@ -1,0 +1,6 @@
+---
+- name: Export vars
+  ansible.builtin.set_fact:
+    # to returning variable outside roles -> to playbook
+    # for using it in playbook
+    wgcf_profile: "{{ wgcf_profile }}"

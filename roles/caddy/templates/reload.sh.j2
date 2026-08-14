@@ -1,0 +1,22 @@
+#!/bin/sh
+
+CONTAINER="caddy"
+COMPOSE_FILE="{{ caddy_compose }}"
+COMPOSE_DIR="{{ caddy_dir }}"
+
+if ! docker container inspect "$CONTAINER" >/dev/null 2>&1; then
+    echo "Caddy container does not exist, starting stack..."
+    docker compose -f "$COMPOSE_FILE" up -d --build
+    exit $?
+fi
+
+STATUS="$(docker inspect -f '{% raw %}{{.State.Status}}{% endraw %}' "$CONTAINER")"
+
+if [ "$STATUS" != "running" ]; then
+    echo "Caddy container is not running, starting stack..."
+    docker compose -f "$COMPOSE_FILE" up -d --build
+    exit $?
+fi
+
+echo "Caddy is running, reloading config..."
+docker exec "$CONTAINER" caddy reload --config /etc/caddy/Caddyfile

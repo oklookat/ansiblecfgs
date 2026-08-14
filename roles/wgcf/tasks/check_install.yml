@@ -1,0 +1,14 @@
+---
+- name: Check wgcf account
+  ansible.builtin.stat:
+    path: "{{ wgcf_account }}"
+  register: wgcf_account_file
+
+- name: Check wgcf profile
+  ansible.builtin.stat:
+    path: "{{ wgcf_profile }}"
+  register: wgcf_profile_file
+
+- name: Set wgcf_exists
+  ansible.builtin.set_fact:
+    wgcf_exists: "{{ wgcf_account_file.stat.exists and wgcf_profile_file.stat.exists }}"

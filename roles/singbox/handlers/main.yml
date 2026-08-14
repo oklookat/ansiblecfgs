@@ -8,6 +8,15 @@
       --build
     chdir: "{{ singbox_dir }}"
 
+# - name: Restart sing-box
+#   ansible.builtin.command:
+#     cmd: >-
+#       docker compose
+#       -f {{ singbox_compose }}
+#       up -d
+#       --build
+#     chdir: "{{ singbox_dir }}"
+
 - name: Restart sing-box
   ansible.builtin.command:
     cmd: docker compose -f {{ singbox_compose }} restart sing_box

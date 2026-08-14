@@ -1,0 +1,16 @@
+---
+# required vars: docker_dir; docker_group; docker_network
+
+# all
+wgcf_dir: "{{ docker_dir }}/wgcf"
+
+# install
+wgcf_image: "{{ wgcf_dir }}/Dockerfile"
+wgcf_data: "{{ wgcf_dir }}/data"
+
+# other
+wgcf_account: "{{ wgcf_data }}/wgcf-account.toml"
+wgcf_profile: "{{ wgcf_data }}/wgcf-profile.conf"
+
+# run
+# wgcf_license_key: ""

@@ -1,7 +1,4 @@
 ---
-- name: "include: firewall allow Docker"
-  ansible.builtin.import_playbook: ../firewall/allow_docker.yml
-
 - name: "docker: install"
   hosts: all
   become: true
@@ -10,3 +7,6 @@
       ansible.builtin.include_role:
         name: docker
         tasks_from: install.yml
+
+- name: "include: firewall allow Docker"
+  ansible.builtin.import_playbook: ../firewall/allow_docker.yml

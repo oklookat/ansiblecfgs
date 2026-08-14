@@ -1,0 +1,27 @@
+---
+- include_tasks: check_install.yml
+
+- name: Run
+  when: not wgcf_exists
+  block:
+    - name: Build wgcf image
+      community.docker.docker_image:
+        name: wgcf
+        tag: latest
+        source: build
+        build:
+          path: "{{ wgcf_dir }}"
+        force_source: true
+
+    - name: Generate WireGuard config with wgcf
+      community.docker.docker_container:
+        name: wgcf
+        image: wgcf:latest
+        state: started
+        recreate: true
+        detach: false
+        auto_remove: true
+        env:
+          LICENSE_KEY: "{{ wgcf_license_key | default(omit) }}"
+        volumes:
+          - "{{ wgcf_data }}:/data"

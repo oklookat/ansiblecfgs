@@ -16,7 +16,7 @@ services:
       - "{{ caddy_caddyfile }}:/etc/caddy/Caddyfile:ro"
       - "{{ caddy_sites_dir }}:/etc/caddy/sites:ro"
       - "{{ caddy_data }}:/data"
-      - "{{ caddy_file_server }}:/var/www/{{ caddy_domain }}"
+      - "{{ caddy_file_server }}:/var/www"
       - "{{ caddy_certificates }}:/etc/caddy/certs:ro"
 
 networks:

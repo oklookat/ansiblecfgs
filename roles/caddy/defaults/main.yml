@@ -6,18 +6,17 @@ caddy_dir: "{{ docker_dir }}/caddy"
 
 ## install | install_naive
 caddy_compose: "{{ caddy_dir }}/compose.yml"
+caddy_reload_script: "{{ caddy_dir }}/reload.sh"
 
 # mount points
 caddy_certificates: "" # dir with certificates
-caddy_file_server: "{{ caddy_dir }}/fileserver/{{ caddy_domain }}"
+caddy_file_server: "{{ caddy_dir }}/fileserver"
 caddy_sites_dir: "{{ caddy_dir }}/sites"
 caddy_domain: "example.com"
 caddy_caddyfile: "{{ caddy_dir }}/Caddyfile"
 caddy_data: "{{ caddy_dir }}/data" # certificates and account data, see XDG_DATA_HOME in Caddy image
 caddy_image: "{{ caddy_dir }}/Dockerfile"
 caddy_site_caddyfile: "{{ caddy_sites_dir }}/{{ caddy_domain }}.caddy"
-caddy_template_main_caddyfile: ""
-caddy_template_site_caddyfile: ""
 
 ##
 
@@ -26,3 +25,20 @@ caddy_naive_username: "{{ lookup('community.general.random_string', length=24, m
 caddy_naive_password: "{{ lookup('community.general.random_string', length=24, min_lower=1, min_upper=1, min_numeric=1, min_special=1, override_special='-_=+!#$()[]') }}"
 caddy_disable_insecure_upstreams_check: false
 caddy_upstream: ""
+
+# deploy_configs
+# caddy_configs: # if not defined, _default will be
+caddy_configs_default:
+  caddyfile:
+    template: main.caddy.j2
+  sites:
+    - domain: "{{ caddy_domain }}"
+      template: site.caddy.j2
+
+# install_naive
+caddy_configs_default_naive:
+  caddyfile:
+    template: main.naive.caddy.j2
+  sites:
+    - domain: "{{ caddy_domain }}"
+      template: naive.caddy.j2

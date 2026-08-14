@@ -1,0 +1,23 @@
+---
+- name: Get sing_box container info
+  community.docker.docker_container_info:
+    name: sing_box
+  register: sing_box_container_info
+
+- name: Start sing_box stack if not running
+  ansible.builtin.command:
+    cmd: docker compose -f {{ singbox_compose }} up -d --build
+    chdir: "{{ singbox_dir }}"
+  when: >-
+    not sing_box_container_info.exists
+    or sing_box_container_info.container.State.Status != 'running'
+
+- name: Restart sing_box Docker Compose
+  community.docker.docker_compose_v2:
+    files:
+      - "{{ singbox_compose }}"
+    project_src: "{{ singbox_dir }}"
+    state: restarted
+  when: >-
+    sing_box_container_info.exists
+    and sing_box_container_info.container.State.Status == 'running'

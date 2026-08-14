@@ -1,0 +1,6 @@
+---
+# Export from roles to playbook
+- name: Export variables
+  ansible.builtin.set_fact:
+    singbox_container_name: "{{ singbox_container_name }}"
+    singbox_listen_port: "{{ singbox_listen_port }}"

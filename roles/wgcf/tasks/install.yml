@@ -1,0 +1,26 @@
+---
+- include_tasks: check_install.yml
+
+- name: Install
+  when: not wgcf_exists
+  block:
+    - name: Create wgcf directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        group: "{{ docker_group }}"
+        mode: "0755"
+      loop:
+        - "{{ wgcf_dir }}"
+        - "{{ wgcf_data }}"
+
+    - name: Copy wgcf Dockerfile
+      ansible.builtin.copy:
+        src: wgcf.Dockerfile
+        dest: "{{ wgcf_image }}"
+
+    - name: Copy wgcf entrypoint
+      ansible.builtin.copy:
+        src: entrypoint.sh
+        dest: "{{ wgcf_dir }}"
+        mode: "0755"

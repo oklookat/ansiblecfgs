@@ -1,0 +1,9 @@
+---
+- name: "caddy: deploy configs"
+  hosts: all
+  become: true
+  tasks:
+    - name: "caddy: deploy configs"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: deploy_configs.yml

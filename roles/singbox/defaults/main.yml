@@ -1,8 +1,9 @@
 ---
 # required vars: docker_dir; docker_group; docker_network
 
-# all
+# general
 singbox_dir: "{{ docker_dir }}/sing-box"
+singbox_container_name: "sing_box"
 
 # install
 singbox_image: "{{ singbox_dir }}/Dockerfile"
@@ -11,6 +12,16 @@ singbox_compose: "{{ singbox_dir }}/compose.yml"
 
 # deploy_config | deploy_config_mixed
 singbox_template_config: "mixed.json.j2"
+
+# deploy_config_mixed_wg
+singbox_wg_config: ""
+singbox_private_key: ""
+singbox_public_key: ""
+singbox_mtu: ""
+singbox_address_ipv4: ""
+singbox_address_ipv6: ""
+singbox_endpoint: ""
+singbox_port: ""
 
 # deploy_config
 singbox_config: "{{ singbox_dir }}/config.json"

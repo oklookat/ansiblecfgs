@@ -1,0 +1,5 @@
+---
+- name: Rebuild Caddy stack
+  ansible.builtin.command:
+    cmd: docker compose -f {{ caddy_compose }} up -d --build
+    chdir: "{{ caddy_dir }}"

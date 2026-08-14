@@ -1,9 +1,8 @@
 ---
-- name: Set default Caddyfile templates
+- name: Set default Caddy configuration
   ansible.builtin.set_fact:
-    caddy_template_main_caddyfile: "{{ caddy_template_main_caddyfile | default('main.caddy.j2', true) }}"
-    caddy_template_site_caddyfile: "{{ caddy_template_site_caddyfile | default('site.caddy.j2', true) }}"
     caddy_dockerfile: "{{ caddy_dockerfile | default('caddy.Dockerfile', true) }}"
+    caddy_configs: "{{ caddy_configs | default(caddy_configs_default, true) }}"
 
 - name: Create Caddy directories
   ansible.builtin.file:
@@ -22,27 +21,21 @@
     src: compose.yml.j2
     dest: "{{ caddy_compose }}"
     mode: "0644"
-  notify: Start Docker Compose
 
 - name: Copy Caddy Dockerfile
   ansible.builtin.copy:
     src: "{{ caddy_dockerfile }}"
     dest: "{{ caddy_image }}"
-  notify: Start Docker Compose
 
-- name: Render Caddyfile
+- name: Render reload script
   ansible.builtin.template:
-    src: "{{ caddy_template_main_caddyfile }}"
-    dest: "{{ caddy_caddyfile }}"
-    mode: "0644"
-  notify: Reload Caddy
+    src: reload.sh.j2
+    dest: "{{ caddy_reload_script }}"
+    mode: "0755"
 
-- name: Render site Caddyfile
-  ansible.builtin.template:
-    src: "{{ caddy_template_site_caddyfile }}"
-    dest: "{{ caddy_site_caddyfile }}"
-    mode: "0644"
-  notify: Reload Caddy
+- include_tasks: rebuild.yml
+
+- include_tasks: deploy_configs.yml
 
 - name: Copy index.html
   ansible.builtin.copy:

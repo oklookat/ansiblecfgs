@@ -1,0 +1,19 @@
+---
+- name: Render main Caddyfile
+  ansible.builtin.template:
+    src: "{{ caddy_configs.caddyfile.template }}"
+    dest: "{{ caddy_caddyfile }}"
+    mode: "0644"
+  when:
+    - caddy_configs.caddyfile is defined
+
+- name: Render Caddy sites
+  ansible.builtin.template:
+    src: "{{ item.template }}"
+    dest: "{{ caddy_sites_dir }}/{{ item.domain }}.caddy"
+    mode: "0644"
+  loop: "{{ caddy_configs.sites | default([]) }}"
+  loop_control:
+    label: "{{ item.domain }}"
+
+- include_tasks: reload.yml

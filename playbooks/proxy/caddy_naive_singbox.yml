@@ -8,13 +8,32 @@
 - name: "proxy: caddy-naive-sing-box"
   hosts: proxy
   become: true
-  vars:
-    lego_reload_hooks:
-      - docker exec caddy caddy reload --config /etc/caddy/Caddyfile
-    caddy_disable_insecure_upstreams_check: true
-    caddy_upstream: "socks5://sing-box:{{ singbox_listen_port }}"
-
   tasks:
+    - name: "Export vars"
+      block:
+        - name: "lego: export vars"
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: export_vars.yml
+
+        - name: "caddy: export vars"
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: export_vars.yml
+
+        - name: "sing-box: export vars"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: export_vars.yml
+
+    - name: "Set vars"
+      ansible.builtin.set_fact:
+        lego_reload_hooks:
+          - sh "{{ caddy_reload_script }}"
+        caddy_disable_insecure_upstreams_check: true
+        caddy_upstream: "socks5://{{ singbox_container_name }}:{{ singbox_listen_port }}"
+        caddy_certificates: "{{ lego_certificates_dir }}"
+
     - name: Ensure proxy network exists
       community.docker.docker_network:
         name: "{{ docker_network }}"

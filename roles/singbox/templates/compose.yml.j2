@@ -1,9 +1,9 @@
 services:
-  sing-box:
+  {{ singbox_container_name }}:
     build:
       context: "{{ singbox_dir }}"
     image: sing-box:latest
-    container_name: sing_box
+    container_name: {{ singbox_container_name }}
     restart: unless-stopped
     networks:
       - {{ docker_network }}

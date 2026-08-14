@@ -1,0 +1,32 @@
+---
+- name: "sing-box: deploy config (mixed WG)"
+  hosts: proxy
+  become: true
+  vars:
+    singbox_wg_config: "/opt/ansiblecfgs/docker/wgcf/data/wgcf-profile.conf"
+  tasks:
+    - name: "wgcf"
+      block:
+        - name: "export vars"
+          ansible.builtin.include_role:
+            name: wgcf
+            tasks_from: export_vars.yml
+
+        - name: "install"
+          ansible.builtin.include_role:
+            name: wgcf
+            tasks_from: install.yml
+
+        - name: "run"
+          ansible.builtin.include_role:
+            name: wgcf
+            tasks_from: run.yml
+
+    - name: Set singbox_wg_config
+      ansible.builtin.set_fact:
+        singbox_wg_config: "{{ wgcf_profile }}"
+
+    - name: Deploy
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: deploy_config_mixed_wg.yml

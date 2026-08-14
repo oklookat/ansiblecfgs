@@ -1,0 +1,27 @@
+---
+- name: Read Wireguard config
+  ansible.builtin.slurp:
+    src: "{{ singbox_wg_config }}"
+  register: wg_profile_raw
+
+- name: Parse WireGuard config into variables
+  ansible.builtin.set_fact:
+    singbox_private_key: "{{ wg_profile_raw.content | b64decode | regex_search('PrivateKey\\s*=\\s*(.+)', '\\1') | first | trim }}"
+    singbox_public_key: "{{ wg_profile_raw.content | b64decode | regex_search('PublicKey\\s*=\\s*(.+)', '\\1') | first | trim }}"
+    singbox_mtu: "{{ wg_profile_raw.content | b64decode | regex_search('MTU\\s*=\\s*(\\d+)', '\\1') | first | default(1280) }}"
+
+    _addresses: "{{ wg_profile_raw.content | b64decode | regex_search('Address\\s*=\\s*(.+)', '\\1') | first | split(',') | map('trim') | list }}"
+    _endpoint: "{{ wg_profile_raw.content | b64decode | regex_search('Endpoint\\s*=\\s*(.+)', '\\1') | first | trim }}"
+
+- name: Split addresses and endpoint
+  ansible.builtin.set_fact:
+    singbox_address_ipv4: "{{ _addresses | select('match', '^[0-9.]+/') | first | default('') }}"
+    singbox_address_ipv6: "{{ _addresses | select('match', '^[0-9a-fA-F:]+/') | first | default('') }}"
+    singbox_endpoint: "{{ _endpoint.split(':')[0] }}"
+    singbox_port: "{{ _endpoint.split(':')[1] | int }}"
+
+- name: Set default config templates
+  ansible.builtin.set_fact:
+    singbox_template_config: "{{ singbox_template_config | default('mixed.wg.json.j2', true) }}"
+
+- include_tasks: deploy_config.yml

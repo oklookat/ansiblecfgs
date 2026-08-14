@@ -4,6 +4,7 @@
 # lego
 lego_dir: "{{ docker_dir }}/lego"
 lego_storage: "{{ lego_dir }}/data/"
+lego_certificates_dir: "{{ lego_storage }}/certificates"
 lego_email: "foo@example.com"
 lego_config: "{{ lego_dir }}/config.yml"
 lego_cloudflare_api_token: ""

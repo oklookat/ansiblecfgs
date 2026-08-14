@@ -1,8 +1,7 @@
 ---
-- name: Set default Caddyfile templates
+- name: Set default Caddy configuration
   ansible.builtin.set_fact:
-    caddy_template_main_caddyfile: "{{ caddy_template_main_caddyfile | default('main.naive.caddy.j2', true) }}"
-    caddy_template_site_caddyfile: "{{ caddy_template_site_caddyfile | default('naive.caddy.j2', true) }}"
     caddy_dockerfile: "{{ caddy_dockerfile | default('naive.Dockerfile', true) }}"
+    caddy_configs: "{{ caddy_configs | default(caddy_configs_default_naive, true) }}"
 
 - include_tasks: install.yml

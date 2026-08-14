@@ -1,0 +1,19 @@
+---
+- name: Get Caddy container info
+  community.docker.docker_container_info:
+    name: caddy
+  register: caddy_container_info
+
+- name: Rebuild Caddy stack if not running
+  include_tasks: rebuild.yml
+  when: >-
+    not caddy_container_info.exists
+    or caddy_container_info.container.State.Status != 'running'
+
+- name: Reload Caddy config
+  community.docker.docker_container_exec:
+    container: caddy
+    command: caddy reload --config /etc/caddy/Caddyfile
+  when: >-
+    caddy_container_info.exists
+    and caddy_container_info.container.State.Status == 'running'

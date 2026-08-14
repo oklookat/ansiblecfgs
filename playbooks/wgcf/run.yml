@@ -1,0 +1,14 @@
+---
+- name: "wgcf: run"
+  hosts: all
+  become: true
+  tasks:
+    - name: install
+      ansible.builtin.include_role:
+        name: wgcf
+        tasks_from: install.yml
+
+    - name: run
+      ansible.builtin.include_role:
+        name: wgcf
+        tasks_from: run.yml

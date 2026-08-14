@@ -1,20 +1,22 @@
 :443, {{ caddy_domain }} {
     tls /etc/caddy/certs/{{ caddy_domain }}.crt /etc/caddy/certs/{{ caddy_domain }}.key
 
-    forward_proxy {
-        basic_auth {{ caddy_naive_username }} {{ caddy_naive_password }}
-        hide_ip
-        hide_via
-        probe_resistance
+    route {
+        forward_proxy {
+            basic_auth {{ caddy_naive_username }} {{ caddy_naive_password }}
+            hide_ip
+            hide_via
+            probe_resistance
 {% if caddy_upstream is defined and caddy_upstream %}
 {% if caddy_disable_insecure_upstreams_check %}
-        disable_insecure_upstreams_check
+            disable_insecure_upstreams_check
 {% endif %}
-        upstream {{ caddy_upstream }}
+            upstream {{ caddy_upstream }}
 {% endif %}
-    }
+        }
 
-    file_server {
-        root /var/www/{{ caddy_domain }}
+        file_server {
+            root /var/www/{{ caddy_domain }}
+        }
     }
 }
