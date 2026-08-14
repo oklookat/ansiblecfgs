@@ -41,6 +41,14 @@
             ]
         }
     ],
+    "http_clients": [
+        {
+            "tag": "client-wg",
+            "engine": "go",
+            "version": 2,
+            "detour": "wg"
+        }
+    ],
     "inbounds": [
         {
             "type": "mixed",
@@ -81,6 +89,7 @@
             }
         ],
         "final": "wg",
+        "default_http_client": "client-wg",
         "default_domain_resolver": {
             "server": "cloudflare",
             "strategy": "ipv4_only"
