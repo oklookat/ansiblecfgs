@@ -19,8 +19,6 @@ If you haven't logged into the server yet, do so because otherwise it will compl
 
 - `ansible-playbook -i inventories/staging playbooks/system/setup`
 
-- `make staging system/setup` (assumed that Ansible bin placed in `$HOME/ansible/.venv/bin`)
-
 Limit to specific host:
 
 - `ansible-playbook -i inventories/prod playbooks/system/setup.yml --limit myhost`
