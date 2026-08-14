@@ -1,6 +1,6 @@
 - name: "openwrt: deploy Xray config"
   hosts: openwrt
-  gather_facts: no
+  gather_facts: false
   vars:
     xray_config: "/usr/local/share/xray/config.json"
   tasks:

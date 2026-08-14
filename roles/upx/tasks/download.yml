@@ -14,13 +14,13 @@
         url: "{{ upx_url }}"
         dest: "{{ upx_workdir }}/upx.tar.xz"
         mode: "0644"
-        force: no
+        force: false
 
     - name: Extract UPX if binary does not exist
       unarchive:
         src: "{{ upx_workdir }}/upx.tar.xz"
         dest: "{{ upx_workdir }}"
-        remote_src: yes
+        remote_src: true
         creates: "{{ upx_workdir }}/upx"
 
     - name: Find and move UPX binary to root of workdir
@@ -28,7 +28,7 @@
         paths: "{{ upx_workdir }}"
         patterns: "upx"
         file_type: file
-        recurse: yes
+        recurse: true
       register: upx_files
 
     - name: Move UPX binary to root of workdir

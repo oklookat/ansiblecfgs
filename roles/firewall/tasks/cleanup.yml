@@ -47,7 +47,7 @@
       - netfilter-persistent
       - iptables-persistent
     state: absent
-    purge: yes
+    purge: true
   ignore_errors: true
 
 - name: Remove saved iptables rules files (IPv4/IPv6)

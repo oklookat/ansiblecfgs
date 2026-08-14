@@ -13,7 +13,7 @@
       - nftables
       - iptables
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Ensure iptables uses nft backend
   ansible.builtin.command: update-alternatives --set iptables /usr/sbin/iptables-nft

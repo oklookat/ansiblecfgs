@@ -25,4 +25,4 @@ system_journald_storage: persistent
 system_journald_system_max_use: 500M
 system_journald_system_max_file_size: 50M
 system_journald_runtime_max_use: 100M
-system_journald_compress: yes
+system_journald_compress: true

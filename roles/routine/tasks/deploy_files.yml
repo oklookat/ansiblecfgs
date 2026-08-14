@@ -7,7 +7,7 @@
 - name: Allow {{ ansible_user }} to run rsync without password
   ansible.builtin.lineinfile:
     path: "/etc/sudoers.d/ansible-rsync"
-    create: yes
+    create: true
     mode: "0440"
     owner: root
     group: root
@@ -27,8 +27,8 @@
     delete: "{{ item.delete | default(false) }}"
     checksum: "{{ item.checksum | default(false) }}"
     compress: "{{ item.compress | default(true) if ansible_fqdn != 'localhost' else false }}"
-    recursive: yes
-    archive: yes
+    recursive: true
+    archive: true
   become: "{{ item.become | default(true) }}"
   loop: "{{ routine_files }}"
   loop_control:
@@ -43,7 +43,7 @@
     group: "{{ item.group | default('root') }}"
     mode: "{{ item.mode | default('0755') }}"
     state: directory
-    recurse: yes
+    recurse: true
   loop: "{{ routine_files }}"
   when:
     - item.owner is defined or item.group is defined or item.mode is defined
