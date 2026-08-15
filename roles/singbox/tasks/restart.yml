@@ -10,7 +10,6 @@
     files:
       - "{{ singbox_compose }}"
     state: present
-    build: always
   when: >-
     not singbox_container_info.exists
     or singbox_container_info.container.State.Status != 'running'

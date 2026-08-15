@@ -8,13 +8,6 @@
     build: always
     recreate: always
 
-- name: Restart sing-box
-  community.docker.docker_compose_v2:
-    project_src: "{{ singbox_dir }}"
-    files:
-      - "{{ singbox_compose }}"
-    state: restarted
-
 - name: Recreate sing-box
   community.docker.docker_compose_v2:
     project_src: "{{ singbox_dir }}"
