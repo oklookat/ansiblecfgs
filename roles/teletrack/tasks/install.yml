@@ -1,0 +1,29 @@
+---
+- name: Create teletrack directory
+  ansible.builtin.file:
+    path: "{{ teletrack_dir }}"
+    state: directory
+    group: "{{ docker_group }}"
+    mode: "0755"
+
+- name: Create empty Teletrack config
+  ansible.builtin.file:
+    path: "{{ teletrack_config }}"
+    state: touch
+    group: "{{ docker_group }}"
+    mode: "0644"
+
+- name: Copy teletrack Dockerfile
+  ansible.builtin.copy:
+    src: Dockerfile
+    dest: "{{ teletrack_image }}"
+
+- name: Render Compose file
+  ansible.builtin.template:
+    src: compose.yml.j2
+    dest: "{{ teletrack_compose }}"
+    mode: "0644"
+
+- include_tasks: deploy_config.yml
+
+- include_tasks: restart.yml

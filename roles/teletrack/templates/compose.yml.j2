@@ -1,0 +1,9 @@
+services:
+  {{ teletrack_container_name }}:
+    build:
+      context: "{{ teletrack_dir }}"
+    image: teletrack:latest
+    container_name: {{ teletrack_container_name }}
+    restart: unless-stopped
+    volumes:
+      - {{ teletrack_config }}:/app/config.json

@@ -1,0 +1,23 @@
+---
+- name: Get teletrack container info
+  community.docker.docker_container_info:
+    name: "{{ teletrack_container_name }}"
+  register: teletrack_container_info
+
+- name: Start teletrack stack if not running
+  ansible.builtin.command:
+    cmd: docker compose -f {{ teletrack_compose }} up -d --build
+    chdir: "{{ teletrack_dir }}"
+  when: >-
+    not teletrack_container_info.exists
+    or teletrack_container_info.container.State.Status != 'running'
+
+- name: Restart teletrack Docker Compose
+  community.docker.docker_compose_v2:
+    files:
+      - "{{ teletrack_compose }}"
+    project_src: "{{ teletrack_dir }}"
+    state: restarted
+  when: >-
+    teletrack_container_info.exists
+    and teletrack_container_info.container.State.Status == 'running'

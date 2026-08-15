@@ -1,0 +1,9 @@
+---
+- name: Deploy config
+  ansible.builtin.template:
+    src: "{{ teletrack_template_config }}"
+    dest: "{{ teletrack_config }}"
+    group: "{{ docker_group }}"
+    mode: "0644"
+
+- include_tasks: restart.yml

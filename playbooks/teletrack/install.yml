@@ -1,0 +1,9 @@
+---
+- name: "teletrack: install"
+  hosts: all
+  become: true
+  tasks:
+    - name: "teletrack: install"
+      ansible.builtin.include_role:
+        name: teletrack
+        tasks_from: install.yml

@@ -1,0 +1,8 @@
+teletrack_dir: "{{ docker_dir }}/teletrack"
+
+teletrack_container_name: "teletrack"
+teletrack_image: "{{ teletrack_dir }}/Dockerfile"
+teletrack_compose: "{{ teletrack_dir }}/compose.yml"
+
+teletrack_template_config: ""
+teletrack_config: "{{ teletrack_dir }}/config.json"
