@@ -25,7 +25,7 @@ RUN CGO_ENABLED=0 GOOS=linux \
 
 FROM alpine:3.24.1
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates tzdata
 
 ARG TELETRACK_CONFIG=/app/config.json
 ENV TELETRACK_CONFIG="${TELETRACK_CONFIG}"
