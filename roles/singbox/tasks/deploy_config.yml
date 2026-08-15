@@ -1,10 +1,9 @@
 ---
-- name: Deploy config
+- name: Deploy sing-box config
   ansible.builtin.template:
     src: "{{ singbox_template_config }}"
     dest: "{{ singbox_config }}"
     owner: "1000"
     group: "1000"
     mode: "0644"
-
-- include_tasks: restart.yml
+  notify: Restart sing-box

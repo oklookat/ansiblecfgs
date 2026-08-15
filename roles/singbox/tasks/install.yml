@@ -18,12 +18,15 @@
   ansible.builtin.copy:
     src: sing-box.Dockerfile
     dest: "{{ singbox_image }}"
+    mode: "0644"
+  notify: Rebuild sing-box
 
 - name: Render Compose file
   ansible.builtin.template:
     src: compose.yml.j2
     dest: "{{ singbox_compose }}"
     mode: "0644"
+  notify: Recreate sing-box
 
 - include_tasks: deploy_config.yml
 

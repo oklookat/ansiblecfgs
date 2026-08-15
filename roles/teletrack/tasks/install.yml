@@ -17,12 +17,14 @@
   ansible.builtin.copy:
     src: Dockerfile
     dest: "{{ teletrack_image }}"
+  notify: Rebuild teletrack
 
 - name: Render Compose file
   ansible.builtin.template:
     src: compose.yml.j2
     dest: "{{ teletrack_compose }}"
     mode: "0644"
+  notify: Recreate teletrack
 
 - include_tasks: deploy_config.yml
 
