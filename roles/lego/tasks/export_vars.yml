@@ -3,4 +3,3 @@
 - name: Export variables
   ansible.builtin.set_fact:
     lego_certificates_dir: "{{ lego_certificates_dir }}"
-    singbox_listen_port: "{{ singbox_listen_port }}"

@@ -13,7 +13,7 @@
       block:
         - name: "lego: export vars"
           ansible.builtin.include_role:
-            name: caddy
+            name: lego
             tasks_from: export_vars.yml
 
         - name: "caddy: export vars"
@@ -61,3 +61,8 @@
           ansible.builtin.include_role:
             name: singbox
             tasks_from: deploy_config_mixed.yml
+
+    - name: "lego: explicit start"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: explicit_start.yml

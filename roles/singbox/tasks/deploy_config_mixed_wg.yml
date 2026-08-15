@@ -22,6 +22,6 @@
 
 - name: Set default config templates
   ansible.builtin.set_fact:
-    singbox_template_config: "{{ singbox_template_config | default('mixed.wg.json.j2', true) }}"
+    singbox_template_config: "{{ singbox_template_config_wg }}"
 
 - include_tasks: deploy_config.yml

@@ -12,13 +12,16 @@ if [ -f "$cert" ]; then
 else
     before_{{ loop.index }}=""
 fi
+
 {% endfor %}
+
+echo "Running lego..."
 
 docker run --rm \
     -v "{{ lego_config }}:/etc/lego/config.yml:ro" \
     -v "{{ lego_cloudflare_env }}:/etc/lego/cloudflare.env:ro" \
     -v "{{ lego_storage }}:/var/lib/lego" \
-    goacme/lego:v5.3.1 \
+    goacme/lego:{{ lego_version }} \
     --config /etc/lego/config.yml
 
 {% for domain in lego_domains %}
@@ -36,6 +39,7 @@ if [ "$before_{{ loop.index }}" != "$after_{{ loop.index }}" ]; then
     echo "Certificate changed: {{ domain }}"
     changed=1
 fi
+
 {% endfor %}
 
 if [ "$changed" -eq 1 ]; then

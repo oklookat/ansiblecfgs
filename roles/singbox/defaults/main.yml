@@ -10,11 +10,15 @@ singbox_image: "{{ singbox_dir }}/Dockerfile"
 singbox_data: "{{ singbox_dir }}/data"
 singbox_compose: "{{ singbox_dir }}/compose.yml"
 
-# deploy_config | deploy_config_mixed
+# deploy_config | deploy_config_mixed | deploy_config_mixed_wg (shadowing)
 singbox_template_config: "mixed.json.j2"
 
 # deploy_config_mixed_wg
-singbox_wg_config: ""
+singbox_template_config_wg: "mixed.wg.json.j2"
+
+# deploy_config_mixed_wg (shadowing)
+singbox_wg_config: "" # wireguard profile
+# parsed by deploy_config_mixed_wg
 singbox_private_key: ""
 singbox_public_key: ""
 singbox_mtu: ""

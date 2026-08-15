@@ -5,12 +5,7 @@ services:
     image: caddy-naive:latest
     container_name: caddy
     restart: unless-stopped
-
-    networks:
-      - {{ docker_network }}
-    ports:
-      - "443:443"
-      - "80:80"
+    network_mode: host
 
     volumes:
       - "{{ caddy_caddyfile }}:/etc/caddy/Caddyfile:ro"
@@ -18,7 +13,3 @@ services:
       - "{{ caddy_data }}:/data"
       - "{{ caddy_file_server }}:/var/www"
       - "{{ caddy_certificates }}:/etc/caddy/certs:ro"
-
-networks:
-  {{ docker_network }}:
-    external: true

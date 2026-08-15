@@ -6,6 +6,10 @@
     storage file_system {
         root /data
     }
+
+    servers {
+        protocols h1 h2
+    }
 }
 
 import sites/*.caddy

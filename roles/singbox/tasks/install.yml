@@ -25,4 +25,6 @@
     dest: "{{ singbox_compose }}"
     mode: "0644"
 
+- include_tasks: deploy_config.yml
+
 - include_tasks: restart.yml

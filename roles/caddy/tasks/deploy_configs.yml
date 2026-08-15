@@ -1,11 +1,24 @@
 ---
+- name: Ensure Caddy configuration directory exists
+  ansible.builtin.file:
+    path: "{{ caddy_caddyfile | dirname }}"
+    state: directory
+    mode: "0755"
+  when: caddy_configs.caddyfile is defined
+
 - name: Render main Caddyfile
   ansible.builtin.template:
     src: "{{ caddy_configs.caddyfile.template }}"
     dest: "{{ caddy_caddyfile }}"
     mode: "0644"
-  when:
-    - caddy_configs.caddyfile is defined
+  when: caddy_configs.caddyfile is defined
+
+- name: Ensure sites directory exists
+  ansible.builtin.file:
+    path: "{{ caddy_sites_dir }}"
+    state: directory
+    mode: "0755"
+    group: "{{ docker_group }}"
 
 - name: Render Caddy sites
   ansible.builtin.template:
@@ -15,5 +28,3 @@
   loop: "{{ caddy_configs.sites | default([]) }}"
   loop_control:
     label: "{{ item.domain }}"
-
-- include_tasks: reload.yml

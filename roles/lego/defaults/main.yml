@@ -2,6 +2,7 @@
 # required vars: docker_dir; docker_group
 
 # lego
+lego_version: "v5.3.1"
 lego_dir: "{{ docker_dir }}/lego"
 lego_storage: "{{ lego_dir }}/data/"
 lego_certificates_dir: "{{ lego_storage }}/certificates"

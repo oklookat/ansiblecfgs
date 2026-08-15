@@ -1,0 +1,4 @@
+---
+- name: Start lego-renew service
+  ansible.builtin.command:
+    cmd: systemctl start lego-renew.service
