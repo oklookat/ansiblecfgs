@@ -1,5 +1,9 @@
 # ansiblecfgs (v2)
 
+This version will not be updated.
+
+Migrating to [version 3](https://github.com/oklookat/ansiblecfgs/tree/v3).
+
 ## Installing Ansible
 
 ### Ubuntu, WSL (Ubuntu)
