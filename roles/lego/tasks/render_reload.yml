@@ -5,3 +5,4 @@
     dest: "{{ lego_reload }}"
     group: "{{ docker_group }}"
     mode: "0755"
+  when: lego_reload is defined and lego_reload | length > 0

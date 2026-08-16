@@ -1,7 +1,13 @@
 #!/bin/sh
 set -eu
 
+LEGO_NETWORK="lego_net"
 changed=0
+
+cleanup() {
+    docker network rm "$LEGO_NETWORK" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
 
 {% for domain in lego_domains %}
 {% set cert_name = domain.replace('*.','_.') %}
@@ -15,9 +21,14 @@ fi
 
 {% endfor %}
 
+echo "Setting up isolated network..."
+docker network inspect "$LEGO_NETWORK" >/dev/null 2>&1 || \
+    docker network create "$LEGO_NETWORK" >/dev/null
+
 echo "Running lego..."
 
 docker run --rm \
+    --network "$LEGO_NETWORK" \
     -v "{{ lego_config }}:/etc/lego/config.yml:ro" \
     -v "{{ lego_cloudflare_env }}:/etc/lego/cloudflare.env:ro" \
     -v "{{ lego_storage }}:/var/lib/lego" \

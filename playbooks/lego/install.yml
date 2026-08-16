@@ -1,6 +1,6 @@
 ---
 - name: "lego: install"
-  hosts: lego
+  hosts: all
   become: true
   tasks:
     - name: "lego: install"
