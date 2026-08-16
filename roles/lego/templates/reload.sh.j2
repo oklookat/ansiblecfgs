@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+{% if lego_reload_hooks is defined %}
 {% for command in lego_reload_hooks %}
 {{ command }}
 {% endfor %}
+{% endif %}

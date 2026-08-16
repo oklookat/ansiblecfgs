@@ -4,3 +4,4 @@
   ansible.builtin.set_fact:
     singbox_container_name: "{{ singbox_container_name }}"
     singbox_listen_port: "{{ singbox_listen_port }}"
+    singbox_reload_script: "{{ singbox_reload_script }}"

@@ -43,12 +43,7 @@
     group: root
     mode: "0644"
 
-- name: Render reload script
-  ansible.builtin.template:
-    src: reload.sh.j2
-    dest: "{{ lego_reload }}"
-    group: "{{ docker_group }}"
-    mode: "0755"
+- include_tasks: render_reload.yml
 
 - name: Enable and start lego renew timer
   ansible.builtin.systemd_service:

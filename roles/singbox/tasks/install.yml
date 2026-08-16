@@ -10,8 +10,6 @@
   ansible.builtin.file:
     path: "{{ singbox_data }}"
     state: directory
-    owner: "1000"
-    group: "1000"
     mode: "0755"
 
 - name: Copy sing-box Dockerfile
@@ -23,10 +21,16 @@
 
 - name: Render Compose file
   ansible.builtin.template:
-    src: compose.yml.j2
+    src: "{{ singbox_template_compose }}"
     dest: "{{ singbox_compose }}"
     mode: "0644"
   notify: Recreate sing-box
+
+- name: Render reload script
+  ansible.builtin.template:
+    src: reload.sh.j2
+    dest: "{{ singbox_reload_script }}"
+    mode: "0755"
 
 - include_tasks: deploy_config.yml
 

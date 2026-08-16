@@ -48,55 +48,9 @@ sing-box client outbound example:
             "username": "username",
             "password": "password",
             "insecure_concurrency": 1,
-            "udp_over_tcp": true,
-            "quic": false,
             "tls": {
                 "enabled": true,
                 "server_name": "example.com"
             }
         },
-```
-
-## lego_install
-
-[lego](https://github.com/go-acme/lego) obtains and renews certifiactes.
-
-`ansible-playbook -i inventories/prod playbooks/docker/lego_install.yml --limit myvps`
-
-Required variables:
-
-```yaml
-docker_lego_email: "example@example.com"
-docker_lego_cloudflare_api_token: "cloudflare api token, with dns zone read/write permission"
-docker_lego_domains:
-  - example.com
-  - "*.example.com"
-  - "helloworld.local"
-
-# Not required, but useful:
-# Command to execute if certificates updated:
-docker_lego_reload_hooks:
-    - docker exec caddy caddy reload --config /etc/caddy/Caddyfile # default
-```
-
-Only Cloudflare DNS challenge supported.
-With a little tweaking, it would be possible to get support for any other challenges, but that's not necessary yet.
-
-After installing, timer and service (`renew.service`, `renew.timer`) will be created on docker host. Every 12 hours
-will be check (`runner.sh`): certificates need updating? If yes, script runs lego via `docker run`, updates
-certificates, and runs `docker_lego_reload_hooks` (`reload.sh`).
-
-Certificates stored in `{{ docker_lego_storage }}/certificates`, and can be mounted to other containers.
-
-Example:
-
-- `{{ docker_lego_storage }}/certificates/example.com.crt`
-- `{{ docker_lego_storage }}/certificates/example.com.key`
-
-Debug:
-
-```bash
-sudo systemctl start lego-renew.service # explicit start checking
-systemctl status lego-renew.timer
-journalctl -u lego-renew.service -f # realtime logs
 ```

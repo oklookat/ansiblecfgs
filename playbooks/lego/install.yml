@@ -1,0 +1,14 @@
+---
+- name: "lego: install"
+  hosts: lego
+  become: true
+  tasks:
+    - name: "lego: install"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: install.yml
+
+    - name: "lego: explicit start"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: explicit_start.yml

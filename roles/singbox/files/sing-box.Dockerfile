@@ -18,13 +18,7 @@ RUN set -eux; \
     chmod +x /usr/local/bin/sing-box; \
     rm -rf /tmp/sing-box*
 
-RUN adduser -D -H -u 1000 singbox; \
-    mkdir -p /var/lib/sing-box /etc/sing-box; \
-    chown -R singbox:singbox /var/lib/sing-box /etc/sing-box
-
 RUN sing-box version
-
-USER singbox
 
 ENTRYPOINT ["sing-box"]
 

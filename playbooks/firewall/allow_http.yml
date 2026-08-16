@@ -5,7 +5,7 @@
   tasks:
     - name: "firewall: add, apply rules"
       block:
-        - name: "Allow: 80, 443 TCP; 443 UDP"
+        - name: "Allow: 80, 443 TCP"
           ansible.builtin.include_role:
             name: firewall
             tasks_from: rules.yml
@@ -14,7 +14,7 @@
             firewall_rules:
               - "add rule inet filter input tcp dport 80 accept"
               - "add rule inet filter input tcp dport 443 accept"
-              - "add rule inet filter input udp dport 443 accept"
+
         - name: Apply
           ansible.builtin.include_role:
             name: firewall

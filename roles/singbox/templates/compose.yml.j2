@@ -13,6 +13,9 @@ services:
     volumes:
       - {{ singbox_config }}:/etc/sing-box/config.json:ro
       - {{ singbox_data }}:/var/lib/sing-box
+{% if singbox_certificates is defined and singbox_certificates %}
+      - {{ singbox_certificates }}:/var/lib/sing-box/certificates
+{% endif %}
 
 networks:
   {{ docker_network }}:

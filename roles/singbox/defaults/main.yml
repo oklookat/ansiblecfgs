@@ -4,11 +4,14 @@
 # general
 singbox_dir: "{{ docker_dir }}/sing-box"
 singbox_container_name: "sing_box"
+singbox_certificates: ""
 
 # install
 singbox_image: "{{ singbox_dir }}/Dockerfile"
 singbox_data: "{{ singbox_dir }}/data"
+singbox_template_compose: "compose.yml.j2"
 singbox_compose: "{{ singbox_dir }}/compose.yml"
+singbox_reload_script: "{{ singbox_dir }}/reload.sh"
 
 # deploy_config | deploy_config_mixed | deploy_config_mixed_wg (shadowing)
 singbox_template_config: "mixed.json.j2"

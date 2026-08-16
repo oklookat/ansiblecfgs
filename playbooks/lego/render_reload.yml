@@ -1,0 +1,27 @@
+---
+- name: "lego: render reload script"
+  hosts: all
+  become: true
+  tasks:
+    - name: "Export vars"
+      block:
+        - name: "caddy: export vars"
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: export_vars.yml
+
+        - name: "sing-box: export vars"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: export_vars.yml
+
+    - name: "Set vars"
+      ansible.builtin.set_fact:
+        lego_reload_hooks:
+          - sh "{{ caddy_reload_script }}"
+          - sh "{{ singbox_reload_script }}"
+
+    - name: "lego: render reload script"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: render_reload.yml
