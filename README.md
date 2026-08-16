@@ -1,6 +1,30 @@
 # ansiblecfgs (v3)
 
-## Installing Ansible
+Automate everything.
+
+The main principle in v3: basic system setup, and everything else in Docker containers.
+
+Main variable where data places: `caddy_dir`.
+
+Requirements: Linux or WSL host, full version of `ansible` (not just `ansible-core`).
+
+## Usage
+
+- Fill `inventories/prod` directory with your hosts, and `group_vars`.
+
+- Select playbook you needed. If your VPS is clean, you usually needed [`system`](./playbooks/system) playbook first.
+
+- Fill variables required by playbook.
+
+- Run playbook. Example: `ansible-playbook -i inventories/prod playbooks/system/setup.yml --limit myhost`
+
+## Documentation
+
+See [playbooks](./playbooks) directory, and each playbook `README.md`.
+
+## Example Ansible installation
+
+See more in [Ansible docs](https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html).
 
 ### Ubuntu, WSL (Ubuntu)
 
@@ -14,11 +38,3 @@ pip install ansible passlib # passlib for creating a user with a password on the
 ```
 
 If you haven't logged into the server yet, do so because otherwise it will complain about `known_hosts`. Run: `ssh root@SERVER_IP`
-
-## Usage
-
-- `ansible-playbook -i inventories/staging playbooks/system/setup`
-
-Limit to specific host:
-
-- `ansible-playbook -i inventories/prod playbooks/system/setup.yml --limit myhost`
