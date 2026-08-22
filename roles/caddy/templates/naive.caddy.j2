@@ -1,4 +1,4 @@
-{{ caddy_domain }} {
+:443, {{ caddy_domain }} {
     tls /etc/caddy/certs/{{ caddy_domain }}.crt /etc/caddy/certs/{{ caddy_domain }}.key
 
     route {
