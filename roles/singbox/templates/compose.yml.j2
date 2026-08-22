@@ -6,9 +6,7 @@ services:
     container_name: {{ singbox_container_name }}
     restart: unless-stopped
     networks:
-      - {{ docker_network }}
-    ports:
-      - "127.0.0.1:1080:{{ singbox_listen_port }}"
+      - "{{ singbox_network }}"
 
     volumes:
       - {{ singbox_config }}:/etc/sing-box/config.json:ro
@@ -18,5 +16,4 @@ services:
 {% endif %}
 
 networks:
-  {{ docker_network }}:
-    external: true
+  "{{ singbox_network }}":

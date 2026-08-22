@@ -5,6 +5,8 @@
 lego_version: "v5.3.1"
 lego_dir: "{{ docker_dir }}/lego"
 lego_storage: "{{ lego_dir }}/data/"
+lego_hooks_dir: "{{ lego_dir }}/hooks"
+
 lego_certificates_dir: "{{ lego_storage }}/certificates"
 lego_email: "foo@example.com"
 lego_config: "{{ lego_dir }}/config.yml"
@@ -12,9 +14,20 @@ lego_cloudflare_api_token: ""
 lego_cloudflare_env: "{{ lego_dir }}/cloudflare.env"
 lego_runner: "{{ lego_dir }}/runner.sh"
 lego_reload: "{{ lego_dir }}/reload.sh"
-lego_reload_hooks:
-  #- docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+# lego_reload_hooks:
+#   #- docker exec caddy caddy reload --config /etc/caddy/Caddyfile
 
 # lego_domains:
 #   - example.com
 #   - "*.example.com"
+
+# copy_hooks
+# lego_hooks:
+#   - path: ./caddy.sh
+#     name: caddy.sh
+
+#   - path: ./nginx.sh
+#     name: nginx.sh
+
+#   - path: ./singbox.sh
+#     name: singbox.sh

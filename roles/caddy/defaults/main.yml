@@ -1,6 +1,10 @@
 ---
 # required vars: docker_dir; docker_group; docker_network
 
+# networks
+caddy_singbox_network: "singbox_network"
+caddy_ghost_network: "ghost_network"
+
 # all
 caddy_dir: "{{ docker_dir }}/caddy"
 
@@ -12,6 +16,7 @@ caddy_reload_script: "{{ caddy_dir }}/reload.sh"
 caddy_certificates: "" # dir with certificates
 caddy_file_server: "{{ caddy_dir }}/fileserver"
 caddy_sites_dir: "{{ caddy_dir }}/sites"
+caddy_snippets_dir: "{{ caddy_dir }}/snippets"
 caddy_domain: "example.com"
 caddy_caddyfile: "{{ caddy_dir }}/Caddyfile"
 caddy_data: "{{ caddy_dir }}/data" # certificates and account data, see XDG_DATA_HOME in Caddy image
@@ -42,3 +47,11 @@ caddy_configs_default_naive:
   sites:
     - domain: "{{ caddy_domain }}"
       template: naive.caddy.j2
+
+# install_ghost
+caddy_ghost_snippets: "{{ caddy_snippets_dir }}/ghost"
+caddy_ghost_domain: "example.com"
+caddy_ghost_admin_domain: "admin.example.com"
+caddy_ghost_reverse_proxy: "ghost:2368"
+caddy_ghost_traffic_analytics_reverse_proxy: "traffic-analytics:3000"
+caddy_ghost_activitypub_target: "https://ap.ghost.org"

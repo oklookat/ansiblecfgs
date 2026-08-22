@@ -16,12 +16,9 @@
     - "{{ caddy_file_server }}"
     - "{{ caddy_file_server }}/{{ caddy_domain }}"
     - "{{ caddy_data }}"
+    - "{{ caddy_snippets_dir }}"
 
-- name: Render Compose file
-  ansible.builtin.template:
-    src: compose.yml.j2
-    dest: "{{ caddy_compose }}"
-    mode: "0644"
+- include_tasks: render_compose.yml
 
 - name: Copy Caddy Dockerfile
   ansible.builtin.copy:

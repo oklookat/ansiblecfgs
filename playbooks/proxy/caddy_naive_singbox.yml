@@ -28,8 +28,9 @@
 
     - name: "Set vars"
       ansible.builtin.set_fact:
-        lego_reload_hooks:
-          - sh "{{ caddy_reload_script }}"
+        lego_hooks:
+          - path: "{{ caddy_reload_script }}"
+            name: caddy.sh
         caddy_disable_insecure_upstreams_check: true
         caddy_upstream: "socks5://{{ singbox_container_name }}:{{ singbox_listen_port }}"
         caddy_certificates: "{{ lego_certificates_dir }}"

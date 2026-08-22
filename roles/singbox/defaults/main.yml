@@ -5,6 +5,7 @@
 singbox_dir: "{{ docker_dir }}/sing-box"
 singbox_container_name: "sing_box"
 singbox_certificates: ""
+singbox_network: "singbox_network"
 
 # install
 singbox_image: "{{ singbox_dir }}/Dockerfile"

@@ -5,11 +5,33 @@ services:
     image: caddy-naive:latest
     container_name: caddy
     restart: unless-stopped
-    network_mode: host
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    networks:
+{% if singbox_network_info.exists %}
+      - singbox_network
+{% endif %}
+{% if ghost_network_info.exists %}
+      - ghost_network
+{% endif %}
 
     volumes:
       - "{{ caddy_caddyfile }}:/etc/caddy/Caddyfile:ro"
       - "{{ caddy_sites_dir }}:/etc/caddy/sites:ro"
+      - "{{ caddy_snippets_dir }}:/etc/caddy/snippets:ro"
       - "{{ caddy_data }}:/data"
       - "{{ caddy_file_server }}:/var/www"
       - "{{ caddy_certificates }}:/etc/caddy/certs:ro"
+
+networks:
+{% if singbox_network_info.exists %}
+  singbox_network:
+    external: true
+{% endif %}
+{% if ghost_network_info.exists %}
+  ghost_network:
+    external: true
+{% endif %}

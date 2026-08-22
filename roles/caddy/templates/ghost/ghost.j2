@@ -1,0 +1,28 @@
+{{ caddy_ghost_domain }} {
+	tls /etc/caddy/certs/{{ caddy_ghost_domain }}.crt /etc/caddy/certs/{{ caddy_ghost_domain }}.key
+
+	import /etc/caddy/snippets/ghost/Logging
+
+	# Traffic Analytics service
+	import /etc/caddy/snippets/ghost/TrafficAnalytics
+
+	# ActivityPub Service
+	import /etc/caddy/snippets/ghost/ActivityPub
+
+	# Block /ghost* endpoints with 404
+	# because we use admin domain
+	handle /ghost/* {
+		respond 404
+	}
+
+	# Default proxy everything else to Ghost
+	handle {
+		reverse_proxy {{ caddy_ghost_reverse_proxy }}
+	}
+
+	# Optional: Enable gzip compression
+	encode gzip
+
+	# Optional: Add security headers
+	import /etc/caddy/snippets/ghost/SecurityHeaders
+}

@@ -1,0 +1,7 @@
+---
+# Export from roles to playbook
+- name: Export variables
+  ansible.builtin.set_fact:
+    ghost_domain: "{{ ghost_domain }}"
+    ghost_admin_domain: "{{ ghost_admin_domain }}"
+    ghost_port: "{{ ghost_port }}"

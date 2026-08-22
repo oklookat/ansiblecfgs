@@ -15,13 +15,18 @@
             name: singbox
             tasks_from: export_vars.yml
 
-    - name: "Set vars"
-      ansible.builtin.set_fact:
-        lego_reload_hooks:
-          - sh "{{ caddy_reload_script }}"
-          - sh "{{ singbox_reload_script }}"
-
-    - name: "lego: render reload script"
+    - name: "lego: copy hooks"
       ansible.builtin.include_role:
         name: lego
-        tasks_from: render_reload.yml
+        tasks_from: copy_hooks.yml
+      vars:
+        lego_hooks:
+          - path: "{{ caddy_reload_script }}"
+            name: caddy.sh
+          - path: "{{ singbox_reload_script }}"
+            name: singbox.sh
+
+    - name: "lego: explicit start"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: explicit_start.yml

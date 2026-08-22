@@ -1,0 +1,37 @@
+---
+- name: Create Caddy directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    group: "{{ docker_group }}"
+    mode: "0755"
+  loop:
+    - "{{ caddy_snippets_dir }}"
+    - "{{ caddy_ghost_snippets }}"
+
+- name: Render snippets file
+  ansible.builtin.template:
+    src: ghost/snippets/{{ item }}.j2
+    dest: "{{ caddy_ghost_snippets }}/{{ item }}"
+    mode: "0644"
+  loop:
+    - "ActivityPub"
+    - "Logging"
+    - "SecurityHeaders"
+    - "TrafficAnalytics"
+
+- name: Render ghost Caddyfile
+  ansible.builtin.template:
+    src: ghost/ghost.j2
+    dest: "{{ caddy_sites_dir }}/{{ caddy_ghost_domain }}.caddy"
+    mode: "0644"
+
+- name: Render admin Caddyfile
+  ansible.builtin.template:
+    src: ghost/admin.j2
+    dest: "{{ caddy_sites_dir }}/{{ caddy_ghost_admin_domain }}.caddy"
+    mode: "0644"
+
+- include_tasks: render_compose.yml
+
+- include_tasks: rebuild.yml

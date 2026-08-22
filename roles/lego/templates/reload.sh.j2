@@ -1,8 +1,10 @@
 #!/bin/sh
-set -eu
 
-{% if lego_reload_hooks is defined %}
-{% for command in lego_reload_hooks %}
-{{ command }}
-{% endfor %}
-{% endif %}
+DIR="{{ lego_hooks_dir }}"
+
+for script in "$DIR"/*.sh; do
+    [ -f "$script" ] || continue
+
+    echo "Running: $(basename "$script")"
+    bash "$script"
+done

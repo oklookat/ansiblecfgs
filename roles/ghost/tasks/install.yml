@@ -1,0 +1,38 @@
+---
+- name: Ensure ghost network exists
+  community.docker.docker_network:
+    name: "{{ ghost_network }}"
+    driver: bridge
+    state: present
+
+- name: Create ghost directory
+  ansible.builtin.file:
+    path: "{{ ghost_dir }}"
+    state: directory
+    group: "{{ docker_group }}"
+    mode: "0755"
+
+- name: Copy directories
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ ghost_dir }}"
+    group: "{{ docker_group }}"
+    mode: "0755"
+  loop:
+    - files/mysql-init
+    - files/scripts
+    - files/tinybird
+
+- name: Render env
+  ansible.builtin.template:
+    src: "env.j2"
+    dest: "{{ ghost_dir }}/.env"
+    mode: "0644"
+
+- name: Render compose
+  ansible.builtin.template:
+    src: "compose.yml.j2"
+    dest: "{{ ghost_compose }}"
+    mode: "0644"
+
+- include_tasks: rebuild.yml

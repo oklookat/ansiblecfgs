@@ -1,0 +1,5 @@
+---
+- name: Rebuild ghost stack
+  ansible.builtin.command:
+    cmd: docker compose -f {{ ghost_compose }} up -d --build
+    chdir: "{{ ghost_dir }}"

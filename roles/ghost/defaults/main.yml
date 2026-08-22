@@ -1,0 +1,50 @@
+# install
+
+ghost_dir: "{{ docker_dir }}/ghost"
+ghost_compose: "{{ ghost_dir }}/compose.yml"
+ghost_network: "ghost_network"
+
+ghost_domain: "example.com"
+ghost_admin_domain: "admin.example.com"
+
+# Force Ghost version
+# You should only do this if you need to pin a specific version
+# The update commands won't work
+ghost_version: "6-alpine"
+ghost_port: 2368
+
+# Database settings
+# All database settings must not be changed once the database is initialised
+ghost_database_root_password: "reallysecurerootpassword"
+ghost_database_password: "ghostpassword"
+ghost_database_user: "ghost"
+
+# Data locations
+# Location to store uploaded data
+ghost_upload_location: "./data/ghost"
+
+# Location for database data
+ghost_mysql_data_location: "./data/mysql"
+
+# Tinybird configuration
+# If you want to run Analytics, paste the output from `docker compose run --rm tinybird-login get-tokens` below
+ghost_tinybird_api_url: "https://api.tinybird.co"
+ghost_tinybird_tracker_token: ""
+ghost_tinybird_admin_token: ""
+ghost_tinybird_workspace_id: ""
+
+# ActivityPub
+# If you'd prefer to self-host ActivityPub yourself,
+# replace with "activitypub:8080".
+ghost_activitypub_target: "https://ap.ghost.org"
+
+# SMTP Email (https://ghost.org/docs/config/#mail)
+# Transactional email is required for logins, account creation (staff invites), password resets and other features
+# This is not related to bulk mail / newsletter sending
+ghost_mail_transport: "SMTP"
+ghost_mail_options_host: "smtp.example.com"
+ghost_mail_options_port: "465"
+ghost_mail_options_secure: "true"
+ghost_mail_options_auth_user: "support@example.com"
+ghost_mail_options_auth_pass: "1234567890"
+ghost_mail_from: "'Acme Support' <support@example.com>"

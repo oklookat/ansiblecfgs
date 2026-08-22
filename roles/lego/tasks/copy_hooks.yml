@@ -1,0 +1,10 @@
+---
+- name: Copy lego hooks
+  ansible.builtin.copy:
+    src: "{{ lego_hook.path }}"
+    dest: "{{ lego_hooks_dir }}/{{ lego_hook.name }}"
+    remote_src: true
+    mode: "0755"
+  loop: "{{ lego_hooks }}"
+  loop_control:
+    loop_var: lego_hook

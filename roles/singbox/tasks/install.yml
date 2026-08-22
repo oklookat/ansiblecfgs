@@ -1,4 +1,10 @@
 ---
+- name: Ensure singbox network exists
+  community.docker.docker_network:
+    name: "{{ singbox_network }}"
+    driver: bridge
+    state: present
+
 - name: Create sing-box directory
   ansible.builtin.file:
     path: "{{ singbox_dir }}"
@@ -31,7 +37,6 @@
     src: reload.sh.j2
     dest: "{{ singbox_reload_script }}"
     mode: "0755"
+# - include_tasks: deploy_config.yml
 
-- include_tasks: deploy_config.yml
-
-- include_tasks: restart.yml
+# - include_tasks: restart.yml

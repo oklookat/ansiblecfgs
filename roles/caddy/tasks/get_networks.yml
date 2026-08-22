@@ -1,0 +1,10 @@
+---
+- name: Check singbox network
+  community.docker.docker_network_info:
+    name: "{{ caddy_singbox_network }}"
+  register: singbox_network_info
+
+- name: Check ghost network
+  community.docker.docker_network_info:
+    name: "{{ caddy_ghost_network }}"
+  register: ghost_network_info
