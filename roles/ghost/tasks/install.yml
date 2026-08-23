@@ -23,6 +23,12 @@
     - files/scripts
     - files/tinybird
 
+- name: Render config
+  ansible.builtin.template:
+    src: "config.production.json.j2"
+    dest: "{{ ghost_dir }}/config.production.json"
+    mode: "0644"
+
 - name: Render env
   ansible.builtin.template:
     src: "env.j2"

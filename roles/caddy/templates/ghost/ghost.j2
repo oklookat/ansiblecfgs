@@ -7,12 +7,13 @@
 	import /etc/caddy/snippets/ghost/TrafficAnalytics
 
 	# ActivityPub Service
-	import /etc/caddy/snippets/ghost/ActivityPub
+	import /etc/caddy/snippets/ghost/ActivityPub {{ caddy_ghost_domain }}
 
 	# Block /ghost* endpoints with 404
-	# because we use admin domain
+	# because we use separate admin domain
 	handle /ghost/* {
-		respond 404
+		rewrite * /err-{$uri}
+		reverse_proxy {{ caddy_ghost_reverse_proxy }}
 	}
 
 	# Default proxy everything else to Ghost
@@ -24,5 +25,5 @@
 	encode gzip
 
 	# Optional: Add security headers
-	import /etc/caddy/snippets/ghost/SecurityHeaders
+	import /etc/caddy/snippets/ghost/SecurityHeaders ""
 }

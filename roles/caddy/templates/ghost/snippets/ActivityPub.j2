@@ -1,13 +1,18 @@
 # ActivityPub
-# Proxy activitypub requests /.ghost/activitypub/
 handle /.ghost/activitypub/* {
-	reverse_proxy {{ caddy_ghost_activitypub_target }}
+	reverse_proxy {{ caddy_ghost_activitypub_target }} {
+		header_up Host {args.0}
+	}
 }
 
 handle /.well-known/webfinger {
-	reverse_proxy {{ caddy_ghost_activitypub_target }}
+	reverse_proxy {{ caddy_ghost_activitypub_target }} {
+		header_up Host {args.0}
+	}
 }
 
 handle /.well-known/nodeinfo {
-	reverse_proxy {{ caddy_ghost_activitypub_target }}
+	reverse_proxy {{ caddy_ghost_activitypub_target }} {
+		header_up Host {args.0}
+	}
 }

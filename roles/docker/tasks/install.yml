@@ -23,11 +23,14 @@
         state: absent
         purge: true
 
-    - name: Ensure required packages for apt over HTTPS
+    - name: Ensure required packages
       ansible.builtin.apt:
         name:
           - ca-certificates
           - curl
+          # ubuntu 26.04 lts
+          - python3-requests
+          - python3-docker
         state: present
         update_cache: true
 

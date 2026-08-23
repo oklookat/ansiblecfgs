@@ -24,6 +24,7 @@ services:
       tinybird__stats__endpoint: ${TINYBIRD_API_URL:-https://api.tinybird.co}
     volumes:
       - ${UPLOAD_LOCATION:-./data/ghost}:/var/lib/ghost/content
+      - ./config.production.json:/var/lib/ghost/config.production.json
     depends_on:
       db:
         condition: service_healthy
@@ -168,7 +169,7 @@ services:
   activitypub-migrate:
     image: ghcr.io/tryghost/activitypub-migrations:1.2.7@sha256:19724eca7b7669b01047c746738bf34c46dfa587e2be5b8641067d9ab707a7bb
     environment:
-      MYSQL_DB: mysql://${DATABASE_USER:-ghost}:${DATABASE_PASSWORD:?DATABASE_PASSWORD environment variable is required}@tcp(db:3306)/activitypub
+      MYSQL_DB: mysql://${DATABASE_USER:-ghost}:${DATABASE_PASSWORD_URLENCODED}@tcp(db:3306)/activitypub
     networks:
       - "{{ ghost_network }}"
     depends_on:

@@ -52,8 +52,6 @@
     mode: "0755"
   when: lego_reload is defined and lego_reload | length > 0
 
-- include_tasks: copy_hooks.yml
-
 - name: Enable and start lego renew timer
   ansible.builtin.systemd_service:
     name: lego-renew.timer

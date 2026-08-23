@@ -2,7 +2,7 @@ services:
   caddy:
     build:
       context: "{{ caddy_dir }}"
-    image: caddy-naive:latest
+    image: {{ caddy_image_name }}
     container_name: caddy
     restart: unless-stopped
 

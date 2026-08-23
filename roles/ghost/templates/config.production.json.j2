@@ -1,0 +1,33 @@
+{
+  "url": "http://localhost:{{ ghost_port }}",
+  "server": {
+    "port": {{ ghost_port | int }},
+    "host": "::"
+  },
+  "mail": {
+    "from": "{{ ghost_mail_from }}",
+    "transport": "{{ ghost_mail_transport }}",
+    "options": {
+      "service": "{{ ghost_mail_service }}",
+      "host": "{{ ghost_mail_options_host }}",
+      "port": {{ ghost_mail_options_port | int }},
+      "secureConnection": {{ ghost_mail_options_secure | bool | lower }},
+      "auth": {
+        "user": "{{ ghost_mail_options_auth_user }}",
+        "pass": "{{ ghost_mail_options_auth_pass }}"
+      }
+    }
+  },
+  "logging": {
+    "transports": [
+      "stdout"
+    ]
+  },
+  "process": "systemd",
+  "security": {
+    "staffDeviceVerification": true
+  },
+  "paths": {
+    "contentPath": "/var/lib/ghost/content"
+  }
+}

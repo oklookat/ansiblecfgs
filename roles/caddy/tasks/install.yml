@@ -32,10 +32,3 @@
     mode: "0755"
 
 - include_tasks: deploy_configs.yml
-
-- include_tasks: rebuild.yml
-
-- name: Copy index.html
-  ansible.builtin.copy:
-    src: index.html
-    dest: "{{ caddy_file_server }}/{{ caddy_domain }}/index.html"

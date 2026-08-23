@@ -8,8 +8,8 @@
         name: "{{ docker_network }}"
         driver: bridge
         state: present
-# TODO
-# - name: "caddy: install"
-#   ansible.builtin.include_role:
-#     name: caddy
-#     tasks_from: install.yml
+
+    - name: "caddy: install"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: install.yml

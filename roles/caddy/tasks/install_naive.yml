@@ -3,5 +3,11 @@
   ansible.builtin.set_fact:
     caddy_dockerfile: "{{ caddy_dockerfile | default('naive.Dockerfile', true) }}"
     caddy_configs: "{{ caddy_configs | default(caddy_configs_default_naive, true) }}"
+    caddy_image_name: "caddy-naive:latest"
 
 - include_tasks: install.yml
+
+- name: Copy index.html
+  ansible.builtin.copy:
+    src: index.html
+    dest: "{{ caddy_file_server }}/{{ caddy_domain }}/index.html"

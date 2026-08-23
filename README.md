@@ -38,3 +38,9 @@ pip install ansible passlib # passlib for creating a user with a password on the
 ```
 
 If you haven't logged into the server yet, do so because otherwise it will complain about `known_hosts`. Run: `ssh root@SERVER_IP`
+
+## Issues
+
+[Due to `sudo` changes in Ubuntu 26.04](https://www.reddit.com/r/ansible/comments/1t6ie61/become_true_not_working_with_ubuntu_2604_lts), you may need to set
+
+`ansible_become_exe: "sudo.ws"` in your variables.

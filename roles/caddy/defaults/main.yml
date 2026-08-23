@@ -11,6 +11,7 @@ caddy_dir: "{{ docker_dir }}/caddy"
 ## install | install_naive
 caddy_compose: "{{ caddy_dir }}/compose.yml"
 caddy_reload_script: "{{ caddy_dir }}/reload.sh"
+caddy_image_name: "caddy:latest"
 
 # mount points
 caddy_certificates: "" # dir with certificates

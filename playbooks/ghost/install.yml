@@ -1,9 +1,9 @@
 ---
-# - name: "include: install Docker"
-#   ansible.builtin.import_playbook: ../docker/install.yml
+- name: "include: install Docker"
+  ansible.builtin.import_playbook: ../docker/install.yml
 
-# - name: "include: firewall allow HTTP"
-#   ansible.builtin.import_playbook: ../firewall/allow_http.yml
+- name: "include: firewall allow HTTP"
+  ansible.builtin.import_playbook: ../firewall/allow_http.yml
 
 - name: "ghost: install"
   hosts: all
@@ -28,9 +28,6 @@
 
     - name: "Set vars"
       ansible.builtin.set_fact:
-        lego_hooks:
-          - path: "{{ caddy_reload_script }}"
-            name: caddy.sh
         caddy_certificates: "{{ lego_certificates_dir }}"
         caddy_ghost_domain: "{{ ghost_domain }}"
         caddy_ghost_admin_domain: "{{ ghost_admin_domain }}"
@@ -46,12 +43,31 @@
         name: lego
         tasks_from: install.yml
 
-    - name: "lego: explicit start"
+    - name: "caddy: install"
       ansible.builtin.include_role:
-        name: lego
-        tasks_from: explicit_start.yml
+        name: caddy
+        tasks_from: install.yml
 
     - name: "caddy: install ghost"
       ansible.builtin.include_role:
         name: caddy
         tasks_from: install_ghost.yml
+
+    - name: "lego: explicit start"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: explicit_start.yml
+
+    - name: "lego: copy hooks"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: copy_hooks.yml
+      vars:
+        lego_hooks:
+          - path: "{{ caddy_reload_script }}"
+            name: caddy.sh
+
+    - name: "caddy: rebuild"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: rebuild.yml

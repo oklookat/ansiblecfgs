@@ -42,9 +42,10 @@ ghost_activitypub_target: "https://ap.ghost.org"
 # Transactional email is required for logins, account creation (staff invites), password resets and other features
 # This is not related to bulk mail / newsletter sending
 ghost_mail_transport: "SMTP"
+ghost_mail_service: "Mailgun"
 ghost_mail_options_host: "smtp.example.com"
-ghost_mail_options_port: "465"
-ghost_mail_options_secure: "true"
+ghost_mail_options_port: 465
+ghost_mail_options_secure: true
 ghost_mail_options_auth_user: "support@example.com"
 ghost_mail_options_auth_pass: "1234567890"
 ghost_mail_from: "'Acme Support' <support@example.com>"

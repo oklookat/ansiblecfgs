@@ -33,5 +33,3 @@
     mode: "0644"
 
 - include_tasks: render_compose.yml
-
-- include_tasks: rebuild.yml

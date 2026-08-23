@@ -7,7 +7,7 @@
  	import /etc/caddy/snippets/ghost/TrafficAnalytics
 
  	# ActivityPub Service
- 	import /etc/caddy/snippets/ghost/ActivityPub
+ 	import /etc/caddy/snippets/ghost/ActivityPub {{ caddy_ghost_domain }}
 
  	# Default proxy everything else to Ghost
  	handle {
@@ -18,5 +18,5 @@
  	encode gzip
 
  	# Optional: Add security headers
- 	import /etc/caddy/snippets/ghost/SecurityHeaders
+ 	import /etc/caddy/snippets/ghost/SecurityHeaders "Content-Security-Policy \"frame-ancestors 'self' {{ caddy_ghost_admin_domain }}\""
 }
