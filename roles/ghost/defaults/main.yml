@@ -10,7 +10,7 @@ ghost_admin_domain: "admin.example.com"
 # Force Ghost version
 # You should only do this if you need to pin a specific version
 # The update commands won't work
-ghost_version: "6-alpine"
+ghost_version: "6.59-alpine"
 ghost_port: 2368
 
 # Database settings
