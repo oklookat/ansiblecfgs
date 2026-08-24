@@ -7,3 +7,9 @@ services:
     restart: unless-stopped
     volumes:
       - {{ teletrack_config }}:/app/config.json
+    networks:
+      - teletrack_net
+
+networks:
+  teletrack_net:
+    enable_ipv6: true

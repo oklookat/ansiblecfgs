@@ -21,6 +21,9 @@
           # All docker bridges (172.16–172.31)
           - 'add rule ip nat postrouting ip saddr 172.16.0.0/12 oifname != { "docker0", "br-*" } masquerade comment "All Docker bridges masquerade (172.16.0.0/12)"'
 
+          # Masquerade (NAT) for IPv6 - container to internet
+          - 'add rule ip6 nat postrouting ip6 saddr fd00:dead:beef::/48 oifname != { "docker0", "br-*" } masquerade comment "All Docker bridges masquerade (IPv6 ULA)"'
+
           # Forward
           # Connection between various Docker networks (inter-network)
           - 'add rule inet filter forward iifname { "docker0", "br-*" } oifname { "docker0", "br-*" } accept comment "Inter-Docker network communication"'

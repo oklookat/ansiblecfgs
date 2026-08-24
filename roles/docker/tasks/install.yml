@@ -79,7 +79,9 @@
     mode: "0644"
     content: |
       {
-        "firewall-backend": "nftables"
+        "firewall-backend": "nftables",
+        "ipv6": true,
+        "fixed-cidr-v6": "fd00:dead:beef::/48"
       }
   notify: Restart Docker
 

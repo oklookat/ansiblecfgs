@@ -56,4 +56,11 @@ table ip nat {
     }
 }
 
+table ip6 nat {
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+    }
+}
+
+
 include "{{ firewall_rules_dir }}/*.nft"
