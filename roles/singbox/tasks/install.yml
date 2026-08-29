@@ -3,6 +3,7 @@
   community.docker.docker_network:
     name: "{{ singbox_network }}"
     driver: bridge
+    enable_ipv6: true
     state: present
 
 - name: Create sing-box directory
@@ -23,20 +24,15 @@
     src: sing-box.Dockerfile
     dest: "{{ singbox_image }}"
     mode: "0644"
-  notify: Rebuild sing-box
 
 - name: Render Compose file
   ansible.builtin.template:
     src: "{{ singbox_template_compose }}"
     dest: "{{ singbox_compose }}"
     mode: "0644"
-  notify: Recreate sing-box
 
 - name: Render reload script
   ansible.builtin.template:
     src: reload.sh.j2
     dest: "{{ singbox_reload_script }}"
     mode: "0755"
-# - include_tasks: deploy_config.yml
-
-# - include_tasks: restart.yml

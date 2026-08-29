@@ -10,15 +10,15 @@
             name: wgcf
             tasks_from: export_vars.yml
 
-        - name: "install"
-          ansible.builtin.include_role:
-            name: wgcf
-            tasks_from: install.yml
+        # - name: "install"
+        #   ansible.builtin.include_role:
+        #     name: wgcf
+        #     tasks_from: install.yml
 
-        - name: "run"
-          ansible.builtin.include_role:
-            name: wgcf
-            tasks_from: run.yml
+        # - name: "run"
+        #   ansible.builtin.include_role:
+        #     name: wgcf
+        #     tasks_from: run.yml
 
     - name: Set singbox_wg_config
       ansible.builtin.set_fact:
@@ -27,4 +27,9 @@
     - name: Deploy
       ansible.builtin.include_role:
         name: singbox
-        tasks_from: deploy_config_mixed_wg.yml
+        tasks_from: deploy_config_wg.yml
+
+    - name: "singbox: rebuild"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: rebuild.yml

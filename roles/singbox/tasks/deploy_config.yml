@@ -6,4 +6,3 @@
     owner: "1000"
     group: "1000"
     mode: "0644"
-  notify: Recreate sing-box

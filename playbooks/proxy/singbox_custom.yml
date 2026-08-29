@@ -1,0 +1,99 @@
+---
+- name: "include: install Docker"
+  ansible.builtin.import_playbook: ../docker/install.yml
+
+- name: "include: firewall allow HTTP"
+  ansible.builtin.import_playbook: ../firewall/allow_http.yml
+
+- name: "include: firewall allow singbox"
+  ansible.builtin.import_playbook: ../firewall/allow_singbox.yml
+
+- name: "proxy: singbox custom"
+  hosts: proxy
+  become: true
+  tasks:
+    - name: "Export vars"
+      block:
+        - name: "lego: export vars"
+          ansible.builtin.include_role:
+            name: lego
+            tasks_from: export_vars.yml
+
+        - name: "caddy: export vars"
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: export_vars.yml
+
+        - name: "sing-box: export vars"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: export_vars.yml
+
+        - name: "wgcf: export vars"
+          ansible.builtin.include_role:
+            name: wgcf
+            tasks_from: export_vars.yml
+
+    - name: "Set vars"
+      ansible.builtin.set_fact:
+        lego_hooks:
+          - path: "{{ caddy_reload_script }}"
+            name: caddy.sh
+          - path: "{{ singbox_reload_script }}"
+            name: singbox.sh
+        caddy_certificates: "{{ lego_certificates_dir }}"
+        singbox_certificates: "{{ lego_certificates_dir }}"
+        singbox_wg_config: "{{ wgcf_profile }}"
+
+    - name: "lego: install"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: install.yml
+
+    - name: "lego: explicit start"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: explicit_start.yml
+
+    - name: "sing-box: install"
+      block:
+        - name: "install"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: install.yml
+
+        - name: "deploy wg config"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: deploy_config_wg.yml
+
+    - name: "caddy: install"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: install.yml
+
+    - name: "wgcf"
+      block:
+        - name: "install"
+          ansible.builtin.include_role:
+            name: wgcf
+            tasks_from: install.yml
+        - name: "run"
+          ansible.builtin.include_role:
+            name: wgcf
+            tasks_from: run.yml
+
+    - name: "lego: copy hooks"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: copy_hooks.yml
+
+    - name: "caddy: rebuild"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: rebuild.yml
+
+    - name: "singbox: rebuild"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: rebuild.yml
