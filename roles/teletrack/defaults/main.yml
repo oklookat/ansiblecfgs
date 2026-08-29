@@ -6,3 +6,5 @@ teletrack_compose: "{{ teletrack_dir }}/compose.yml"
 
 teletrack_template_config: ""
 teletrack_config: "{{ teletrack_dir }}/config.json"
+
+teletrack_data: "{{ teletrack_dir }}/data"
