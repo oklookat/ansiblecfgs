@@ -1,0 +1,14 @@
+---
+- name: "sing-box: update"
+  hosts: proxy
+  become: true
+  tasks:
+    - name: update
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: update.yml
+
+    - name: rebuild
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: rebuild.yml

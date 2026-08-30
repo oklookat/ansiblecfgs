@@ -12,17 +12,7 @@
     state: directory
     mode: "0755"
 
-- name: Copy sing-box Dockerfile
-  ansible.builtin.copy:
-    src: sing-box.Dockerfile
-    dest: "{{ singbox_image }}"
-    mode: "0644"
-
-- name: Render Compose file
-  ansible.builtin.template:
-    src: "{{ singbox_template_compose }}"
-    dest: "{{ singbox_compose }}"
-    mode: "0644"
+- include_tasks: update.yml
 
 - name: Render reload script
   ansible.builtin.template:

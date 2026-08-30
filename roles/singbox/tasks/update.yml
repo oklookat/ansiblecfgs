@@ -1,0 +1,12 @@
+---
+- name: Copy sing-box Dockerfile
+  ansible.builtin.copy:
+    src: sing-box.Dockerfile
+    dest: "{{ singbox_image }}"
+    mode: "0644"
+
+- name: Render Compose file
+  ansible.builtin.template:
+    src: "{{ singbox_template_compose }}"
+    dest: "{{ singbox_compose }}"
+    mode: "0644"
