@@ -1,12 +1,12 @@
 FROM alpine:3.24.1
 
 ARG SING_BOX_VERSION=1.14.0-rc.5
-ARG TARGETARCH=arm64-musl   # или amd64, amd64-musl, arm64-glibc и т.д.
+ARG TARGETARCH=arm64-musl
 
-# Установка утилит (кешируется)
+# caching
 RUN apk add --no-cache --upgrade ca-certificates curl tar
 
-# Скачивание и распаковка (перестраивается при каждом запуске)
+# dont caching
 ARG CACHE_BUST
 ARG DOWNLOAD_LINK="https://github.com/SagerNet/sing-box/releases/download/v${SING_BOX_VERSION}/sing-box-${SING_BOX_VERSION}-linux-${TARGETARCH}.tar.gz"
 
