@@ -24,3 +24,6 @@ docker_group: "docker"
 
 # custom dirs on remote, for data, images, etc
 docker_dir: "/opt/ansiblecfgs/docker"
+
+# docker_ipv6_subnet: "fd00:dead:beef:1::/64"
+# docker_ipv6_gateway: "fd00:dead:beef:1::/64"

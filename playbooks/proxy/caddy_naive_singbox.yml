@@ -2,9 +2,6 @@
 - name: "include: install Docker"
   ansible.builtin.import_playbook: ../docker/install.yml
 
-- name: "include: firewall allow HTTP"
-  ansible.builtin.import_playbook: ../firewall/allow_http.yml
-
 - name: "proxy: caddy-naive-sing-box"
   hosts: proxy
   become: true
@@ -31,25 +28,23 @@
         lego_hooks:
           - path: "{{ caddy_reload_script }}"
             name: caddy.sh
+          - path: "{{ singbox_reload_script }}"
+            name: singbox.sh
         caddy_disable_insecure_upstreams_check: true
         caddy_upstream: "socks5://{{ singbox_container_name }}:{{ singbox_listen_port }}"
         caddy_certificates: "{{ lego_certificates_dir }}"
-
-    - name: Ensure proxy network exists
-      community.docker.docker_network:
-        name: "{{ docker_network }}"
-        driver: bridge
-        state: present
+        caddy_external_networks:
+          - "{{ singbox_network }}"
 
     - name: "lego: install"
       ansible.builtin.include_role:
         name: lego
         tasks_from: install.yml
 
-    - name: "caddy: install naive"
+    - name: "lego: explicit start"
       ansible.builtin.include_role:
-        name: caddy
-        tasks_from: install_naive.yml
+        name: lego
+        tasks_from: explicit_start.yml
 
     - name: "sing-box: install"
       block:
@@ -63,7 +58,22 @@
             name: singbox
             tasks_from: deploy_config_mixed.yml
 
-    - name: "lego: explicit start"
+    - name: "caddy: install naive"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: install_naive.yml
+
+    - name: "lego: copy hooks"
       ansible.builtin.include_role:
         name: lego
-        tasks_from: explicit_start.yml
+        tasks_from: copy_hooks.yml
+
+    - name: "caddy: rebuild"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: rebuild.yml
+
+    - name: "singbox: rebuild"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: rebuild.yml

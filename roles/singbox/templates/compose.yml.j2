@@ -16,4 +16,7 @@ services:
 {% endif %}
 
 networks:
-  "{{ singbox_network }}":
+  {{ singbox_network }}:
+    name: {{ singbox_network }}
+    driver: bridge
+    enable_ipv6: true

@@ -75,14 +75,11 @@
 
 - name: Configure Docker daemon
   ansible.builtin.copy:
+    src: daemon.json
     dest: /etc/docker/daemon.json
+    owner: root
+    group: root
     mode: "0644"
-    content: |
-      {
-        "firewall-backend": "nftables",
-        "ipv6": true,
-        "fixed-cidr-v6": "fd00:dead:beef::/48"
-      }
   notify: Restart Docker
 
 - name: Ensure Docker service is started and enabled

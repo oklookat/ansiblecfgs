@@ -42,6 +42,8 @@
           - path: "{{ singbox_reload_script }}"
             name: singbox.sh
         caddy_certificates: "{{ lego_certificates_dir }}"
+        caddy_external_networks:
+          - "{{ singbox_network }}"
         singbox_certificates: "{{ lego_certificates_dir }}"
         singbox_wg_config: "{{ wgcf_profile }}"
 

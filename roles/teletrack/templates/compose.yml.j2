@@ -9,8 +9,10 @@ services:
       - {{ teletrack_config }}:/app/config.json
       - {{ teletrack_data }}:/var/lib/teletrack
     networks:
-      - teletrack_net
+      - teletrack_network
 
 networks:
-  teletrack_net:
+  teletrack_network:
+    name: teletrack_network
+    driver: bridge
     enable_ipv6: true

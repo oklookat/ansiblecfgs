@@ -11,12 +11,12 @@ services:
       - "443:443"
 
     networks:
-{% if singbox_network_info.exists %}
-      - singbox_network
+      - caddy_network
+{% for network in caddy_external_network_info.results %}
+{% if network.exists %}
+      - {{ network.item }}
 {% endif %}
-{% if ghost_network_info.exists %}
-      - ghost_network
-{% endif %}
+{% endfor %}
 
     volumes:
       - "{{ caddy_caddyfile }}:/etc/caddy/Caddyfile:ro"
@@ -27,11 +27,13 @@ services:
       - "{{ caddy_certificates }}:/etc/caddy/certs:ro"
 
 networks:
-{% if singbox_network_info.exists %}
-  singbox_network:
+  caddy_network:
+    name: caddy_network
+    driver: bridge
+    enable_ipv6: true
+{% for network in caddy_external_network_info.results %}
+{% if network.exists %}
+  {{ network.item }}:
     external: true
 {% endif %}
-{% if ghost_network_info.exists %}
-  ghost_network:
-    external: true
-{% endif %}
+{% endfor %}

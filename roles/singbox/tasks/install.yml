@@ -1,11 +1,4 @@
 ---
-- name: Ensure singbox network exists
-  community.docker.docker_network:
-    name: "{{ singbox_network }}"
-    driver: bridge
-    enable_ipv6: true
-    state: present
-
 - name: Create sing-box directory
   ansible.builtin.file:
     path: "{{ singbox_dir }}"
