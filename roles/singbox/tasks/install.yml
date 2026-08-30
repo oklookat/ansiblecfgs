@@ -1,21 +1,33 @@
 ---
+- name: Assert required variables
+  ansible.builtin.assert:
+    that:
+      - docker_dir is defined
+      - docker_dir | length > 0
+    fail_msg: "docker_dir must be set"
+
 - name: Create sing-box directory
   ansible.builtin.file:
     path: "{{ singbox_dir }}"
     state: directory
     group: "{{ docker_group }}"
     mode: "0755"
+  tags: [singbox, singbox_install]
 
 - name: Create sing-box data directory
   ansible.builtin.file:
     path: "{{ singbox_data }}"
     state: directory
-    mode: "0755"
+    mode: "0750"
+  tags: [singbox, singbox_install]
 
-- include_tasks: update.yml
+- name: Include update tasks
+  ansible.builtin.include_tasks: update.yml
+  tags: [singbox, singbox_install]
 
 - name: Render reload script
   ansible.builtin.template:
     src: reload.sh.j2
     dest: "{{ singbox_reload_script }}"
     mode: "0755"
+  tags: [singbox, singbox_install]

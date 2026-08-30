@@ -2,12 +2,6 @@
 - name: "include: install Docker"
   ansible.builtin.import_playbook: ../docker/install.yml
 
-- name: "include: firewall allow HTTP"
-  ansible.builtin.import_playbook: ../firewall/allow_http.yml
-
-- name: "include: firewall allow singbox"
-  ansible.builtin.import_playbook: ../firewall/allow_singbox.yml
-
 - name: "proxy: singbox custom"
   hosts: proxy
   become: true

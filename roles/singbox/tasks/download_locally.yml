@@ -1,0 +1,63 @@
+---
+- name: Get localhost uid/gid
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command:
+    argv:
+      - id
+      - -u
+  register: local_uid
+
+- name: Get localhost gid
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command:
+    argv:
+      - id
+      - -g
+  register: local_gid
+
+- name: Ensure output directory exists
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ singbox_local_bin | dirname }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ local_uid.stdout }}"
+    group: "{{ local_gid.stdout }}"
+
+- name: Debug target architecture and version
+  delegate_to: localhost
+  become: false
+  ansible.builtin.debug:
+    msg: "Target arch: {{ singbox_arch }}, Version: {{ singbox_version }}"
+
+- name: Build sing-box downloader image
+  delegate_to: localhost
+  become: false
+  community.docker.docker_image:
+    name: "{{ singbox_local_image }}"
+    source: build
+    force_source: yes
+    build:
+      path: "{{ role_path }}/files"
+      dockerfile: "downloader.Dockerfile"
+      args:
+        SING_BOX_VERSION: "{{ singbox_version }}"
+        TARGETARCH: "{{ singbox_arch }}"
+        CACHE_BUST: "{{ lookup('pipe', 'date +%s') }}"
+
+- name: Download sing-box binary from image
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command:
+    argv:
+      - docker
+      - run
+      - --rm
+      - -u
+      - "{{ local_uid.stdout }}:{{ local_gid.stdout }}"
+      - -v
+      - "{{ singbox_local_bin | dirname }}:/out"
+      - "{{ singbox_local_image }}"

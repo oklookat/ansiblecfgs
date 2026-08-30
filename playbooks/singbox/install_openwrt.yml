@@ -1,0 +1,53 @@
+---
+- name: "sing-box: install openwrt"
+  hosts: openwrt
+  gather_facts: false
+  vars:
+    based: "{{ playbook_dir }}/temp"
+    singbox_version: "1.14.0-rc.5"
+    singbox_arch: "arm64-musl"
+    singbox_local_bin: "{{ based }}/sing-box"
+    upx_input: "{{ singbox_local_bin }}"
+    upx_output: "{{ based }}/sing-box.upx"
+
+    singbox_install_openwrt_override:
+      local_temp: "{{ based }}"
+      local_bin: "{{ upx_output }}"
+
+  tasks:
+    - block:
+        - name: "sing-box: download locally"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: download_locally.yml
+
+        - name: "upx: compress sing-box"
+          ansible.builtin.include_role:
+            name: upx
+            tasks_from: main.yml
+
+        - name: "singbox: export vars"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: export_vars.yml
+
+        - name: Merge sing-box settings
+          ansible.builtin.set_fact:
+            singbox_install_openwrt: >-
+              {{
+                singbox_install_openwrt
+                | combine(singbox_install_openwrt_override)
+              }}
+
+        - name: "singbox: install openwrt"
+          ansible.builtin.include_role:
+            name: singbox
+            tasks_from: install_openwrt.yml
+
+      always:
+        - name: Remove temporary sing-box files
+          delegate_to: localhost
+          become: false
+          ansible.builtin.file:
+            path: "{{ based }}"
+            state: absent

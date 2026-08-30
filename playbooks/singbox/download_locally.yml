@@ -1,0 +1,9 @@
+---
+- name: "sing-box: download locally"
+  hosts: localhost
+  become: false
+  tasks:
+    - name: download
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: download_locally.yml

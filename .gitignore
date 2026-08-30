@@ -5,29 +5,37 @@
 *.log
 .DS_Store
 .idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 venv/
+.venv/
 .env/
 env/
 
 **/vault.yml
 **/secrets.yml
-
 *.retry
 *.retry.*
-*.tmp
 *.cache
 *.pem
 *.key
 *.crt
 
-*.log
-
 secrets/
+collections/
+.ansible/
 
-# WSL?
+# WSL zone identifier
 *Zone.Identifier
+
+# Fact cache
+/tmp/ansible_facts
+
+# may be used in default vars for storing temp data
+temp*

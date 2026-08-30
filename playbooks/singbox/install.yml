@@ -1,9 +1,10 @@
 ---
-- name: "sing-box: install"
-  hosts: proxy
+- name: "singbox: install"
+  hosts: all
   become: true
+  gather_facts: true
   tasks:
-    - name: install
+    - name: Install sing-box
       ansible.builtin.include_role:
         name: singbox
         tasks_from: install.yml

@@ -1,7 +1,7 @@
 ---
 # required vars: docker_dir; docker_group; docker_network
 
-# general
+# Paths
 singbox_dir: "{{ docker_dir }}/sing-box"
 singbox_container_name: "sing_box"
 singbox_certificates: ""
@@ -14,15 +14,12 @@ singbox_template_compose: "compose.yml.j2"
 singbox_compose: "{{ singbox_dir }}/compose.yml"
 singbox_reload_script: "{{ singbox_dir }}/reload.sh"
 
-# deploy_config | deploy_config_mixed | deploy_config_mixed_wg (shadowing)
+# Config templates
 singbox_template_config: "mixed.json.j2"
-
-# deploy_config_mixed_wg
 singbox_template_config_wg: "mixed.wg.json.j2"
 
-# deploy_config_mixed_wg (shadowing)
-singbox_wg_config: "" # wireguard profile
-# parsed by deploy_config_mixed_wg
+# WireGuard-related (deploy_config_mixed_wg)
+singbox_wg_config: ""
 singbox_private_key: ""
 singbox_public_key: ""
 singbox_mtu: ""
@@ -31,8 +28,34 @@ singbox_address_ipv6: ""
 singbox_endpoint: ""
 singbox_port: ""
 
-# deploy_config
 singbox_config: "{{ singbox_dir }}/config.json"
 
-# mixed
+# Listening
 singbox_listen_port: 1080
+
+# Resource limits
+singbox_memory: "512m"
+singbox_memory_reservation: "64m"
+singbox_cpus: "1.0"
+
+# download_locally
+singbox_version: "1.14.0-rc.5"
+singbox_arch: "amd64-musl"
+singbox_local_image: "local/sing-box-downloader:latest"
+singbox_local_bin: "./downloaded/sing-box"
+
+# deploy_config
+singbox_openwrt: false
+
+# install_openwrt
+singbox_install_openwrt:
+  local_temp: "./temp"
+  workdir: "/usr/share/sing-box"
+  bin: "/usr/local/bin/sing-box"
+  local_bin: ""
+  config: "/etc/sing-box/config.json"
+  local_config: "{{ singbox_install_openwrt.local_temp }}/config.json"
+  uci: "/etc/config/sing-box"
+  local_uci: "{{ singbox_install_openwrt.local_temp }}/uci"
+  init: "/etc/init.d/sing-box"
+  local_init: "{{ singbox_install_openwrt.local_temp }}/init"

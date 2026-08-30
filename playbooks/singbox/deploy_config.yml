@@ -1,7 +1,20 @@
 ---
-- name: "sing-box: deploy config"
+- name: "sing-box: deploy config proxy"
   hosts: proxy
+  gather_facts: true
   become: true
+
+  tasks:
+    - name: Deploy
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: deploy_config.yml
+
+- name: "sing-box: deploy config openwrt"
+  hosts: openwrt
+  gather_facts: false
+  become: false
+
   tasks:
     - name: Deploy
       ansible.builtin.include_role:

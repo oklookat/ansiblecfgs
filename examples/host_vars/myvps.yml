@@ -1,0 +1,60 @@
+---
+# before system/setup:
+# (comment this block after system/setup and rebooting)
+ansible_host: 192.168.1.2
+ansible_user: "root"
+ansible_password: "root"
+###
+
+system_new_root_password: "newroot"
+system_new_user_name: "myuser"
+system_new_user_password: "myuser"
+system_new_ssh_port: "31101"
+
+# after system/setup and rebooting, uncomment this:
+# ansible_host: 192.168.1.1
+# ansible_port: "{{ system_new_ssh_port }}"
+# ansible_user: "{{ system_new_user_name }}"
+# ansible_become_password: "{{ system_new_user_password }}"
+
+# secrets ---
+host_secrets: "{{ secrets }}/myvps"
+domain: "example.com"
+
+# lego
+lego_cloudflare_api_token: "1234"
+lego_domains:
+  - "{{ domain }}"
+
+# caddy
+caddy_domain: "{{ domain }}"
+caddy_configs:
+  caddyfile:
+    template: "{{ host_secrets }}/caddyfile.j2"
+  sites:
+    - domain: "{{ host_secrets }}/{{ caddy_domain }}"
+      template: caddy.j2
+
+# singbox
+# singbox_template_compose: "{{ host_secrets }}/singbox.compose.yml.j2"
+singbox_template_config: "{{ host_secrets }}/example.json.j2"
+singbox_template_config_wg: "{{ host_secrets }}/example.wg.json.j2"
+singbox_expose_ports:
+  - "3000:1081"
+
+# routine
+routine_files:
+  - src: "{{ host_secrets }}/{{ caddy_domain }}/index.html"
+    dest: "{{ docker_dir }}/caddy/fileserver/{{ caddy_domain }}/index.html"
+    group: "{{ docker_group }}"
+    mode: "0755"
+    is_directory: false
+
+  - src: "{{ host_secrets }}/{{ caddy_domain }}/example"
+    dest: "{{ docker_dir }}/caddy/fileserver/{{ caddy_domain }}/example"
+    group: "{{ docker_group }}"
+    mode: "0755"
+    is_directory: true
+
+# teletrack
+teletrack_template_config: "{{ host_secrets }}/teletrack.json"

@@ -1,6 +1,50 @@
 ---
-- name: Compress
+- name: Get localhost uid/gid
   delegate_to: localhost
-  command: "{{ upx_workdir }}/upx --best --lzma -f -o {{ upx_output }} {{ upx_input }}"
-  args:
-    chdir: "{{ upx_workdir }}"
+  become: false
+  ansible.builtin.command:
+    argv:
+      - id
+      - -u
+  register: local_uid
+
+- name: Get localhost gid
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command:
+    argv:
+      - id
+      - -g
+  register: local_gid
+
+- name: Ensure output directory exists
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ upx_output | dirname }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ local_uid.stdout }}"
+    group: "{{ local_gid.stdout }}"
+
+- name: Compress with UPX
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command:
+    argv:
+      - docker
+      - run
+      - --rm
+      - -u
+      - "{{ local_uid.stdout }}:{{ local_gid.stdout }}"
+      - -v
+      - "{{ upx_input | dirname }}:/input:ro"
+      - -v
+      - "{{ upx_output | dirname }}:/output"
+      - "{{ upx_image }}"
+      - --best
+      - --lzma
+      - -f
+      - -o
+      - "/output/{{ upx_output | basename }}"
+      - "/input/{{ upx_input | basename }}"

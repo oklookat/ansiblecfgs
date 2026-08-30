@@ -1,0 +1,10 @@
+---
+- name: Build UPX image
+  delegate_to: localhost
+  become: false
+  community.docker.docker_image:
+    name: "{{ upx_image }}"
+    source: build
+    build:
+      path: "{{ role_path }}/files"
+      dockerfile: Dockerfile

@@ -1,0 +1,12 @@
+---
+- name: "upx: compress (test)"
+  hosts: localhost
+  become: false
+  vars:
+    upx_input: "{{ playbook_dir }}/test"
+    upx_output: "{{ playbook_dir }}/test.upx"
+  tasks:
+    - name: "upx: compress"
+      ansible.builtin.include_role:
+        name: upx
+        tasks_from: main.yml

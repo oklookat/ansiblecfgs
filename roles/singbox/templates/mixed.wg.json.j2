@@ -1,7 +1,7 @@
 {
     "$schema": "https://sing-box.sagernet.org/schema.json",
     "log": {
-        "level": "debug",
+        "level": "warning",
         "timestamp": true
     },
     "dns": {
@@ -13,14 +13,13 @@
             }
         ],
         "final": "cloudflare",
-        "strategy": "ipv4_only",
         "reverse_mapping": true
     },
     "endpoints": [
         {
             "type": "wireguard",
             "tag": "wg",
-            "system": false,
+            "system": true,
             "mtu": {{ singbox_mtu }},
             "address": [
                     "{{ singbox_address_ipv4 }}"{% if singbox_address_ipv6 %},
@@ -53,7 +52,7 @@
         {
             "type": "mixed",
             "tag": "mixed-in",
-            "listen": "0.0.0.0",
+            "listen": "::",
             "listen_port": {{ singbox_listen_port }}
         }
     ],
@@ -91,8 +90,7 @@
         "final": "wg",
         "default_http_client": "client-wg",
         "default_domain_resolver": {
-            "server": "cloudflare",
-            "strategy": "ipv4_only"
+            "server": "cloudflare"
         }
     },
     "experimental": {

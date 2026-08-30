@@ -9,6 +9,7 @@ routine_rsync_opts:
 #     owner: "www-data"
 #     group: "www-data"
 #     mode: "0755"
+#     is_directory: true
 #     rsync_opts:
 #       - "--exclude=*.map"
 #       - "--exclude=.gitkeep"

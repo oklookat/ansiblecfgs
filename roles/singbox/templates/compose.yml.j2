@@ -5,15 +5,37 @@ services:
     image: sing-box:latest
     container_name: {{ singbox_container_name }}
     restart: unless-stopped
+{% if singbox_expose_ports is defined and singbox_expose_ports %}
+    ports:
+{% for port in singbox_expose_ports %}
+      - "{{ port }}"
+{% endfor %}
+{% endif %}
     networks:
       - "{{ singbox_network }}"
-
     volumes:
       - {{ singbox_config }}:/etc/sing-box/config.json:ro
       - {{ singbox_data }}:/var/lib/sing-box
 {% if singbox_certificates is defined and singbox_certificates %}
       - {{ singbox_certificates }}:/var/lib/sing-box/certificates
 {% endif %}
+    mem_limit: {{ singbox_memory }}
+    mem_reservation: {{ singbox_memory_reservation }}
+    cpus: {{ singbox_cpus }}
+    security_opt:
+      - no-new-privileges: true
+    read_only: false
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_BIND_SERVICE
+    devices:
+      - /dev/net/tun:/dev/net/tun # for support wireguard mode "system"
+    sysctls: # for support wireguard mode "system"
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.conf.all.rp_filter=2
+      - net.ipv4.conf.default.rp_filter=2
 
 networks:
   {{ singbox_network }}:
