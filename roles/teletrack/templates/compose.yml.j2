@@ -5,9 +5,18 @@ services:
     image: teletrack:latest
     container_name: {{ teletrack_container_name }}
     restart: on-failure:5
+{% if teletrack_expose_ports is defined and teletrack_expose_ports %}
+    ports:
+{% for port in teletrack_expose_ports %}
+      - "{{ port }}"
+{% endfor %}
+{% endif %}
     volumes:
       - {{ teletrack_config }}:/app/config.json
       - {{ teletrack_data }}:/var/lib/teletrack
+{% if teletrack_certificates is defined and teletrack_certificates %}
+      - {{ teletrack_certificates }}:/var/lib/teletrack/certificates
+{% endif %}
     networks:
       - teletrack_network
 
