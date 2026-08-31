@@ -4,7 +4,7 @@
   gather_facts: false
   vars:
     based: "{{ playbook_dir }}/temp"
-    singbox_version: "1.14.0-rc.5"
+    singbox_version: "1.14.0"
     singbox_arch: "arm64-musl"
     singbox_local_bin: "{{ based }}/sing-box"
     upx_input: "{{ singbox_local_bin }}"

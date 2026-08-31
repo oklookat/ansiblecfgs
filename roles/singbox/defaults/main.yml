@@ -39,7 +39,7 @@ singbox_memory_reservation: "64m"
 singbox_cpus: "1.0"
 
 # download_locally
-singbox_version: "1.14.0-rc.5"
+singbox_version: "1.14.0"
 singbox_arch: "amd64-musl"
 singbox_local_image: "local/sing-box-downloader:latest"
 singbox_local_bin: "./downloaded/sing-box"
