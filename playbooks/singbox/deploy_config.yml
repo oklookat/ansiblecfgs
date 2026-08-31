@@ -10,6 +10,11 @@
         name: singbox
         tasks_from: deploy_config.yml
 
+    - name: "Rebuild"
+      ansible.builtin.include_role:
+        name: singbox
+        tasks_from: rebuild.yml
+
 - name: "sing-box: deploy config openwrt"
   hosts: openwrt
   gather_facts: false

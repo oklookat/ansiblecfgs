@@ -1,6 +1,6 @@
 FROM alpine:3.24.1
 
-ARG SING_BOX_VERSION=1.14.0-rc.5
+ARG SING_BOX_VERSION=1.14.0
 ARG TARGETARCH=arm64-musl
 
 # caching
