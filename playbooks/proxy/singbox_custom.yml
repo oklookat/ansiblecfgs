@@ -58,38 +58,43 @@
             name: singbox
             tasks_from: install.yml
 
-        - name: "deploy wg config"
+        - name: "deploy config"
           ansible.builtin.include_role:
             name: singbox
-            tasks_from: deploy_config_wg.yml
+            tasks_from: deploy_config.yml
 
     - name: "caddy: install"
       ansible.builtin.include_role:
         name: caddy
         tasks_from: install.yml
 
-    - name: "wgcf"
-      block:
-        - name: "install"
-          ansible.builtin.include_role:
-            name: wgcf
-            tasks_from: install.yml
-        - name: "run"
-          ansible.builtin.include_role:
-            name: wgcf
-            tasks_from: run.yml
+    # - name: "wgcf"
+    #   block:
+    #     - name: "install"
+    #       ansible.builtin.include_role:
+    #         name: wgcf
+    #         tasks_from: install.yml
+    #     - name: "run"
+    #       ansible.builtin.include_role:
+    #         name: wgcf
+    #         tasks_from: run.yml
 
     - name: "lego: copy hooks"
       ansible.builtin.include_role:
         name: lego
         tasks_from: copy_hooks.yml
 
-    - name: "caddy: rebuild"
-      ansible.builtin.include_role:
-        name: caddy
-        tasks_from: rebuild.yml
-
     - name: "singbox: rebuild"
       ansible.builtin.include_role:
         name: singbox
+        tasks_from: rebuild.yml
+
+    - name: "caddy: render compose"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: render_compose.yml
+
+    - name: "caddy: rebuild"
+      ansible.builtin.include_role:
+        name: caddy
         tasks_from: rebuild.yml

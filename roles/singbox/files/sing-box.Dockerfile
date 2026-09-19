@@ -1,6 +1,6 @@
 FROM alpine:3.24.1
 
-ARG SING_BOX_VERSION=1.14.0
+ARG SING_BOX_VERSION=1.15.0-alpha.6
 ARG TARGETARCH=amd64-musl
 ARG DOWNLOAD_LINK="https://github.com/SagerNet/sing-box/releases/download/v${SING_BOX_VERSION}/sing-box-${SING_BOX_VERSION}-linux-${TARGETARCH}.tar.gz"
 

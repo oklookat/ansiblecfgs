@@ -23,7 +23,7 @@ services:
     mem_reservation: {{ singbox_memory_reservation }}
     cpus: {{ singbox_cpus }}
     security_opt:
-      - no-new-privileges: true
+      - "no-new-privileges:true"
     read_only: false
     cap_drop:
       - ALL
