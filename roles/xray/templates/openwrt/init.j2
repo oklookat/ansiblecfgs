@@ -1,0 +1,183 @@
+#!/bin/sh /etc/rc.common
+# Xray + Transparent Proxy (TPROXY) — OpenWrt fw4/nftables
+
+USE_PROCD=1
+START=99
+STOP=10
+
+PROG="{{ xray_install_openwrt.bin }}"
+CONFIG_FILE="{{ xray_install_openwrt.config }}"
+
+TPROXY_PORT=3000
+TPROXY_MARK=255       # 0xff
+TPROXY_TABLE=100
+NFT_FILE="/etc/nftables.d/30-xray-tproxy.nft"
+
+start_service() {
+    config_load "xray"
+
+    local enabled
+    config_get_bool enabled "main" "enabled" 0
+    [ "$enabled" -eq 1 ] || return 0
+
+    local log_stderr log_stdout
+    local location_config location_asset location_confdir
+
+    config_get_bool log_stderr "main" "log_stderr" 1
+    config_get_bool log_stdout "main" "log_stdout" 1
+
+    config_get location_config "main" "location_config" ""
+    config_get location_asset "main" "location_asset" ""
+    config_get location_confdir "main" "location_confdir" ""
+
+    # Fallbacks for Xray built-in locations
+    [ -n "$location_config" ] || location_config="/etc/xray"
+    [ -n "$location_asset" ] || location_asset="/usr/local/share/xray"
+
+    # Sanity checks before doing anything
+    [ -x "$PROG" ] || {
+        logger -t xray "Binary not found or not executable: $PROG"
+        return 1
+    }
+
+    [ -f "$CONFIG_FILE" ] || {
+        logger -t xray "Config not found: $CONFIG_FILE"
+        return 1
+    }
+
+    [ -d "$location_asset" ] || {
+        logger -t xray "Asset directory not found: $location_asset"
+        return 1
+    }
+
+    logger -t xray "Setting up TPROXY"
+
+    # Point dnsmasq at Xray's built-in DNS (port 5353)
+    uci set dhcp.@dnsmasq[0].noresolv='1'
+
+    if ! uci get dhcp.@dnsmasq[0].server 2>/dev/null | grep -q '127.0.0.1#5353'; then
+        uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+    fi
+
+    uci commit dhcp
+    /etc/init.d/dnsmasq restart
+
+    # Policy routing: marked packets → loopback → TPROXY socket
+    if ! ip rule show | grep -q "fwmark 0xff.*lookup $TPROXY_TABLE"; then
+        ip rule add fwmark $TPROXY_MARK lookup $TPROXY_TABLE prio 1000 || \
+            logger -t xray "WARN: failed to add IPv4 fwmark rule"
+    fi
+
+    if ! ip -6 rule show | grep -q "fwmark 0xff.*lookup $TPROXY_TABLE"; then
+        ip -6 rule add fwmark $TPROXY_MARK lookup $TPROXY_TABLE prio 1000 || \
+            logger -t xray "WARN: failed to add IPv6 fwmark rule"
+    fi
+
+    ip route show table $TPROXY_TABLE 2>/dev/null | grep -q 'local default' || \
+        ip route add local default dev lo table $TPROXY_TABLE
+
+    ip -6 route show table $TPROXY_TABLE 2>/dev/null | grep -q 'local default' || \
+        ip -6 route add local default dev lo table $TPROXY_TABLE
+
+    # Write nftables rules.
+    # This file is included by fw4 inside `table inet fw4`,
+    # so no table wrapper is required here.
+    cat > "$NFT_FILE" <<EOF
+# Xray TProxy rules — included into table inet fw4 by firewall reload
+
+define x_bypass4 = {
+    0.0.0.0/8,
+    10.0.0.0/8,
+    127.0.0.0/8,
+    169.254.0.0/16,
+    172.16.0.0/12,
+    192.168.0.0/16,
+    224.0.0.0/4,
+    240.0.0.0/4
+}
+
+define x_bypass6 = {
+    ::1/128,
+    ::/128,
+    fe80::/10,
+    fc00::/7,
+    ff00::/8
+}
+
+chain xray_prerouting {
+    type filter hook prerouting priority mangle + 1; policy accept;
+
+    ip  daddr \$x_bypass4 return
+    ip6 daddr \$x_bypass6 return
+
+    meta l4proto { tcp, udp } meta mark set 0xff
+    meta l4proto { tcp, udp } tproxy to :$TPROXY_PORT accept
+}
+EOF
+
+    logger -t xray "Applying nftables rules via fw4"
+    /etc/init.d/firewall reload
+
+    # Start Xray via procd
+    procd_open_instance
+
+    procd_set_param command "$PROG" "-c" "$CONFIG_FILE"
+
+    # Xray built-in locations
+    procd_set_param env \
+        "XRAY_LOCATION_CONFIG=$location_config" \
+        "XRAY_LOCATION_ASSET=$location_asset"
+
+    # Optional multiple configuration directory
+    [ -n "$location_confdir" ] && \
+        procd_set_param env \
+            "XRAY_LOCATION_CONFDIR=$location_confdir"
+
+    procd_set_param file "$CONFIG_FILE"
+    procd_set_param respawn
+
+    procd_set_param stdout "$log_stdout"
+    procd_set_param stderr "$log_stderr"
+
+    procd_set_param limits core="unlimited"
+    procd_set_param limits nofile="65535 65535"
+
+    procd_close_instance
+
+    logger -t xray "Xray started with TPROXY on port $TPROXY_PORT"
+}
+
+stop_service() {
+    logger -t xray "Stopping Xray and removing TPROXY rules"
+
+    # 1. Remove nft rules first so no new packets get marked/redirected
+    rm -f "$NFT_FILE"
+    /etc/init.d/firewall reload
+
+    # 2. Clean up policy routing
+    ip rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
+    ip -6 rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
+
+    ip route flush table $TPROXY_TABLE 2>/dev/null || true
+    ip -6 route flush table $TPROXY_TABLE 2>/dev/null || true
+
+    # 3. Restore dnsmasq
+    uci delete dhcp.@dnsmasq[0].noresolv 2>/dev/null || true
+
+    if uci get dhcp.@dnsmasq[0].server 2>/dev/null | grep -q '127.0.0.1#5353'; then
+        uci del_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+    fi
+
+    uci commit dhcp
+    /etc/init.d/dnsmasq restart
+
+    logger -t xray "TPROXY rules removed"
+}
+
+reload_service() {
+    restart
+}
+
+service_triggers() {
+    procd_add_reload_trigger "xray"
+}

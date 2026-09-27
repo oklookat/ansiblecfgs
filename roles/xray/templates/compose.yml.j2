@@ -1,0 +1,44 @@
+services:
+  {{ xray_container_name }}:
+    build:
+      context: "{{ xray_dir }}"
+    image: xray:latest
+    container_name: {{ xray_container_name }}
+    restart: unless-stopped
+{% if xray_expose_ports is defined and xray_expose_ports %}
+    ports:
+{% for port in xray_expose_ports %}
+      - "{{ port }}"
+{% endfor %}
+{% endif %}
+    networks:
+      - "{{ xray_network }}"
+    volumes:
+      - {{ xray_config }}:/etc/xray/config.json:ro
+      - {{ xray_data }}:/usr/local/share/xray
+{% if xray_certificates is defined and xray_certificates %}
+      - {{ xray_certificates }}:/usr/local/share/xray/certificates
+{% endif %}
+    mem_limit: {{ xray_memory }}
+    mem_reservation: {{ xray_memory_reservation }}
+    cpus: {{ xray_cpus }}
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: false
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_BIND_SERVICE
+    devices:
+      - /dev/net/tun:/dev/net/tun # for support wireguard mode "system"
+    sysctls: # for support wireguard mode "system"
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.conf.all.rp_filter=2
+      - net.ipv4.conf.default.rp_filter=2
+
+networks:
+  {{ xray_network }}:
+    name: {{ xray_network }}
+    driver: bridge
+    enable_ipv6: true

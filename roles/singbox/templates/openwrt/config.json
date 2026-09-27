@@ -1,0 +1,101 @@
+{
+    "$schema": "https://sing-box.sagernet.org/schema.json",
+    "log": {
+        "level": "warning",
+        "timestamp": true
+    },
+    "dns": {
+        "servers": [
+            {
+                "type": "tls",
+                "tag": "cloudflare",
+                "server": "cloudflare-dns.com",
+                "domain_resolver": "hosts"
+            },
+            {
+                "type": "hosts",
+                "tag": "hosts",
+                "predefined": {
+                    "cloudflare-dns.com": [
+                        "1.1.1.1",
+                        "2606:4700:4700::1111",
+                        "1.0.0.1",
+                        "2606:4700:4700::1001"
+                    ]
+                }
+            }
+        ],
+        "rules": [
+            {
+                "preferred_by": "hosts",
+                "action": "route",
+                "server": "hosts"
+            }
+        ],
+        "final": "cloudflare",
+        "reverse_mapping": true
+    },
+    "http_clients": [
+        {
+            "tag": "client-direct",
+            "engine": "go",
+            "version": 2
+        }
+    ],
+    "inbounds": [
+        {
+            "type": "tun",
+            "address": [
+                "172.19.0.1/30",
+                "fdfe:dcba:9876::1/126"
+            ],
+            "auto_route": true,
+            "auto_redirect": true,
+            "strict_route": true,
+            "stack": "system"
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "direct",
+            "tag": "direct"
+        }
+    ],
+    "route": {
+        "rules": [
+            {
+                "action": "sniff"
+            },
+            {
+                "protocol": "dns",
+                "action": "hijack-dns"
+            },
+            {
+                "protocol": "quic",
+                "action": "reject"
+            },
+            {
+                "protocol": [
+                    "bittorrent",
+                    "ssh"
+                ],
+                "outbound": "direct"
+            },
+            {
+                "ip_is_private": true,
+                "outbound": "direct"
+            }
+        ],
+        "final": "direct",
+        "default_domain_resolver": {
+            "server": "cloudflare"
+        },
+        "default_http_client": "client-direct",
+        "auto_detect_interface": true
+    },
+    "experimental": {
+        "cache_file": {
+            "enabled": true
+        }
+    }
+}

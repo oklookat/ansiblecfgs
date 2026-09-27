@@ -1,0 +1,15 @@
+config xray 'main'
+    option enabled '1'
+
+    # Paths
+    option conffile '{{ xray_install_openwrt.config }}'
+    option workdir '{{ xray_install_openwrt.workdir }}'
+
+    # Xray built-in locations
+    option location_config '{{ xray_install_openwrt.location_config }}'
+    option location_asset '{{ xray_install_openwrt.location_asset }}'
+    option location_confdir '{{ xray_install_openwrt.location_confdir }}'
+
+    # Logging
+    option log_stderr '1'
+    option log_stdout '1'
