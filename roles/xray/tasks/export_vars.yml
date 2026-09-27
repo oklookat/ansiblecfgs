@@ -1,0 +1,9 @@
+---
+# Export from roles to playbook
+- name: Export variables
+  ansible.builtin.set_fact:
+    xray_container_name: "{{ xray_container_name }}"
+    xray_listen_port: "{{ xray_listen_port }}"
+    xray_reload_script: "{{ xray_reload_script }}"
+    xray_install_openwrt: "{{ xray_install_openwrt }}"
+    xray_network: "{{ xray_network }}"

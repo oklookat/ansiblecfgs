@@ -1,0 +1,17 @@
+---
+- name: Rebuild xray
+  community.docker.docker_compose_v2:
+    project_src: "{{ xray_dir }}"
+    files:
+      - "{{ xray_compose }}"
+    state: present
+    build: always
+    recreate: always
+
+- name: Recreate xray
+  community.docker.docker_compose_v2:
+    project_src: "{{ xray_dir }}"
+    files:
+      - "{{ xray_compose }}"
+    state: present
+    recreate: always

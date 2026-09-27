@@ -7,3 +7,8 @@
       ansible.builtin.include_role:
         name: caddy
         tasks_from: deploy_configs.yml
+
+    - name: "caddy: reload"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: reload.yml

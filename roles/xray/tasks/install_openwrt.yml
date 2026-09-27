@@ -1,0 +1,153 @@
+---
+- name: Check local xray files
+  delegate_to: localhost
+  become: false
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ xray_install_openwrt.local_bin }}"
+  register: xray_local_files
+  when: item | length > 0
+
+- name: Fail if required local files are missing
+  delegate_to: localhost
+  become: false
+  ansible.builtin.fail:
+    msg: "Missing local xray file: {{ item.item }}"
+  loop: "{{ xray_local_files.results }}"
+  when:
+    - item.stat is defined
+    - not item.stat.exists
+
+- name: Render config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.template:
+    src: openwrt/config.json
+    dest: "{{ xray_install_openwrt.local_config }}"
+
+- name: Render uci config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.template:
+    src: openwrt/uci.j2
+    dest: "{{ xray_install_openwrt.local_uci }}"
+
+- name: Render init config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.template:
+    src: openwrt/init.j2
+    dest: "{{ xray_install_openwrt.local_init }}"
+
+- name: Check remote xray config
+  ansible.builtin.raw: test -f "{{ xray_install_openwrt.config }}"
+  register: xray_remote_config
+  failed_when: false
+  changed_when: false
+
+- name: Debug remote config
+  ansible.builtin.debug:
+    msg: "Remote config exists: {{ xray_remote_config.rc == 0 }}"
+
+# OpenWrt dependencies
+
+- name: Update opkg
+  ansible.builtin.raw: opkg update
+
+- name: Install SFTP server
+  ansible.builtin.raw: opkg install openssh-sftp-server
+
+- name: Install kmod deps
+  ansible.builtin.raw: opkg install kmod-tun kmod-nft-queue kmod-nfnetlink-queue
+
+- name: Modprobe nfnetlink_queue
+  ansible.builtin.raw: modprobe nfnetlink_queue
+
+- name: Modprobe nft_queue
+  ansible.builtin.raw: modprobe nft_queue
+
+- name: Stop xray service
+  ansible.builtin.raw: service xray stop || true
+
+- name: Ensure required directories exist
+  ansible.builtin.raw: |
+    mkdir -p "{{ xray_install_openwrt.bin | dirname }}"
+    mkdir -p "{{ xray_install_openwrt.config | dirname }}"
+    mkdir -p "{{ xray_install_openwrt.workdir }}"
+
+# Remove old binary to save flash space
+
+- name: Remove old xray binary
+  ansible.builtin.raw: rm -f "{{ xray_install_openwrt.bin }}"
+
+- name: Check free space
+  ansible.builtin.raw: df -h "{{ xray_install_openwrt.bin | dirname }}"
+
+- name: Copy binary
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      scp -P {{ ansible_port }}
+      "{{ xray_install_openwrt.local_bin }}"
+      {{ ansible_user }}@{{ ansible_host }}:"{{ xray_install_openwrt.bin }}"
+
+- name: Make binary executable
+  ansible.builtin.raw: chmod 0755 "{{ xray_install_openwrt.bin }}"
+
+- name: Verify binary permissions
+  ansible.builtin.raw: ls -lh "{{ xray_install_openwrt.bin }}"
+
+# UCI
+
+- name: Copy uci config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      scp -P {{ ansible_port }}
+      "{{ xray_install_openwrt.local_uci }}"
+      root@{{ ansible_host }}:"{{ xray_install_openwrt.uci }}"
+
+# Init
+
+- name: Copy init config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      scp -P {{ ansible_port }}
+      "{{ xray_install_openwrt.local_init }}"
+      root@{{ ansible_host }}:"{{ xray_install_openwrt.init }}"
+
+- name: Make init executable
+  ansible.builtin.raw: chmod 0755 "{{ xray_install_openwrt.init }}"
+
+# Config only if missing
+
+- name: Copy config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      scp -P {{ ansible_port }}
+      "{{ xray_install_openwrt.local_config }}"
+      root@{{ ansible_host }}:"{{ xray_install_openwrt.config }}"
+  when: xray_remote_config.rc != 0
+
+- name: Remove temporary xray files
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ xray_install_openwrt.local_uci }}"
+    - "{{ xray_install_openwrt.local_init }}"
+
+- name: Enable xray service
+  ansible.builtin.raw: service xray enable || true
+
+- name: Start xray service
+  ansible.builtin.raw: service xray start || true

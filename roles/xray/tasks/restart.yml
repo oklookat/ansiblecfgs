@@ -1,0 +1,15 @@
+---
+- name: Get xray container info
+  community.docker.docker_container_info:
+    name: "{{ xray_container_name }}"
+  register: xray_container_info
+
+- name: Ensure xray is running
+  community.docker.docker_compose_v2:
+    project_src: "{{ xray_dir }}"
+    files:
+      - "{{ xray_compose }}"
+    state: present
+  when: >-
+    not xray_container_info.exists
+    or xray_container_info.container.State.Status != 'running'

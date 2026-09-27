@@ -1,0 +1,9 @@
+---
+- name: "xray: download locally"
+  hosts: localhost
+  become: false
+  tasks:
+    - name: download
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: download_locally.yml

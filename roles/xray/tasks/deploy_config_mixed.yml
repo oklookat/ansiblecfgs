@@ -1,0 +1,7 @@
+---
+- name: Set default config templates
+  ansible.builtin.set_fact:
+    xray_template_config: "{{ xray_template_config | default('mixed.json.j2', true) }}"
+    xray_listen_port: "{{ xray_listen_port | default(1080, true) }}"
+
+- include_tasks: deploy_config.yml

@@ -1,0 +1,29 @@
+---
+- name: Assert required variables
+  ansible.builtin.assert:
+    that:
+      - docker_dir is defined
+      - docker_dir | length > 0
+    fail_msg: "docker_dir must be set"
+
+- name: Create xray directory
+  ansible.builtin.file:
+    path: "{{ xray_dir }}"
+    state: directory
+    group: "{{ docker_group }}"
+    mode: "0755"
+
+- name: Create xray data directory
+  ansible.builtin.file:
+    path: "{{ xray_data }}"
+    state: directory
+    mode: "0750"
+
+- name: Include update tasks
+  ansible.builtin.include_tasks: update.yml
+
+- name: Render reload script
+  ansible.builtin.template:
+    src: reload.sh.j2
+    dest: "{{ xray_reload_script }}"
+    mode: "0755"

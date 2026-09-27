@@ -1,0 +1,12 @@
+---
+- name: Copy xray Dockerfile
+  ansible.builtin.copy:
+    src: xray.Dockerfile
+    dest: "{{ xray_image }}"
+    mode: "0644"
+
+- name: Render Compose file
+  ansible.builtin.template:
+    src: "{{ xray_template_compose }}"
+    dest: "{{ xray_compose }}"
+    mode: "0644"
