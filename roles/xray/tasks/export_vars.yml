@@ -8,3 +8,7 @@
     xray_install_openwrt: "{{ xray_install_openwrt }}"
     xray_network: "{{ xray_network }}"
     xray_xhttp_path: "{{ xray_xhttp_path }}"
+    xray_config: "{{ xray_config }}"
+    xray_dir: "{{ xray_dir }}"
+    xray_geosite_url: "{{ xray_geosite_url }}"
+    xray_geoip_url: "{{ xray_geoip_url }}"
