@@ -15,7 +15,6 @@ services:
       - "{{ xray_network }}"
     volumes:
       - {{ xray_config }}:/etc/xray/config.json:ro
-      - {{ xray_data }}:/usr/local/share/xray
 {% if xray_certificates is defined and xray_certificates %}
       - {{ xray_certificates }}:/usr/local/share/xray/certificates
 {% endif %}
