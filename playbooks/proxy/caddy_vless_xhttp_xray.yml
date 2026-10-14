@@ -42,17 +42,17 @@
     - name: "Validate required vars"
       ansible.builtin.assert:
         that:
-          - xray_sni is defined
-          - xray_sni is string
-          - xray_sni | trim | length > 0
+          - caddy_domain is defined
+          - caddy_domain is string
+          - caddy_domain | trim | length > 0
           - xray_xhttp_path is defined
           - xray_xhttp_path is string
           - xray_xhttp_path | trim | length > 0
           - xray_xhttp_path is match('^/')
         fail_msg: >-
-          xray_sni and xray_xhttp_path must be defined, non-empty strings,
+          caddy_domain and xray_xhttp_path must be defined, non-empty strings,
           and xray_xhttp_path must start with "/":
-          xray_sni={{ xray_sni | default('<undefined>') | to_json }},
+          caddy_domain={{ caddy_domain | default('<undefined>') | to_json }},
           xray_xhttp_path={{ xray_xhttp_path | default('<undefined>') | to_json }}
         quiet: true
 
@@ -77,6 +77,13 @@
           ansible.builtin.include_role:
             name: xray
             tasks_from: deploy_config_vless_xhttp.yml
+
+        # create network so caddy can render compose with
+        # xray network
+        - name: "xray: rebuild"
+          ansible.builtin.include_role:
+            name: xray
+            tasks_from: rebuild.yml
 
     - name: "caddy: install xhttp"
       ansible.builtin.include_role:

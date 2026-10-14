@@ -10,6 +10,10 @@ xray_data: "{{ xray_dir }}/data"
 xray_template_compose: "compose.yml.j2"
 xray_compose: "{{ xray_dir }}/compose.yml"
 xray_reload_script: "{{ xray_dir }}/reload.sh"
+xray_geosite_url: "https://github.com/runetfreedom/russia-v2ray-rules-dat/raw/refs/heads/release/geosite.dat"
+xray_geoip_url: "https://github.com/runetfreedom/russia-v2ray-rules-dat/raw/refs/heads/release/geoip.dat"
+
+xray_config: "{{ xray_dir }}/config.json"
 
 # Config templates
 xray_template_config: "mixed.json.j2"
@@ -21,11 +25,6 @@ xray_uuid: "{{ 99999999 | random | to_uuid }}"
 xray_sni: ""
 xray_xhttp_path: ""
 xray_listen_port: 3000
-
-# Resource limits
-xray_memory: "512m"
-xray_memory_reservation: "64m"
-xray_cpus: "1.0"
 
 # download_locally
 xray_version: "26.3.27"
@@ -57,21 +56,3 @@ xray_install_openwrt:
 
   location_config: "/etc/xray"
   location_confdir: ""
-
-# geo_autoupdate
-xray_share_dir: "/usr/local/share/xray"
-xray_geo_autoupdate_script: "/usr/local/bin/xray_geo_autoupdate.sh"
-# every monday on 3:00
-xray_geo_autoupdate_calendar: "Mon *-*-* 03:00:00"
-xray_geofiles:
-  - url: "https://github.com/Loyalsoldier/v2ray-rules-dat/raw/refs/heads/release/geoip.dat"
-    dest: "{{ xray_share_dir }}/geoip.dat"
-
-  - url: "https://github.com/Loyalsoldier/v2ray-rules-dat/raw/refs/heads/release/geosite.dat"
-    dest: "{{ xray_share_dir }}/geosite.dat"
-
-  - url: "https://github.com/runetfreedom/russia-v2ray-rules-dat/raw/refs/heads/release/geoip.dat"
-    dest: "{{ xray_share_dir }}/geoip-runetfreedom.dat"
-
-  - url: "https://github.com/runetfreedom/russia-v2ray-rules-dat/raw/refs/heads/release/geosite.dat"
-    dest: "{{ xray_share_dir }}/geosite-runetfreedom.dat"

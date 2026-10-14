@@ -24,6 +24,7 @@
 			header_up X-Forwarded-Port {server_port}
 
 			transport http {
+				versions h2c 2
 				read_timeout 1h
 				write_timeout 1h
 				keepalive 1h

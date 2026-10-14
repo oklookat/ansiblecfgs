@@ -1,0 +1,25 @@
+---
+- name: "xray: update"
+  hosts: proxy
+  become: true
+  tasks:
+    - name: "export vars"
+      block:
+        - name: "lego: export vars"
+          ansible.builtin.include_role:
+            name: lego
+            tasks_from: export_vars.yml
+
+    - name: "Set vars"
+      ansible.builtin.set_fact:
+        xray_certificates: "{{ lego_certificates_dir }}"
+
+    - name: update
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: update.yml
+
+    - name: rebuild
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: rebuild.yml

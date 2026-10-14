@@ -1,0 +1,10 @@
+---
+- name: "xray: install"
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Install xray
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: install.yml

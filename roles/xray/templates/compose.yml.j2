@@ -19,9 +19,6 @@ services:
 {% if xray_certificates is defined and xray_certificates %}
       - {{ xray_certificates }}:/usr/local/share/xray/certificates
 {% endif %}
-    mem_limit: {{ xray_memory }}
-    mem_reservation: {{ xray_memory_reservation }}
-    cpus: {{ xray_cpus }}
     security_opt:
       - "no-new-privileges:true"
     read_only: false

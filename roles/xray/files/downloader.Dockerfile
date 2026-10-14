@@ -1,30 +1,30 @@
-FROM alpine:3.24.1
+# builder
+FROM alpine:3.24.1 AS builder
 
 ARG XRAY_VERSION=26.3.27
-ARG TARGETARCH=arm64-v8a
+ARG XRAY_ARCH=linux-arm64-v8a
 
-# caching
-RUN apk add --no-cache --upgrade ca-certificates curl unzip
+# cached
+RUN apk add --no-cache ca-certificates curl unzip
 
-# dont caching
+# not cache
 ARG CACHE_BUST
-ARG DOWNLOAD_LINK="https://github.com/XTLS/Xray-core/releases/download/v${XRAY_VERSION}/Xray-linux-${TARGETARCH}.zip"
+RUN set -eux; \
+    echo "Cache bust: ${CACHE_BUST}"; \
+    url="https://github.com/XTLS/Xray-core/releases/download/v${XRAY_VERSION}/Xray-${XRAY_ARCH}.zip"; \
+    echo "Downloading ${url}"; \
+    curl -fsSL --retry 3 "${url}" -o /tmp/xray.zip; \
+    mkdir -p /dist; \
+    unzip -j /tmp/xray.zip xray geoip.dat geosite.dat -d /dist; \
+    chmod 0755 /dist/xray
+
+# final
+FROM alpine:3.24.1
 
 ENV XRAY_LOCATION_ASSET=/usr/local/share/xray
 
-RUN set -eux; \
-    echo "Cache bust: ${CACHE_BUST}"; \
-    mkdir -p /usr/local/share/xray /tmp/xray; \
-    curl -fsSL "${DOWNLOAD_LINK}" -o /tmp/xray.zip; \
-    unzip -j /tmp/xray.zip \
-    "xray" \
-    "geoip.dat" \
-    "geosite.dat" \
-    -d /tmp/xray; \
-    install -m 0755 /tmp/xray/xray /usr/local/bin/xray; \
-    install -m 0644 /tmp/xray/geoip.dat /usr/local/share/xray/geoip.dat; \
-    install -m 0644 /tmp/xray/geosite.dat /usr/local/share/xray/geosite.dat; \
-    rm -rf /tmp/xray /tmp/xray.zip
+COPY --from=builder /dist/xray /usr/local/bin/xray
+COPY --from=builder /dist/geoip.dat /dist/geosite.dat /usr/local/share/xray/
 
 ENTRYPOINT ["/bin/sh", "-c"]
-CMD ["cp /usr/local/bin/xray /out/xray && cp /usr/local/share/xray/geoip.dat /out/geoip.dat && cp /usr/local/share/xray/geosite.dat /out/geosite.dat && chmod 0755 /out/xray"]
+CMD ["install -m 0755 /usr/local/bin/xray /out/xray && install -m 0644 /usr/local/share/xray/geoip.dat /out/geoip.dat && install -m 0644 /usr/local/share/xray/geosite.dat /out/geosite.dat"]

@@ -1,8 +1,8 @@
 FROM alpine:3.24.1
 
 ARG XRAY_VERSION=26.3.27
-ARG TARGETARCH=linux-64
-ARG DOWNLOAD_LINK="https://github.com/XTLS/Xray-core/releases/download/v${XRAY_VERSION}/Xray-linux-${TARGETARCH}.zip"
+ARG XRAY_ARCH="linux-64"
+ARG DOWNLOAD_LINK="https://github.com/XTLS/Xray-core/releases/download/v${XRAY_VERSION}/Xray-${XRAY_ARCH}.zip"
 
 ENV XRAY_LOCATION_CONFIG=/etc/xray \
     XRAY_LOCATION_ASSET=/usr/local/share/xray
