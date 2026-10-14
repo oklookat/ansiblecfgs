@@ -37,3 +37,5 @@ collections/
 # may be used in default vars for storing temp data
 temp*
 !templates
+
+.*vault*

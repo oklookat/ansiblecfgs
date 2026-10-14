@@ -6,6 +6,10 @@
     path: "{{ item }}"
   loop:
     - "{{ xray_install_openwrt.local_bin }}"
+    - "{{ xray_install_openwrt.local_geosite }}"
+    - "{{ xray_install_openwrt.local_geoip }}"
+  loop_control:
+    label: "{{ item }}"
   register: xray_local_files
   when: item | length > 0
 
@@ -15,6 +19,8 @@
   ansible.builtin.fail:
     msg: "Missing local xray file: {{ item.item }}"
   loop: "{{ xray_local_files.results }}"
+  loop_control:
+    label: "{{ item.item }}"
   when:
     - item.stat is defined
     - not item.stat.exists
@@ -74,7 +80,7 @@
   ansible.builtin.raw: |
     mkdir -p "{{ xray_install_openwrt.bin | dirname }}"
     mkdir -p "{{ xray_install_openwrt.config | dirname }}"
-    mkdir -p "{{ xray_install_openwrt.workdir }}"
+    mkdir -p "{{ xray_install_openwrt.location_asset }}"
 
 # Remove old binary to save flash space
 
@@ -146,6 +152,15 @@
     - "{{ xray_install_openwrt.local_uci }}"
     - "{{ xray_install_openwrt.local_init }}"
 
+# geosite, geoip
+
+- name: Copy geosite
+  local_action: shell scp -P {{ ansible_port }} {{ xray_install_openwrt.local_geosite }} 'root@{{ ansible_host }}:{{ xray_install_openwrt.geosite }}'
+
+- name: Copy geoip
+  local_action: shell scp -P {{ ansible_port }} {{ xray_install_openwrt.local_geoip }} 'root@{{ ansible_host }}:{{ xray_install_openwrt.geoip }}'
+
+#
 - name: Enable xray service
   ansible.builtin.raw: service xray enable || true
 

@@ -30,7 +30,11 @@ caddy_site_caddyfile: "{{ caddy_sites_dir }}/{{ caddy_domain }}.caddy"
 caddy_naive_username: "{{ lookup('community.general.random_string', length=24, min_lower=1, min_upper=1, min_numeric=1, min_special=1, override_special='-_=+!#$()[]') }}"
 caddy_naive_password: "{{ lookup('community.general.random_string', length=24, min_lower=1, min_upper=1, min_numeric=1, min_special=1, override_special='-_=+!#$()[]') }}"
 caddy_disable_insecure_upstreams_check: false
+# install_naive | install_xhttp
 caddy_upstream: ""
+
+# install_xhttp
+caddy_location: ""
 
 # deploy_configs
 # caddy_configs: # if not defined, _default will be
@@ -44,11 +48,20 @@ caddy_configs_default:
 # install_naive
 caddy_configs_default_naive:
   caddyfile:
-    template: main.naive.caddy.j2
+    template: main.proxy.caddy.j2
   sites:
     - domain: "{{ caddy_domain }}"
       template: naive.caddy.j2
 
+# install_xhttp
+caddy_configs_default_xhttp:
+  caddyfile:
+    template: main.proxy.caddy.j2
+  sites:
+    - domain: "{{ caddy_domain }}"
+      template: xhttp.caddy.j2
+
+## todo put like caddy_ghost then settings
 # install_ghost
 caddy_ghost_snippets: "{{ caddy_snippets_dir }}/ghost"
 caddy_ghost_domain: "example.com"

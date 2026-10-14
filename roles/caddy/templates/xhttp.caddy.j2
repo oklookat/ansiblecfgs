@@ -1,0 +1,38 @@
+{{ caddy_domain }}:443 {
+    tls /etc/caddy/certs/{{ caddy_domain }}.crt /etc/caddy/certs/{{ caddy_domain }}.key {
+		protocols tls1.2 tls1.3
+	}
+
+	# HSTS
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+	# Deny robots.
+	handle /robots.txt {
+		header Content-Type text/plain
+		respond <<TXT
+			User-agent: *
+			Disallow: /
+			TXT 200
+	}
+
+	# Local VLESS+XHTTP listening process.
+	handle {{ caddy_location }}* {
+		reverse_proxy {{ caddy_upstream }} {
+			flush_interval -1
+
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-Port {server_port}
+
+			transport http {
+				read_timeout 1h
+				write_timeout 1h
+				keepalive 1h
+			}
+		}
+	}
+
+	handle {
+		root * /var/www/{{ caddy_domain }}
+		file_server
+	}
+}

@@ -15,8 +15,12 @@ xray_reload_script: "{{ xray_dir }}/reload.sh"
 xray_template_config: "mixed.json.j2"
 xray_template_config_wg: "mixed.wg.json.j2"
 
-# Listening
-xray_listen_port: 1080
+# configs
+# xhttp_sfy
+xray_uuid: "{{ 99999999 | random | to_uuid }}"
+xray_sni: ""
+xray_xhttp_path: ""
+xray_listen_port: 3000
 
 # Resource limits
 xray_memory: "512m"
@@ -35,7 +39,7 @@ xray_openwrt: false
 # install_openwrt
 xray_install_openwrt:
   local_temp: "./temp"
-  workdir: "/usr/local/share/xray"
+  location_asset: "/usr/local/share/xray"
   bin: "/usr/local/bin/xray"
   local_bin: ""
   config: "/etc/xray/config.json"
@@ -45,8 +49,13 @@ xray_install_openwrt:
   init: "/etc/init.d/xray"
   local_init: "{{ xray_install_openwrt.local_temp }}/init"
 
+  # geo
+  local_geosite: "{{ role_path }}/files/geosite.dat.openwrt"
+  geosite: "{{ xray_install_openwrt.location_asset }}/geosite.dat"
+  local_geoip: "{{ role_path }}/files/geoip.dat.openwrt"
+  geoip: "{{ xray_install_openwrt.location_asset }}/geoip.dat"
+
   location_config: "/etc/xray"
-  location_asset: "/usr/local/share/xray"
   location_confdir: ""
 
 # geo_autoupdate

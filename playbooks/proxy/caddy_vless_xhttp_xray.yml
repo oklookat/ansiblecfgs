@@ -1,0 +1,99 @@
+---
+- name: "include: install Docker"
+  ansible.builtin.import_playbook: ../docker/install.yml
+
+- name: "proxy: caddy-vless-xhttp-xray"
+  hosts: proxy
+  become: true
+  tasks:
+    - name: "Export vars"
+      block:
+        - name: "lego: export vars"
+          ansible.builtin.include_role:
+            name: lego
+            tasks_from: export_vars.yml
+
+        - name: "caddy: export vars"
+          ansible.builtin.include_role:
+            name: caddy
+            tasks_from: export_vars.yml
+
+        - name: "xray: export vars"
+          ansible.builtin.include_role:
+            name: xray
+            tasks_from: export_vars.yml
+
+    - name: "Set vars"
+      ansible.builtin.set_fact:
+        lego_hooks:
+          - path: "{{ caddy_reload_script }}"
+            name: caddy.sh
+          - path: "{{ xray_reload_script }}"
+            name: xray.sh
+        caddy_upstream: "{{ xray_container_name }}:{{ xray_listen_port }}"
+        caddy_certificates: "{{ lego_certificates_dir }}"
+        caddy_location: "{{ xray_xhttp_path }}"
+        caddy_external_networks:
+          - "{{ xray_network }}"
+
+    # TODO? Put validators on roles
+    # example: put this validator to xray role with
+    # condition like "xhttp validate"?
+    - name: "Validate required vars"
+      ansible.builtin.assert:
+        that:
+          - xray_sni is defined
+          - xray_sni is string
+          - xray_sni | trim | length > 0
+          - xray_xhttp_path is defined
+          - xray_xhttp_path is string
+          - xray_xhttp_path | trim | length > 0
+          - xray_xhttp_path is match('^/')
+        fail_msg: >-
+          xray_sni and xray_xhttp_path must be defined, non-empty strings,
+          and xray_xhttp_path must start with "/":
+          xray_sni={{ xray_sni | default('<undefined>') | to_json }},
+          xray_xhttp_path={{ xray_xhttp_path | default('<undefined>') | to_json }}
+        quiet: true
+
+    - name: "lego: install"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: install.yml
+
+    - name: "lego: explicit start"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: explicit_start.yml
+
+    - name: "xray: install"
+      block:
+        - name: "install"
+          ansible.builtin.include_role:
+            name: xray
+            tasks_from: install.yml
+
+        - name: "deploy vless xhttp config"
+          ansible.builtin.include_role:
+            name: xray
+            tasks_from: deploy_config_vless_xhttp.yml
+
+    - name: "caddy: install xhttp"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: install_xhttp.yml
+
+    - name: "lego: copy hooks"
+      ansible.builtin.include_role:
+        name: lego
+        tasks_from: copy_hooks.yml
+
+    - name: "caddy: rebuild"
+      ansible.builtin.include_role:
+        name: caddy
+        tasks_from: rebuild.yml
+
+    - name: "xray: rebuild"
+      ansible.builtin.include_role:
+        name: xray
+        tasks_from: rebuild.yml

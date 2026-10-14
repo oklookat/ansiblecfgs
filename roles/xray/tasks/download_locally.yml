@@ -33,6 +33,20 @@
   ansible.builtin.debug:
     msg: "Target arch: {{ xray_arch }}, Version: {{ xray_version }}"
 
+- name: Ensure Python deps for community.docker in controller venv
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - -m
+      - pip
+      - install
+      - requests
+      - docker
+  register: pip_result
+  changed_when: "'Successfully installed' in pip_result.stdout"
+
 - name: Build xray downloader image
   delegate_to: localhost
   become: false
