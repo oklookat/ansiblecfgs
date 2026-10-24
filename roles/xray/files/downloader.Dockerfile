@@ -1,7 +1,7 @@
 # builder
 FROM alpine:3.24.1 AS builder
 
-ARG XRAY_VERSION=26.3.27
+ARG XRAY_VERSION=26.10.21
 ARG XRAY_ARCH=linux-arm64-v8a
 
 # cached
