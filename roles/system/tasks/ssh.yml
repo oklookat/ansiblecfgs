@@ -60,6 +60,7 @@
         name: cloud-init
         state: stopped
         enabled: false
+      ignore_errors: true # ← если сервиса нет — просто пропускаем
 
     - name: Find SSH override configs
       ansible.builtin.find:
@@ -72,8 +73,7 @@
         path: "{{ item.path }}"
         state: absent
       loop: "{{ cloud_init_ssh_overrides.files }}"
-      when:
-        - cloud_init_ssh_overrides.matched > 0
+      when: cloud_init_ssh_overrides.matched > 0
 
 - name: Apply main sshd_config template
   ansible.builtin.template:
