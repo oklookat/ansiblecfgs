@@ -1,5 +1,6 @@
 #!/bin/sh /etc/rc.common
-# Xray + Transparent Proxy (TPROXY) — OpenWrt fw4/nftables
+# Xray + Transparent Proxy (TPROXY) — OpenWrt fw4/nftables (IPv4 + IPv6)
+# FakeDNS-aware version: dnsmasq cache off, LAN RA with default route (ULA)
 
 USE_PROCD=1
 START=99
@@ -9,10 +10,41 @@ PROG="{{ xray_install_openwrt.bin }}"
 CONFIG_FILE="{{ xray_install_openwrt.config }}"
 
 TPROXY_PORT=3000
-TPROXY_MARK=255          # 0xff nft mark
-XRAY_MARK=2              # xray mark outbound
+TPROXY_MARK=255          # 0xff
+XRAY_MARK=2              # Xray outbound mark (loop protection)
 TPROXY_TABLE=100
 NFT_FILE="/etc/nftables.d/30-xray-tproxy.nft"
+
+# Section name of the LAN interface in /etc/config/dhcp
+LAN_DHCP_SECTION="lan"
+# 1 = manage RA/SLAAC on LAN so clients get an IPv6 address and default route
+#     (needed for clients to reach fakedns IPv6 addresses 2001:2::/48)
+LAN_IPV6_RA=1
+
+DHCP_CHANGED=0
+
+# ---------- uci helpers (touch dhcp config only when something differs) ----------
+dhcp_set() {
+    [ "$(uci -q get "$1")" = "$2" ] && return 0
+    uci set "$1=$2"
+    DHCP_CHANGED=1
+}
+
+dhcp_del() {
+    uci -q get "$1" >/dev/null 2>&1 || return 0
+    uci delete "$1"
+    DHCP_CHANGED=1
+}
+
+dhcp_apply() {
+    [ "$DHCP_CHANGED" = "1" ] || return 0
+    uci commit dhcp
+    /etc/init.d/dnsmasq restart
+    if [ -x /etc/init.d/odhcpd ]; then
+        # restart fails with "Not found" when the service is not running yet
+        /etc/init.d/odhcpd restart >/dev/null 2>&1 || /etc/init.d/odhcpd start
+    fi
+}
 
 start_service() {
     config_load "xray"
@@ -28,7 +60,7 @@ start_service() {
     config_get_bool log_stdout "main" "log_stdout" 1
 
     config_get location_config "main" "location_config" ""
-    config_get location_asset "main" "location_asset" ""
+    config_get location_asset  "main" "location_asset"  ""
     config_get location_confdir "main" "location_confdir" ""
 
     [ -n "$location_config" ] || location_config="/etc/xray"
@@ -47,35 +79,70 @@ start_service() {
         return 1
     }
 
-    logger -t xray "Setting up full TPROXY (LAN + router)"
+    logger -t xray "Setting up full TPROXY (LAN + router) IPv4+IPv6"
 
-    # ---------- DNS ----------
-    uci set dhcp.@dnsmasq[0].noresolv='1'
+    # ---------- DNS (dnsmasq → Xray fakedns) ----------
+    DHCP_CHANGED=0
+
+    dhcp_set "dhcp.@dnsmasq[0].noresolv" "1"
+    # fakedns answers have a ~1s TTL; a dnsmasq cache can pin real addresses
+    # (seen with TTL ~300) and hand them to clients instead of fake ones
+    dhcp_set "dhcp.@dnsmasq[0].cachesize" "0"
+
+    # IPv4
     if ! uci get dhcp.@dnsmasq[0].server 2>/dev/null | grep -q '127.0.0.1#5353'; then
         uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+        DHCP_CHANGED=1
     fi
-    uci commit dhcp
-    /etc/init.d/dnsmasq restart
+
+    # IPv6
+    if ! uci get dhcp.@dnsmasq[0].server 2>/dev/null | grep -q '::1#5353'; then
+        uci add_list dhcp.@dnsmasq[0].server='::1#5353'
+        DHCP_CHANGED=1
+    fi
+
+    # ---------- LAN IPv6 (odhcpd RA, ULA only) ----------
+    if [ "$LAN_IPV6_RA" = "1" ]; then
+        dhcp_set "dhcp.$LAN_DHCP_SECTION.ra" "server"
+        dhcp_set "dhcp.$LAN_DHCP_SECTION.dhcpv6" "server"
+        dhcp_set "dhcp.$LAN_DHCP_SECTION.ra_slaac" "1"
+        # without a public prefix odhcpd announces ra_lifetime=0 (no default route)
+        dhcp_set "dhcp.$LAN_DHCP_SECTION.ra_default" "1"
+
+        if [ -x /etc/init.d/odhcpd ]; then
+            /etc/init.d/odhcpd enabled || /etc/init.d/odhcpd enable
+        fi
+    fi
+
+    dhcp_apply
 
     # ---------- Policy routing ----------
-    if ! ip rule show | grep -q "fwmark 0xff.*lookup $TPROXY_TABLE"; then
+    # IPv4
+    if ! ip rule show | grep -q "fwmark 0xff lookup $TPROXY_TABLE"; then
         ip rule add fwmark $TPROXY_MARK lookup $TPROXY_TABLE prio 1000 || \
             logger -t xray "WARN: failed to add IPv4 fwmark rule"
     fi
-    if ! ip -6 rule show | grep -q "fwmark 0xff.*lookup $TPROXY_TABLE"; then
+
+    # IPv6
+    if ! ip -6 rule show | grep -q "fwmark 0xff lookup $TPROXY_TABLE"; then
         ip -6 rule add fwmark $TPROXY_MARK lookup $TPROXY_TABLE prio 1000 || \
             logger -t xray "WARN: failed to add IPv6 fwmark rule"
     fi
 
-    ip route show table $TPROXY_TABLE 2>/dev/null | grep -q 'local default' || \
-        ip route add local default dev lo table $TPROXY_TABLE
+    # Local routes (more reliable)
+    ip route replace local default dev lo table $TPROXY_TABLE 2>/dev/null || \
+        ip route add local default dev lo table $TPROXY_TABLE 2>/dev/null || \
+        logger -t xray "WARN: failed to add IPv4 local route"
 
-    ip -6 route show table $TPROXY_TABLE 2>/dev/null | grep -q 'local default' || \
-        ip -6 route add local default dev lo table $TPROXY_TABLE
+    # IPv6 — ::/0 + replace (most reliable on OpenWrt)
+    ip -6 route replace local ::/0 dev lo table $TPROXY_TABLE 2>/dev/null || \
+        ip -6 route replace local default dev lo table $TPROXY_TABLE 2>/dev/null || \
+        logger -t xray "WARN: failed to add IPv6 local route"
 
     # ---------- nftables ----------
     cat > "$NFT_FILE" <<EOF
 # Xray full TPROXY — included into table inet fw4
+# IPv4 + IPv6 support
 
 define x_bypass4 = {
     0.0.0.0/8,
@@ -105,9 +172,10 @@ chain xray_prerouting {
     ip  daddr \$x_bypass4 return
     ip6 daddr \$x_bypass6 return
 
-    # mark + tproxy
+    # mark + explicit tproxy (more reliable)
     meta l4proto { tcp, udp } meta mark set $TPROXY_MARK
-    meta l4proto { tcp, udp } tproxy to :$TPROXY_PORT accept
+    meta l4proto { tcp, udp } tproxy ip  to :$TPROXY_PORT accept
+    meta l4proto { tcp, udp } tproxy ip6 to :$TPROXY_PORT accept
 }
 
 # ===== Router itself (output) =====
@@ -118,10 +186,10 @@ chain xray_output {
     ip  daddr \$x_bypass4 return
     ip6 daddr \$x_bypass6 return
 
-    # loop protect: xray traffic (mark 2) bypass
+    # loop protection — traffic from Xray itself
     meta mark $XRAY_MARK return
 
-    # all other mark → policy routing → prerouting → tproxy
+    # mark the rest → policy routing → prerouting → tproxy
     meta l4proto { tcp, udp } meta mark set $TPROXY_MARK
 }
 EOF
@@ -132,11 +200,17 @@ EOF
     # ---------- Start Xray ----------
     procd_open_instance
     procd_set_param command "$PROG" "-c" "$CONFIG_FILE"
-    procd_set_param env \
-        "XRAY_LOCATION_CONFIG=$location_config" \
-        "XRAY_LOCATION_ASSET=$location_asset"
-    [ -n "$location_confdir" ] && \
-        procd_set_param env "XRAY_LOCATION_CONFDIR=$location_confdir"
+    # single env call: a second "procd_set_param env" would replace the first one
+    if [ -n "$location_confdir" ]; then
+        procd_set_param env \
+            "XRAY_LOCATION_CONFIG=$location_config" \
+            "XRAY_LOCATION_ASSET=$location_asset" \
+            "XRAY_LOCATION_CONFDIR=$location_confdir"
+    else
+        procd_set_param env \
+            "XRAY_LOCATION_CONFIG=$location_config" \
+            "XRAY_LOCATION_ASSET=$location_asset"
+    fi
 
     procd_set_param file "$CONFIG_FILE"
     procd_set_param respawn
@@ -155,18 +229,36 @@ stop_service() {
     rm -f "$NFT_FILE"
     /etc/init.d/firewall reload
 
+    # Remove policy routing
     ip rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
     ip -6 rule del fwmark $TPROXY_MARK lookup $TPROXY_TABLE 2>/dev/null || true
+
     ip route flush table $TPROXY_TABLE 2>/dev/null || true
     ip -6 route flush table $TPROXY_TABLE 2>/dev/null || true
 
-    # restore dnsmasq
-    uci delete dhcp.@dnsmasq[0].noresolv 2>/dev/null || true
+    # Restore dnsmasq / odhcpd
+    DHCP_CHANGED=0
+
+    dhcp_del "dhcp.@dnsmasq[0].noresolv"
+    dhcp_del "dhcp.@dnsmasq[0].cachesize"
+
     if uci get dhcp.@dnsmasq[0].server 2>/dev/null | grep -q '127.0.0.1#5353'; then
         uci del_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+        DHCP_CHANGED=1
     fi
-    uci commit dhcp
-    /etc/init.d/dnsmasq restart
+    if uci get dhcp.@dnsmasq[0].server 2>/dev/null | grep -q '::1#5353'; then
+        uci del_list dhcp.@dnsmasq[0].server='::1#5353'
+        DHCP_CHANGED=1
+    fi
+
+    if [ "$LAN_IPV6_RA" = "1" ]; then
+        dhcp_del "dhcp.$LAN_DHCP_SECTION.ra_default"
+        dhcp_del "dhcp.$LAN_DHCP_SECTION.ra_slaac"
+        dhcp_del "dhcp.$LAN_DHCP_SECTION.dhcpv6"
+        dhcp_del "dhcp.$LAN_DHCP_SECTION.ra"
+    fi
+
+    dhcp_apply
 
     logger -t xray "TPROXY rules removed"
 }

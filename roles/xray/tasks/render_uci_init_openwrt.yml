@@ -1,0 +1,60 @@
+---
+- name: Ensure local temp directory exists
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ xray_install_openwrt.local_temp }}"
+    state: directory
+    mode: "0755"
+
+- name: Stop xray service
+  ansible.builtin.raw: service xray stop || true
+
+- name: Render uci config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.template:
+    src: openwrt/uci.j2
+    dest: "{{ xray_install_openwrt.local_uci }}"
+
+- name: Render init config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.template:
+    src: openwrt/init.j2
+    dest: "{{ xray_install_openwrt.local_init }}"
+
+# UCI
+
+- name: Copy uci config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      scp -P {{ ansible_port }}
+      "{{ xray_install_openwrt.local_uci }}"
+      root@{{ ansible_host }}:"{{ xray_install_openwrt.uci }}"
+
+# Init
+
+- name: Copy init config
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      scp -P {{ ansible_port }}
+      "{{ xray_install_openwrt.local_init }}"
+      root@{{ ansible_host }}:"{{ xray_install_openwrt.init }}"
+
+- name: Make init executable
+  ansible.builtin.raw: chmod 0755 "{{ xray_install_openwrt.init }}"
+
+- name: Remove temporary xray files
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ xray_install_openwrt.local_uci }}"
+    - "{{ xray_install_openwrt.local_init }}"
