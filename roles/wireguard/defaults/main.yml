@@ -1,0 +1,64 @@
+---
+# required vars: docker_dir; docker_group
+
+# paths
+wireguard_container_name: "wireguard"
+wireguard_dir: "{{ docker_dir }}/wireguard"
+wireguard_config_dir: "{{ wireguard_dir }}/config"
+wireguard_clients_dir: "{{ wireguard_dir }}/clients"
+wireguard_compose: "{{ wireguard_dir }}/compose.yml"
+wireguard_network: "wireguard_network"
+
+# image
+wireguard_image: "local/wireguard:latest"
+
+# interface
+wireguard_interface: "wg0"
+wireguard_port: 51820
+
+# IPv4
+wireguard_address: "10.13.13.1/24"
+wireguard_network_cidr: "10.13.13.0/24"
+
+# IPv6 (ULA recommended for private VPN)
+wireguard_address_ipv6: "fd42:42:42::1/64"
+wireguard_network_cidr_ipv6: "fd42:42:42::/64"
+wireguard_enable_ipv6: true
+
+# public endpoint for client configs
+wireguard_endpoint: "" # vpn.example.com or public IP
+
+# DNS for clients
+wireguard_dns: "1.1.1.1,8.8.8.8"
+
+# MTU (optional)
+wireguard_mtu: ""
+
+# PostUp / PostDown — keep empty when using host nftables
+wireguard_post_up: []
+wireguard_post_down: []
+
+# Server keys (leave empty to auto-generate)
+wireguard_private_key: ""
+wireguard_public_key: ""
+
+# Peers
+# Required: name, address
+# Optional: address_ipv6, allowed_ips, persistent_keepalive, private_key, public_key, preshared_key
+wireguard_peers: []
+
+# nftables integration
+# If true — role will deploy rules into firewall_rules_dir
+wireguard_manage_nftables: true
+wireguard_nftables_rules_file: "{{ firewall_rules_dir | default('/etc/nftables.d') }}/wireguard.nft"
+
+# docker
+wireguard_cap_add:
+  - NET_ADMIN
+  - SYS_MODULE
+
+wireguard_sysctls:
+  - net.ipv4.conf.all.src_valid_mark=1
+  - net.ipv4.ip_forward=1
+  - net.ipv6.conf.all.forwarding=1
+  - net.ipv6.conf.all.disable_ipv6=0

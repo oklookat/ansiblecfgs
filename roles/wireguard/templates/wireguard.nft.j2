@@ -1,0 +1,16 @@
+# Managed by Ansible — wireguard role
+# Do NOT run `nft -f /etc/nftables.conf` while Docker is running
+# without stopping Docker first (see playbooks/docker/README.md)
+
+# Allow WireGuard UDP port
+add rule inet filter input udp dport {{ wireguard_port }} ct state new accept comment "wireguard"
+
+# Forward traffic to/from WireGuard interface
+add rule inet filter forward iifname "{{ wireguard_interface }}" accept comment "wireguard-fwd-in"
+add rule inet filter forward oifname "{{ wireguard_interface }}" accept comment "wireguard-fwd-out"
+
+# NAT (masquerade) for clients going to the internet
+add rule ip nat postrouting ip saddr {{ wireguard_network_cidr }} oifname != "{{ wireguard_interface }}" masquerade comment "wireguard-nat"
+{% if wireguard_enable_ipv6 %}
+add rule ip6 nat postrouting ip6 saddr {{ wireguard_network_cidr_ipv6 }} oifname != "{{ wireguard_interface }}" masquerade comment "wireguard-nat6"
+{% endif %}

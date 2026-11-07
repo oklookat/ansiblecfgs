@@ -1,0 +1,49 @@
+---
+- name: "Peer {{ peer.name }}: ensure client directory"
+  ansible.builtin.file:
+    path: "{{ wireguard_clients_dir }}/{{ peer.name }}"
+    state: directory
+    mode: "0755"
+
+- name: "Peer {{ peer.name }}: check private key"
+  ansible.builtin.stat:
+    path: "{{ wireguard_clients_dir }}/{{ peer.name }}/privatekey"
+  register: _peer_priv_stat
+
+- name: "Peer {{ peer.name }}: generate private key"
+  ansible.builtin.command: wg genkey
+  register: _peer_priv
+  when: not _peer_priv_stat.stat.exists and (peer.private_key | default('') | length == 0)
+  changed_when: true
+
+- name: "Peer {{ peer.name }}: save private key"
+  ansible.builtin.copy:
+    content: "{{ peer.private_key | default('') if (peer.private_key | default('') | length > 0) else _peer_priv.stdout }}"
+    dest: "{{ wireguard_clients_dir }}/{{ peer.name }}/privatekey"
+    mode: "0600"
+  when: not _peer_priv_stat.stat.exists or (peer.private_key | default('') | length > 0)
+
+- name: "Peer {{ peer.name }}: read private key"
+  ansible.builtin.slurp:
+    src: "{{ wireguard_clients_dir }}/{{ peer.name }}/privatekey"
+  register: _peer_priv_file
+
+- name: "Peer {{ peer.name }}: generate public key"
+  ansible.builtin.shell: "echo '{{ _peer_priv_file.content | b64decode | trim }}' | wg pubkey"
+  register: _peer_pub
+  changed_when: false
+
+- name: "Peer {{ peer.name }}: set facts"
+  ansible.builtin.set_fact:
+    wireguard_peers_processed: "{{ wireguard_peers_processed | default([]) + [peer | combine({
+      'private_key': _peer_priv_file.content | b64decode | trim,
+      'public_key': (peer.public_key | default('') | length > 0) | ternary(peer.public_key, _peer_pub.stdout | trim)
+    })] }}"
+
+- name: "Peer {{ peer.name }}: render client config"
+  ansible.builtin.template:
+    src: peer.conf.j2
+    dest: "{{ wireguard_clients_dir }}/{{ peer.name }}/{{ peer.name }}.conf"
+    mode: "0600"
+  vars:
+    peer_private_key: "{{ _peer_priv_file.content | b64decode | trim }}"

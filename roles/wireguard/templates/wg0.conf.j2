@@ -1,0 +1,32 @@
+[Interface]
+Address = {{ wireguard_address }}{% if wireguard_enable_ipv6 %}, {{ wireguard_address_ipv6 }}{% endif %}
+
+ListenPort = {{ wireguard_port }}
+PrivateKey = {{ wireguard_private_key }}
+{% if wireguard_mtu | length > 0 %}
+MTU = {{ wireguard_mtu }}
+{% endif %}
+{% for cmd in wireguard_post_up %}
+PostUp = {{ cmd }}
+{% endfor %}
+{% for cmd in wireguard_post_down %}
+PostDown = {{ cmd }}
+{% endfor %}
+
+{% for peer in wireguard_peers %}
+# {{ peer.name }}
+[Peer]
+PublicKey = {{ peer.public_key }}
+AllowedIPs = {{ peer.address }}{% if wireguard_enable_ipv6 and peer.address_ipv6 | default('') | length > 0 %}, {{ peer.address_ipv6 }}{% endif %}
+
+{% if peer.preshared_key | default('') | length > 0 %}
+PresharedKey = {{ peer.preshared_key }}
+{% endif %}
+{% if peer.endpoint | default('') | length > 0 %}
+Endpoint = {{ peer.endpoint }}
+{% endif %}
+{% if peer.persistent_keepalive | default(0) | int > 0 %}
+PersistentKeepalive = {{ peer.persistent_keepalive }}
+{% endif %}
+
+{% endfor %}
