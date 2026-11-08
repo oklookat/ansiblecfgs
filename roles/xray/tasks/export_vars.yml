@@ -12,3 +12,4 @@
     xray_dir: "{{ xray_dir }}"
     xray_geosite_url: "{{ xray_geosite_url }}"
     xray_geoip_url: "{{ xray_geoip_url }}"
+    xray_version: "{{ xray_version }}"

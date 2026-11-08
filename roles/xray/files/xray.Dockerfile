@@ -1,6 +1,6 @@
 FROM alpine:3.24.1
 
-ARG XRAY_VERSION=26.10.21
+ARG XRAY_VERSION=26.10.31
 ARG XRAY_ARCH="linux-64"
 ARG DOWNLOAD_LINK="https://github.com/XTLS/Xray-core/releases/download/v${XRAY_VERSION}/Xray-${XRAY_ARCH}.zip"
 
