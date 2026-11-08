@@ -5,6 +5,17 @@
   failed_when: nft_check.rc != 0
   changed_when: false
 
+- name: Stop Docker before applying nftables
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+  loop:
+    - docker
+    - docker.socket
+  failed_when: false
+  when: ansible_facts.services['docker.service'] is defined
+    or true # always try, ignore errors if missing
+
 - name: Apply nftables rules
   ansible.builtin.command: nft -f /etc/nftables.conf
   when: nft_check.rc == 0
@@ -14,3 +25,10 @@
     name: nftables
     enabled: true
     state: started
+
+- name: Start Docker after nftables
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+  failed_when: false

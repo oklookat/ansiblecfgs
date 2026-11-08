@@ -1,6 +1,8 @@
 ---
 services:
   {{ wireguard_container_name }}:
+    build:
+      context: "{{ wireguard_dir }}"
     image: "{{ wireguard_image }}"
     container_name: {{ wireguard_container_name }}
     restart: unless-stopped
@@ -9,24 +11,11 @@ services:
       - "{{ wireguard_port }}:{{ wireguard_port }}/udp"
 
     volumes:
-      - "{{ wireguard_config }}:/config"
+      - "{{ wireguard_config_dir }}:/etc/wireguard:ro"
       - /lib/modules:/lib/modules:ro
 
     environment:
-      PUID: "{{ wireguard_puid }}"
-      PGID: "{{ wireguard_pgid }}"
-      TZ: "{{ wireguard_timezone }}"
-      SERVERURL: "{{ wireguard_serverurl }}"
-      SERVERPORT: "{{ wireguard_serverport }}"
-      PEERS: "{{ wireguard_peers }}"
-      PEERDNS: "{{ wireguard_peerdns }}"
-      INTERNAL_SUBNET: "{{ wireguard_internal_subnet }}"
-      ALLOWEDIPS: "{{ wireguard_allowedips }}"
-      PERSISTENTKEEPALIVE_PEERS: "{{ wireguard_persistentkeepalive_peers }}"
-      LOG_CONFS: "{{ wireguard_log_confs }}"
-{% for key, value in wireguard_extra_env.items() %}
-      {{ key }}: "{{ value }}"
-{% endfor %}
+      WIREGUARD_INTERFACE: "{{ wireguard_interface }}"
 
     cap_add:
 {% for cap in wireguard_cap_add %}

@@ -3,12 +3,6 @@
   hosts: all
   become: true
   tasks:
-    - name: Ensure wireguard-tools is present (for key generation)
-      ansible.builtin.apt:
-        name: wireguard-tools
-        state: present
-        update_cache: true
-
     - name: "wireguard: install"
       ansible.builtin.include_role:
         name: wireguard

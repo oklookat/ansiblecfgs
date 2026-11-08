@@ -35,8 +35,21 @@ wireguard_dns: "1.1.1.1,8.8.8.8"
 wireguard_mtu: ""
 
 # PostUp / PostDown — keep empty when using host nftables
-wireguard_post_up: []
-wireguard_post_down: []
+wireguard_post_up:
+  - "iptables -A FORWARD -i %i -j ACCEPT"
+  - "iptables -A FORWARD -o %i -j ACCEPT"
+  - "iptables -t nat -A POSTROUTING -o eth+ -j MASQUERADE"
+  - "ip6tables -A FORWARD -i %i -j ACCEPT"
+  - "ip6tables -A FORWARD -o %i -j ACCEPT"
+  - "ip6tables -t nat -A POSTROUTING -o eth+ -j MASQUERADE"
+
+wireguard_post_down:
+  - "iptables -D FORWARD -i %i -j ACCEPT"
+  - "iptables -D FORWARD -o %i -j ACCEPT"
+  - "iptables -t nat -D POSTROUTING -o eth+ -j MASQUERADE"
+  - "ip6tables -D FORWARD -i %i -j ACCEPT"
+  - "ip6tables -D FORWARD -o %i -j ACCEPT"
+  - "ip6tables -t nat -D POSTROUTING -o eth+ -j MASQUERADE"
 
 # Server keys (leave empty to auto-generate)
 wireguard_private_key: ""
@@ -46,11 +59,6 @@ wireguard_public_key: ""
 # Required: name, address
 # Optional: address_ipv6, allowed_ips, persistent_keepalive, private_key, public_key, preshared_key
 wireguard_peers: []
-
-# nftables integration
-# If true — role will deploy rules into firewall_rules_dir
-wireguard_manage_nftables: true
-wireguard_nftables_rules_file: "{{ firewall_rules_dir | default('/etc/nftables.d') }}/wireguard.nft"
 
 # docker
 wireguard_cap_add:

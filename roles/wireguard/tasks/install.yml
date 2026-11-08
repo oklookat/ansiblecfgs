@@ -1,4 +1,8 @@
 ---
+- name: Reset processed peers
+  ansible.builtin.set_fact:
+    wireguard_peers_processed: []
+
 - name: Ensure required variables
   ansible.builtin.assert:
     that:
@@ -101,27 +105,9 @@
     dest: "{{ wireguard_compose }}"
     mode: "0644"
 
-- name: Ensure network exists
-  community.docker.docker_network:
-    name: "{{ wireguard_network }}"
-    driver: bridge
-    enable_ipv6: true
-    state: present
-
 - name: Build and start wireguard
   community.docker.docker_compose_v2:
     project_src: "{{ wireguard_dir }}"
-    files:
-      - "{{ wireguard_compose | basename }}"
     state: present
     build: always
-    pull: never
-    remove_orphans: true
-
-# --- nftables rules (optional) ---
-- name: Deploy nftables rules
-  ansible.builtin.template:
-    src: wireguard.nft.j2
-    dest: "{{ wireguard_nftables_rules_file }}"
-    mode: "0644"
-  when: wireguard_manage_nftables | bool
+    recreate: always
